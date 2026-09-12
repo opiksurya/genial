@@ -27,7 +27,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('settings/pixel', [\App\Http\Controllers\Settings\PixelSettingController::class, 'edit'])->name('pixel.edit');
     Route::put('settings/pixel', [\App\Http\Controllers\Settings\PixelSettingController::class, 'update'])->name('pixel.update');
+
+    Route::get('settings/whatsapp', [\App\Http\Controllers\Settings\WhatsAppSettingController::class, 'edit'])->name('whatsapp.edit');
+    Route::put('settings/whatsapp', [\App\Http\Controllers\Settings\WhatsAppSettingController::class, 'update'])->name('whatsapp.update');
 });
+
 
 Route::get('.well-known/passkey-endpoints', function () {
     return response()->json([
