@@ -40,7 +40,7 @@ export default function Welcome() {
     };
 
     // Audit Form Inertia state
-    const { data, setData, post, processing, formErrors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         whatsapp: '',
         website_marketplace: '',
@@ -537,7 +537,7 @@ export default function Welcome() {
                                                     placeholder="Contoh: Budi Santoso"
                                                     className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all ${inputBg}`}
                                                 />
-                                                {formErrors.name && <p className="text-xs text-rose-500 mt-1">{formErrors.name}</p>}
+                                                {errors.name && <p className="text-xs text-rose-500 mt-1">{errors.name}</p>}
                                             </div>
 
                                             <div>
@@ -552,7 +552,7 @@ export default function Welcome() {
                                                     placeholder="Contoh: 081234567890"
                                                     className={`w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all ${inputBg}`}
                                                 />
-                                                {formErrors.whatsapp && <p className="text-xs text-rose-500 mt-1">{formErrors.whatsapp}</p>}
+                                                {errors.whatsapp && <p className="text-xs text-rose-500 mt-1">{errors.whatsapp}</p>}
                                             </div>
 
                                             <div className="grid sm:grid-cols-2 gap-4">
