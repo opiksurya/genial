@@ -11,11 +11,13 @@ Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('a
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy']);
 });
 
 require __DIR__.'/settings.php';
