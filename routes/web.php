@@ -39,6 +39,12 @@ use App\Http\Controllers\ProjectFlow\ProjectTimelineController;
 use App\Http\Controllers\ProjectFlow\ProjectTeamController;
 use App\Http\Controllers\ProjectFlow\ProjectReportController;
 use App\Http\Controllers\ProjectFlow\ProjectCredentialController;
+use App\Http\Controllers\FinanceFlow\FinanceDashboardController;
+use App\Http\Controllers\FinanceFlow\IncomeController;
+use App\Http\Controllers\FinanceFlow\ExpenseController;
+use App\Http\Controllers\FinanceFlow\AllocationController;
+use App\Http\Controllers\FinanceFlow\FinancialReportController;
+use App\Http\Controllers\FinanceFlow\FinanceSettingController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -60,6 +66,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('timeline', [ProjectTimelineController::class, 'index'])->name('timeline');
         Route::get('team', [ProjectTeamController::class, 'index'])->name('team');
         Route::get('reports', [ProjectReportController::class, 'index'])->name('reports');
+    });
+
+    // Genial FinanceFlow Module Routes
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::get('dashboard', [FinanceDashboardController::class, 'index'])->name('dashboard');
+        
+        Route::get('income', [IncomeController::class, 'index'])->name('income.index');
+        Route::post('income', [IncomeController::class, 'store'])->name('income.store');
+        Route::put('income/{income}', [IncomeController::class, 'update'])->name('income.update');
+        Route::delete('income/{income}', [IncomeController::class, 'destroy'])->name('income.destroy');
+        
+        Route::get('expense', [ExpenseController::class, 'index'])->name('expense.index');
+        Route::post('expense', [ExpenseController::class, 'store'])->name('expense.store');
+        Route::put('expense/{expense}', [ExpenseController::class, 'update'])->name('expense.update');
+        Route::put('expense/{expense}/approve', [ExpenseController::class, 'approve'])->name('expense.approve');
+        Route::delete('expense/{expense}', [ExpenseController::class, 'destroy'])->name('expense.destroy');
+        
+        Route::get('allocation', [AllocationController::class, 'index'])->name('allocation.index');
+        Route::post('allocation', [AllocationController::class, 'store'])->name('allocation.store');
+        Route::put('allocation/{allocation}', [AllocationController::class, 'update'])->name('allocation.update');
+        Route::post('allocation/{allocation}/sub', [AllocationController::class, 'storeSub'])->name('allocation.storeSub');
+        Route::delete('allocation/{allocation}', [AllocationController::class, 'destroy'])->name('allocation.destroy');
+        
+        Route::get('reports', [FinancialReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [FinancialReportController::class, 'export'])->name('reports.export');
+        
+        Route::get('settings', [FinanceSettingController::class, 'index'])->name('settings.index');
+        Route::post('settings', [FinanceSettingController::class, 'store'])->name('settings.store');
     });
 });
 

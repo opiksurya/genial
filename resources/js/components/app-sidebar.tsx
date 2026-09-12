@@ -9,7 +9,13 @@ import {
     Kanban,
     Clock,
     UserCheck,
-    BarChart3
+    BarChart3,
+    Wallet,
+    TrendingUp,
+    Receipt,
+    PieChart,
+    FileSpreadsheet,
+    Settings
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -61,6 +67,43 @@ const mainNavItems: NavItem[] = [
                 title: 'Reports',
                 href: '/projects/reports',
                 icon: BarChart3,
+            },
+        ],
+    },
+    {
+        title: 'FinanceFlow',
+        href: '/finance/dashboard',
+        icon: Wallet,
+        items: [
+            {
+                title: 'Finance Dashboard',
+                href: '/finance/dashboard',
+                icon: LayoutGrid,
+            },
+            {
+                title: 'Income Management',
+                href: '/finance/income',
+                icon: TrendingUp,
+            },
+            {
+                title: 'Expense Management',
+                href: '/finance/expense',
+                icon: Receipt,
+            },
+            {
+                title: 'Allocation Management',
+                href: '/finance/allocation',
+                icon: PieChart,
+            },
+            {
+                title: 'Financial Reports',
+                href: '/finance/reports',
+                icon: FileSpreadsheet,
+            },
+            {
+                title: 'Settings',
+                href: '/finance/settings',
+                icon: Settings,
             },
         ],
     },

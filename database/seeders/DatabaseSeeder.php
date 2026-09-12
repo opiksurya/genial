@@ -229,6 +229,240 @@ class DatabaseSeeder extends Seeder
             $p1->recalculateProgress();
             $p2->recalculateProgress();
         }
+
+        // Seed Sample FinanceFlow Data if empty
+        if (\App\Models\Income::count() === 0) {
+            $p1 = \App\Models\Project::first();
+            
+            // Incomes
+            $inc1 = \App\Models\Income::create([
+                'project_id' => $p1 ? $p1->id : null,
+                'client_name' => 'BatikKu Indonesia',
+                'name' => 'Client Website Project',
+                'amount' => 20000000,
+                'date' => now()->startOfMonth(),
+                'status' => 'paid',
+                'invoice_number' => 'INV-2026-001',
+                'notes' => 'Pembayaran lunas termin 1 website e-commerce BatikKu.',
+                'created_by' => $user->id,
+            ]);
+
+            $inc2 = \App\Models\Income::create([
+                'client_name' => 'Skincare Glowing ID',
+                'name' => 'Google Ads Management',
+                'amount' => 15000000,
+                'date' => now()->subDays(5),
+                'status' => 'paid',
+                'invoice_number' => 'INV-2026-002',
+                'notes' => 'Setup & Management fee Google Ads & Meta Ads campaign.',
+                'created_by' => $user->id,
+            ]);
+
+            $inc3 = \App\Models\Income::create([
+                'client_name' => 'Kuliner Nusantara',
+                'name' => 'SEO Monthly Retainer',
+                'amount' => 10000000,
+                'date' => now()->subDays(10),
+                'status' => 'paid',
+                'invoice_number' => 'INV-2026-003',
+                'notes' => 'Retainer SEO bulanan & konten artikel.',
+                'created_by' => $user->id,
+            ]);
+
+            $inc4 = \App\Models\Income::create([
+                'client_name' => 'Fashion Hijab Brand',
+                'name' => 'Marketplace Campaign',
+                'amount' => 8000000,
+                'date' => now()->subDays(12),
+                'status' => 'partial',
+                'invoice_number' => 'INV-2026-004',
+                'notes' => 'Optimasi toko Shopee & Tokopedia.',
+                'created_by' => $user->id,
+            ]);
+
+            // Expenses
+            $exp1 = \App\Models\Expense::create([
+                'income_id' => $inc1->id,
+                'project_id' => $p1 ? $p1->id : null,
+                'category' => 'Ads Budget',
+                'name' => 'Meta Ads & Google Ads Budget',
+                'description' => 'Top up saldo iklan Meta & Google Ads client.',
+                'amount' => 5000000,
+                'date' => now()->startOfMonth()->addDays(2),
+                'approval_status' => 'approved',
+                'approved_by' => $user->id,
+                'created_by' => $user->id,
+            ]);
+
+            $exp2 = \App\Models\Expense::create([
+                'income_id' => $inc1->id,
+                'project_id' => $p1 ? $p1->id : null,
+                'category' => 'Tools',
+                'name' => 'Plugin Licensing & Tools',
+                'description' => 'Lisensi WP Rocket, Elementor Pro, & hosting server premium.',
+                'amount' => 1000000,
+                'date' => now()->startOfMonth()->addDays(3),
+                'approval_status' => 'approved',
+                'approved_by' => $user->id,
+                'created_by' => $user->id,
+            ]);
+
+            $exp3 = \App\Models\Expense::create([
+                'income_id' => $inc1->id,
+                'project_id' => $p1 ? $p1->id : null,
+                'category' => 'Freelancer',
+                'name' => 'UI/UX Freelance Designer Fee',
+                'description' => 'Jasa pengerjaan Figma mockup 12 halaman.',
+                'amount' => 2000000,
+                'date' => now()->startOfMonth()->addDays(4),
+                'approval_status' => 'approved',
+                'approved_by' => $user->id,
+                'created_by' => $user->id,
+            ]);
+
+            $exp4 = \App\Models\Expense::create([
+                'category' => 'Software Subscription',
+                'name' => 'Ahrefs & Semrush Monthly Sub',
+                'description' => 'Langganan tool analisis SEO agency.',
+                'amount' => 3000000,
+                'date' => now()->subDays(7),
+                'approval_status' => 'approved',
+                'approved_by' => $user->id,
+                'created_by' => $user->id,
+            ]);
+
+            $exp5 = \App\Models\Expense::create([
+                'category' => 'Operational',
+                'name' => 'Sewa Office & Internet Fiber',
+                'description' => 'Biaya operasional kantor & bandwidth 100Mbps.',
+                'amount' => 4000000,
+                'date' => now()->subDays(15),
+                'approval_status' => 'approved',
+                'approved_by' => $user->id,
+                'created_by' => $user->id,
+            ]);
+
+            // Allocations (Default: Real Money = 53M Income - 15M Expense = 38M)
+            $totalRealMoney = 38000000;
+
+            $alloc1 = \App\Models\Allocation::create([
+                'name' => 'Company Profit',
+                'percentage' => 40,
+                'amount' => (40 / 100) * $totalRealMoney,
+                'sort_order' => 1,
+                'created_by' => $user->id,
+            ]);
+
+            $alloc2 = \App\Models\Allocation::create([
+                'name' => 'Marketing Budget',
+                'percentage' => 30,
+                'amount' => (30 / 100) * $totalRealMoney,
+                'sort_order' => 2,
+                'created_by' => $user->id,
+            ]);
+
+            $alloc3 = \App\Models\Allocation::create([
+                'name' => 'Team Reward',
+                'percentage' => 20,
+                'amount' => (20 / 100) * $totalRealMoney,
+                'sort_order' => 3,
+                'created_by' => $user->id,
+            ]);
+
+            $alloc4 = \App\Models\Allocation::create([
+                'name' => 'Reserve Fund',
+                'percentage' => 10,
+                'amount' => (10 / 100) * $totalRealMoney,
+                'sort_order' => 4,
+                'created_by' => $user->id,
+            ]);
+
+            // Sub-Allocations for Team Reward (20% of Real Money = 7,600,000)
+            $teamAllocAmount = (20 / 100) * $totalRealMoney;
+            
+            \App\Models\SubAllocation::create([
+                'allocation_id' => $alloc3->id,
+                'name' => 'Designer',
+                'percentage' => 30,
+                'amount' => (30 / 100) * $teamAllocAmount,
+                'sort_order' => 1,
+            ]);
+
+            \App\Models\SubAllocation::create([
+                'allocation_id' => $alloc3->id,
+                'name' => 'Developer',
+                'percentage' => 40,
+                'amount' => (40 / 100) * $teamAllocAmount,
+                'sort_order' => 2,
+            ]);
+
+            \App\Models\SubAllocation::create([
+                'allocation_id' => $alloc3->id,
+                'name' => 'Project Manager',
+                'percentage' => 20,
+                'amount' => (20 / 100) * $teamAllocAmount,
+                'sort_order' => 3,
+            ]);
+
+            \App\Models\SubAllocation::create([
+                'allocation_id' => $alloc3->id,
+                'name' => 'Bonus',
+                'percentage' => 10,
+                'amount' => (10 / 100) * $teamAllocAmount,
+                'sort_order' => 4,
+            ]);
+
+            // Financial Transactions Activity Log
+            \App\Models\FinancialTransaction::create([
+                'type' => 'income',
+                'reference_type' => \App\Models\Income::class,
+                'reference_id' => $inc1->id,
+                'activity_name' => 'Added Income: Client Website Project',
+                'user_id' => $user->id,
+                'amount' => 20000000,
+                'status' => 'completed',
+            ]);
+
+            \App\Models\FinancialTransaction::create([
+                'type' => 'expense',
+                'reference_type' => \App\Models\Expense::class,
+                'reference_id' => $exp1->id,
+                'activity_name' => 'Added Expense: [Ads Budget] Meta Ads & Google Ads Budget',
+                'user_id' => $user->id,
+                'amount' => 5000000,
+                'status' => 'completed',
+            ]);
+
+            \App\Models\FinancialTransaction::create([
+                'type' => 'expense',
+                'reference_type' => \App\Models\Expense::class,
+                'reference_id' => $exp2->id,
+                'activity_name' => 'Added Expense: [Tools] Plugin Licensing & Tools',
+                'user_id' => $user->id,
+                'amount' => 1000000,
+                'status' => 'completed',
+            ]);
+
+            \App\Models\FinancialTransaction::create([
+                'type' => 'expense',
+                'reference_type' => \App\Models\Expense::class,
+                'reference_id' => $exp3->id,
+                'activity_name' => 'Added Expense: [Freelancer] UI/UX Freelance Designer Fee',
+                'user_id' => $user->id,
+                'amount' => 2000000,
+                'status' => 'completed',
+            ]);
+
+            \App\Models\FinancialTransaction::create([
+                'type' => 'allocation',
+                'reference_type' => \App\Models\Allocation::class,
+                'reference_id' => $alloc3->id,
+                'activity_name' => 'Configured Team Reward Sub-Allocation (Designer 30%, Dev 40%, PM 20%, Bonus 10%)',
+                'user_id' => $user->id,
+                'amount' => $teamAllocAmount,
+                'status' => 'completed',
+            ]);
+        }
     }
 }
 
