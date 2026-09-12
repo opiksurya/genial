@@ -4,6 +4,7 @@ import { usePage } from '@inertiajs/react';
 declare global {
     interface Window {
         dataLayer?: any[];
+        gtag?: (...args: any[]) => void;
     }
 }
 
@@ -12,38 +13,59 @@ type SharedProps = {
         gtm_id: string;
         enabled: boolean;
     };
+    ga4?: {
+        ga4_id: string;
+        enabled: boolean;
+    };
 };
 
 export function useGtm() {
-    const { gtm } = usePage<SharedProps>().props;
+    const { gtm, ga4 } = usePage<SharedProps>().props;
 
     useEffect(() => {
-        if (!gtm || !gtm.enabled || !gtm.gtm_id) {
-            return;
-        }
-
-        const gtmId = gtm.gtm_id;
-
-        // 1. Initialize dataLayer array
         window.dataLayer = window.dataLayer || [];
 
-        // 2. Inject Google Tag Manager Script into <head> if not already loaded
-        if (!document.getElementById('gtm-script')) {
-            const script = document.createElement('script');
-            script.id = 'gtm-script';
-            script.async = true;
-            script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
+        // 1. Inject & initialize GA4 (Google Analytics 4 gtag.js) if enabled
+        if (ga4 && ga4.enabled && ga4.ga4_id) {
+            const ga4Id = ga4.ga4_id.trim();
 
-            // Push initial gtm.js start event to dataLayer
-            window.dataLayer.push({
-                'gtm.start': new Date().getTime(),
-                event: 'gtm.js',
-            });
+            if (!document.getElementById('ga4-script')) {
+                const script = document.createElement('script');
+                script.id = 'ga4-script';
+                script.async = true;
+                script.src = `https://www.googletagmanager.com/gtag/js?id=${ga4Id}`;
+                document.head.appendChild(script);
 
-            document.head.appendChild(script);
+                if (!window.gtag) {
+                    window.gtag = function () {
+                        window.dataLayer?.push(arguments);
+                    };
+                    window.gtag('js', new Date());
+                }
+                window.gtag('config', ga4Id);
+            }
         }
 
-        // 3. Fire PageView event to DataLayer for Home / Any Page load
+        // 2. Inject Google Tag Manager (GTM) Container Script if enabled
+        if (gtm && gtm.enabled && gtm.gtm_id) {
+            const gtmId = gtm.gtm_id.trim();
+
+            if (!document.getElementById('gtm-script')) {
+                const script = document.createElement('script');
+                script.id = 'gtm-script';
+                script.async = true;
+                script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
+
+                window.dataLayer.push({
+                    'gtm.start': new Date().getTime(),
+                    event: 'gtm.js',
+                });
+
+                document.head.appendChild(script);
+            }
+        }
+
+        // 3. Fire PageView event to DataLayer
         window.dataLayer.push({
             event: 'page_view',
             page_location: window.location.href,
@@ -51,7 +73,7 @@ export function useGtm() {
             page_path: window.location.pathname,
         });
 
-        // 4. Global click listener to auto-detect WhatsApp Lead clicks & push to DataLayer
+        // 4. Global click listener to auto-detect WhatsApp Lead clicks & push to DataLayer & GA4
         const handleWhatsAppClick = (event: MouseEvent) => {
             const target = event.target as HTMLElement | null;
             if (!target) return;
@@ -77,6 +99,15 @@ export function useGtm() {
                     value: 0.00,
                     currency: 'IDR',
                 });
+
+                if (window.gtag) {
+                    window.gtag('event', 'generate_lead', {
+                        event_category: 'Lead',
+                        event_label: 'WhatsApp Contact Click',
+                        value: 0.00,
+                        currency: 'IDR',
+                    });
+                }
             }
         };
 
@@ -85,5 +116,5 @@ export function useGtm() {
         return () => {
             document.removeEventListener('click', handleWhatsAppClick);
         };
-    }, [gtm]);
+    }, [gtm, ga4]);
 }

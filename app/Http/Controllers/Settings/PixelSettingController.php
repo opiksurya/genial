@@ -11,7 +11,7 @@ use Inertia\Response;
 class PixelSettingController extends Controller
 {
     /**
-     * Show Meta Pixel & GTM settings page.
+     * Show Meta Pixel, GA4 & GTM settings page.
      */
     public function edit(): Response
     {
@@ -23,13 +23,15 @@ class PixelSettingController extends Controller
                 'meta_enabled' => Setting::get('meta_enabled', '0') === '1',
                 'gtm_id' => Setting::get('gtm_id', ''),
                 'gtm_enabled' => Setting::get('gtm_enabled', '0') === '1',
+                'ga4_id' => Setting::get('ga4_id', 'G-YRNS0SP4P7'),
+                'ga4_enabled' => Setting::get('ga4_enabled', '1') === '1',
             ],
             'status' => session('status'),
         ]);
     }
 
     /**
-     * Update Meta Pixel, CAPI & GTM settings.
+     * Update Meta Pixel, CAPI, GA4 & GTM settings.
      */
     public function update(Request $request)
     {
@@ -40,6 +42,8 @@ class PixelSettingController extends Controller
             'meta_enabled' => 'boolean',
             'gtm_id' => 'nullable|string|max:255',
             'gtm_enabled' => 'boolean',
+            'ga4_id' => 'nullable|string|max:255',
+            'ga4_enabled' => 'boolean',
         ]);
 
         Setting::set('meta_pixel_id', $validated['meta_pixel_id'] ?? '');
@@ -50,6 +54,9 @@ class PixelSettingController extends Controller
         Setting::set('gtm_id', $validated['gtm_id'] ?? '');
         Setting::set('gtm_enabled', !empty($validated['gtm_enabled']) ? '1' : '0');
 
-        return redirect()->route('pixel.edit')->with('status', 'Pengaturan Tracking & Analytics (Meta Pixel & GTM) berhasil disimpan.');
+        Setting::set('ga4_id', $validated['ga4_id'] ?? '');
+        Setting::set('ga4_enabled', !empty($validated['ga4_enabled']) ? '1' : '0');
+
+        return redirect()->route('pixel.edit')->with('status', 'Pengaturan Tracking & Analytics (GA4, GTM & Meta Pixel) berhasil disimpan.');
     }
 }

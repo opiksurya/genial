@@ -50,6 +50,11 @@ class HandleInertiaRequests extends Middleware
                 'gtm_id' => \App\Models\Setting::get('gtm_id', ''),
                 'enabled' => \App\Models\Setting::get('gtm_enabled', '0') === '1',
             ],
+            'ga4' => [
+                'ga4_id' => \App\Models\Setting::get('ga4_id', ''),
+                'enabled' => \App\Models\Setting::get('ga4_enabled', '0') === '1',
+            ],
         ];
     }
 }
+

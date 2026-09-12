@@ -15,6 +15,8 @@ type Props = {
         meta_enabled: boolean;
         gtm_id: string;
         gtm_enabled: boolean;
+        ga4_id: string;
+        ga4_enabled: boolean;
     };
     status?: string;
 };
@@ -27,6 +29,8 @@ export default function TrackingSettings({ settings, status }: Props) {
         meta_enabled: settings.meta_enabled || false,
         gtm_id: settings.gtm_id || '',
         gtm_enabled: settings.gtm_enabled || false,
+        ga4_id: settings.ga4_id || 'G-YRNS0SP4P7',
+        ga4_enabled: settings.ga4_enabled ?? true,
     });
 
     const submit = (e: React.FormEvent) => {
@@ -40,12 +44,11 @@ export default function TrackingSettings({ settings, status }: Props) {
         <>
             <Head title="Tracking & Analytics Settings" />
 
-
             <div className="space-y-8">
                 <Heading
                     variant="small"
                     title="Tracking & Analytics Settings"
-                    description="Kelola integrasi Google Tag Manager (GTM), Meta Pixel ID, dan Conversions API (CAPI) dengan auto-behavior tracking"
+                    description="Kelola integrasi Google Analytics 4 (GA4), Google Tag Manager (GTM), Meta Pixel ID, dan Conversions API (CAPI) dengan auto-behavior tracking"
                 />
 
                 {status && (
@@ -57,7 +60,55 @@ export default function TrackingSettings({ settings, status }: Props) {
 
                 <form onSubmit={submit} className="space-y-8">
                     
-                    {/* SECTION 1: GOOGLE TAG MANAGER (GTM) */}
+                    {/* SECTION 1: GOOGLE ANALYTICS 4 (GA4) */}
+                    <div className="p-6 rounded-2xl border border-sidebar-border bg-card shadow-sm space-y-5">
+                        <div className="flex items-center gap-3 border-b border-sidebar-border pb-4">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                                <BarChart3 className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-foreground">Google Analytics 4 (GA4 - gtag.js)</h3>
+                                <p className="text-xs text-muted-foreground">
+                                    Tracking analisis pengunjung website langsung dengan Tag Measurement ID (cth: G-YRNS0SP4P7)
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3 p-4 bg-muted/40 rounded-xl border border-sidebar-border">
+                            <Checkbox
+                                id="ga4_enabled"
+                                checked={data.ga4_enabled}
+                                onCheckedChange={(checked) => setData('ga4_enabled', Boolean(checked))}
+                            />
+                            <div>
+                                <Label htmlFor="ga4_enabled" className="font-semibold cursor-pointer text-sm">
+                                    Aktifkan Google Analytics 4 (GA4)
+                                </Label>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Otomatis menyuntikkan script gtag.js dan mengirim event PageView & Lead ke Google Analytics.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="ga4_id" className="font-semibold text-xs">
+                                GA4 Measurement ID (Google Tag) *
+                            </Label>
+                            <Input
+                                id="ga4_id"
+                                value={data.ga4_id}
+                                onChange={(e) => setData('ga4_id', e.target.value)}
+                                placeholder="Contoh: G-YRNS0SP4P7"
+                                className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Dapatkan Measurement ID dari Google Analytics (Admin -&gt; Data Streams -&gt; Measurement ID).
+                            </p>
+                            <InputError message={errors.ga4_id} />
+                        </div>
+                    </div>
+
+                    {/* SECTION 2: GOOGLE TAG MANAGER (GTM) */}
                     <div className="p-6 rounded-2xl border border-sidebar-border bg-card shadow-sm space-y-5">
                         <div className="flex items-center gap-3 border-b border-sidebar-border pb-4">
                             <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
@@ -105,7 +156,7 @@ export default function TrackingSettings({ settings, status }: Props) {
                         </div>
                     </div>
 
-                    {/* SECTION 2: META PIXEL & CONVERSIONS API (CAPI) */}
+                    {/* SECTION 3: META PIXEL & CONVERSIONS API (CAPI) */}
                     <div className="p-6 rounded-2xl border border-sidebar-border bg-card shadow-sm space-y-5">
                         <div className="flex items-center gap-3 border-b border-sidebar-border pb-4">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -191,4 +242,3 @@ export default function TrackingSettings({ settings, status }: Props) {
         </>
     );
 }
-

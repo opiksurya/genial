@@ -59,6 +59,13 @@ class DatabaseSeeder extends Seeder
         if (!\App\Models\Setting::find('whatsapp_default_message')) {
             \App\Models\Setting::set('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin konsultasi strategi digital marketing');
         }
+        if (!\App\Models\Setting::find('ga4_id')) {
+            \App\Models\Setting::set('ga4_id', 'G-YRNS0SP4P7');
+        }
+        if (!\App\Models\Setting::find('ga4_enabled')) {
+            \App\Models\Setting::set('ga4_enabled', '1');
+        }
+
 
         // Seed Sample ProjectFlow Data if empty
 
