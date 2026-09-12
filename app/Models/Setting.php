@@ -20,8 +20,12 @@ class Setting extends Model
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = static::find($key);
-        return $setting ? $setting->value : $default;
+        try {
+            $setting = static::find($key);
+            return $setting ? $setting->value : $default;
+        } catch (\Throwable $e) {
+            return $default;
+        }
     }
 
     /**

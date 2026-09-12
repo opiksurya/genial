@@ -21,6 +21,8 @@ import {
     Moon
 } from 'lucide-react';
 
+import { useMetaPixel } from '@/hooks/use-meta-pixel';
+
 interface PageProps {
     flash?: {
         success?: string;
@@ -30,6 +32,7 @@ interface PageProps {
 }
 
 export default function Welcome() {
+    useMetaPixel();
     const { flash } = usePage<PageProps>().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light'); // Default Light Mode
