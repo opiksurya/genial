@@ -1,7 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, ShieldCheck, Users } from 'lucide-react';
+import { 
+    LayoutGrid, 
+    ShieldCheck, 
+    Users, 
+    ExternalLink, 
+    Sparkles 
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -34,19 +39,6 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
-
 export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -54,7 +46,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboard()} prefetch className="flex items-center gap-2">
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -62,12 +54,33 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent className="px-2 py-4">
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+            <SidebarFooter className="p-3 space-y-3">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 text-xs space-y-2 group-data-[collapsible=icon]:hidden">
+                    <div className="flex items-center justify-between">
+                        <span className="font-semibold text-foreground flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-primary" />
+                            Genial v1.0
+                        </span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Digital Agency Operations & Lead Management System
+                    </p>
+                    <a
+                        href="/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                    >
+                        <span>Lihat Website Utama</span>
+                        <ExternalLink className="w-3 h-3" />
+                    </a>
+                </div>
+
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
