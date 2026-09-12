@@ -57,6 +57,7 @@ class DatabaseSeeder extends Seeder
             $p1 = \App\Models\Project::create([
                 'name' => 'Website E-Commerce Development',
                 'client' => 'BatikKu Indonesia',
+                'client_logo' => 'https://ui-avatars.com/api/?name=BatikKu+Indonesia&background=2D90CA&color=fff&size=128',
                 'description' => 'Pengembangan website toko online batik premium dengan payment gateway & ekspedisi otomatis.',
                 'category' => 'Website Development',
                 'status' => 'In Progress',
@@ -66,6 +67,7 @@ class DatabaseSeeder extends Seeder
                 'end_date' => now()->endOfMonth(),
                 'manager_id' => $user->id,
             ]);
+
 
             \App\Models\ProjectMember::create(['project_id' => $p1->id, 'user_id' => $user->id, 'role' => 'Project Manager']);
 
@@ -126,6 +128,7 @@ class DatabaseSeeder extends Seeder
             $p2 = \App\Models\Project::create([
                 'name' => 'SEO Optimization & Organic Growth',
                 'client' => 'Skincare Glowing ID',
+                'client_logo' => 'https://ui-avatars.com/api/?name=Skincare+Glowing&background=FAD03D&color=000&size=128',
                 'description' => 'Audit SEO on-page, strategi kata kunci commercial intent, & backlink outreach.',
                 'category' => 'SEO Campaign',
                 'status' => 'Planning',
@@ -135,6 +138,7 @@ class DatabaseSeeder extends Seeder
                 'end_date' => now()->addMonth()->endOfMonth(),
                 'manager_id' => $user->id,
             ]);
+
 
             \App\Models\Task::create([
                 'project_id' => $p2->id,

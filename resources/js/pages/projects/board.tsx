@@ -46,6 +46,7 @@ interface ProjectItem {
     id: number;
     name: string;
     client: string;
+    client_logo?: string;
     category: string;
     status: string;
     priority: string;
@@ -114,8 +115,10 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
     const projectForm = useForm({
         name: '',
         client: '',
+        client_logo: '',
         description: '',
         category: CATEGORIES[0],
+
         start_date: new Date().toISOString().split('T')[0],
         end_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         priority: 'Medium',
@@ -230,11 +233,20 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                                     ))}
                                 </select>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Client: <span className="font-semibold text-foreground">{activeProject?.client || '-'}</span> | Category: <span className="font-semibold text-primary">{activeProject?.category || '-'}</span>
-                            </p>
+                            <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                {activeProject?.client_logo ? (
+                                    <img src={activeProject.client_logo} alt={activeProject.client} className="w-4 h-4 rounded-full object-cover border border-sidebar-border" />
+                                ) : (
+                                    <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] font-extrabold flex items-center justify-center border border-primary/30">
+                                        {activeProject?.client?.charAt(0) || 'C'}
+                                    </div>
+                                )}
+                                <span>Client: <strong className="text-foreground">{activeProject?.client || '-'}</strong></span>
+                                <span>| Category: <strong className="text-primary">{activeProject?.category || '-'}</strong></span>
+                            </div>
                         </div>
                     </div>
+
 
                     <div className="flex items-center gap-2 shrink-0">
                         <button
@@ -459,6 +471,17 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                             </div>
 
                             <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">URL Logo Client (Opsional)</label>
+                                <input 
+                                    type="text" 
+                                    value={projectForm.data.client_logo}
+                                    onChange={(e) => projectForm.setData('client_logo', e.target.value)}
+                                    placeholder="https://example.com/logo-client.png"
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
+                            <div>
                                 <label className="block text-xs font-semibold text-foreground mb-1">Deskripsi Project</label>
                                 <textarea 
                                     rows={3}
@@ -468,6 +491,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                                     className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                                 />
                             </div>
+
 
                             <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">
                                 <button type="button" onClick={() => setIsCreateProjectOpen(false)} className="px-4 py-2 rounded-lg border border-sidebar-border text-xs font-medium text-muted-foreground hover:bg-muted">Batal</button>

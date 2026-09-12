@@ -12,6 +12,7 @@ class Project extends Model
     protected $fillable = [
         'name',
         'client',
+        'client_logo',
         'description',
         'category',
         'status',
@@ -21,6 +22,7 @@ class Project extends Model
         'end_date',
         'manager_id',
     ];
+
 
     protected $casts = [
         'start_date' => 'date',

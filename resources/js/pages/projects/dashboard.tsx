@@ -21,6 +21,7 @@ interface ProjectItem {
     id: number;
     name: string;
     client: string;
+    client_logo?: string;
     category: string;
     status: string;
     priority: string;
@@ -35,6 +36,7 @@ interface ProjectItem {
         avatar?: string;
     };
 }
+
 
 interface DeadlineTask {
     id: number;
@@ -214,8 +216,18 @@ export default function ProjectDashboard({ stats, projects, upcomingDeadlines }:
                                         </div>
 
                                         <h3 className="font-extrabold text-foreground text-base line-clamp-1">{p.name}</h3>
-                                        <p className="text-xs font-medium text-muted-foreground mt-0.5">Client: <span className="text-foreground">{p.client}</span></p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {p.client_logo ? (
+                                                <img src={p.client_logo} alt={p.client} className="w-5 h-5 rounded-full object-cover border border-sidebar-border" />
+                                            ) : (
+                                                <div className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-extrabold flex items-center justify-center border border-primary/30">
+                                                    {p.client.charAt(0)}
+                                                </div>
+                                            )}
+                                            <p className="text-xs font-medium text-muted-foreground">Client: <span className="font-semibold text-foreground">{p.client}</span></p>
+                                        </div>
                                     </div>
+
 
                                     {/* Progress Bar */}
                                     <div className="space-y-1.5">

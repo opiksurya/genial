@@ -56,6 +56,7 @@ class ProjectBoardController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'client' => 'required|string|max:255',
+            'client_logo' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'category' => 'required|string',
             'start_date' => 'required|date',
@@ -70,6 +71,7 @@ class ProjectBoardController extends Controller
         $project = Project::create([
             'name' => $validated['name'],
             'client' => $validated['client'],
+            'client_logo' => $validated['client_logo'] ?? null,
             'description' => $validated['description'] ?? null,
             'category' => $validated['category'],
             'status' => 'Planning',
@@ -79,6 +81,7 @@ class ProjectBoardController extends Controller
             'end_date' => $validated['end_date'],
             'manager_id' => $validated['manager_id'] ?? auth()->id(),
         ]);
+
 
         if (!empty($validated['members'])) {
             foreach ($validated['members'] as $mem) {

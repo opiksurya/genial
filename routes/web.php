@@ -6,8 +6,19 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\MetaCapiController;
 
-Route::inertia('/', 'welcome')->name('home');
+use App\Models\Project;
+
+Route::get('/', function () {
+    $clientProjects = Project::select('id', 'name', 'client', 'client_logo', 'category', 'status')
+        ->latest()
+        ->get();
+
+    return Inertia\Inertia::render('welcome', [
+        'clientProjects' => $clientProjects,
+    ]);
+})->name('home');
 Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('audit.request');
+
 Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name('meta.capi.track');
 
 // Google OAuth Login Routes

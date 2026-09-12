@@ -39,11 +39,13 @@ interface ProjectItem {
     id: number;
     name: string;
     client: string;
+    client_logo?: string;
     category: string;
     start_date: string;
     end_date: string;
     milestones?: MilestoneItem[];
 }
+
 
 interface Props {
     projects: ProjectItem[];
@@ -94,11 +96,20 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                                     ))}
                                 </select>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Monitoring durasi task, milestone deadline, dan hubungan ketergantungan task secara visual.
-                            </p>
+                            <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                {activeProject?.client_logo ? (
+                                    <img src={activeProject.client_logo} alt={activeProject.client} className="w-4 h-4 rounded-full object-cover border border-sidebar-border" />
+                                ) : (
+                                    <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] font-extrabold flex items-center justify-center border border-primary/30">
+                                        {activeProject?.client?.charAt(0) || 'C'}
+                                    </div>
+                                )}
+                                <span>Client: <strong className="text-foreground">{activeProject?.client || '-'}</strong></span>
+                                <span>| Monitoring durasi task, milestone deadline, dan hubungan ketergantungan task secara visual.</span>
+                            </div>
                         </div>
                     </div>
+
 
                     <div className="flex items-center gap-2 shrink-0">
                         <div className="flex items-center p-1 rounded-xl bg-muted border border-sidebar-border text-xs font-semibold">
