@@ -90,6 +90,20 @@ export default function ExpenseManagement({ expenses, incomes, projects, categor
         }).format(val);
     };
 
+    const formatDateDisplay = (dateStr?: string) => {
+        if (!dateStr) return '';
+        const cleanDate = dateStr.split('T')[0];
+        try {
+            const [y, m, d] = cleanDate.split('-');
+            if (y && m && d) {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const mIdx = parseInt(m, 10) - 1;
+                return `${parseInt(d, 10)} ${months[mIdx] || m} ${y}`;
+            }
+        } catch (e) {}
+        return cleanDate;
+    };
+
     const handleOpenCreateModal = () => {
         setEditingExpense(null);
         reset();
@@ -168,10 +182,10 @@ export default function ExpenseManagement({ expenses, incomes, projects, categor
 
                     <button
                         onClick={handleOpenCreateModal}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all shadow-lg shadow-rose-600/20 active:scale-95 self-start md:self-auto"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all shadow-lg shadow-rose-600/20 active:scale-95 self-start md:self-auto shrink-0"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>+ Tambahkan Expense</span>
+                        <span>Tambahkan Expense</span>
                     </button>
                 </div>
 
@@ -242,7 +256,7 @@ export default function ExpenseManagement({ expenses, incomes, projects, categor
                                 ) : (
                                     filteredExpenses.map((exp) => (
                                         <tr key={exp.id} className="hover:bg-muted/30 transition-colors">
-                                            <td className="p-4 font-mono text-muted-foreground">{exp.date}</td>
+                                            <td className="p-4 font-mono text-muted-foreground whitespace-nowrap">{formatDateDisplay(exp.date)}</td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] font-bold">

@@ -103,6 +103,20 @@ const ROLES = [
     'Content Writer',
 ];
 
+const formatDateDisplay = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const cleanDate = dateStr.split('T')[0];
+    try {
+        const [y, m, d] = cleanDate.split('-');
+        if (y && m && d) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const mIdx = parseInt(m, 10) - 1;
+            return `${parseInt(d, 10)} ${months[mIdx] || m} ${y}`;
+        }
+    } catch (e) {}
+    return cleanDate;
+};
+
 export default function ProjectBoard({ projects, activeProject, tasks, users }: Props) {
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
     const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
@@ -347,7 +361,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                                                 {t.due_date && (
                                                     <span className="flex items-center gap-1 text-[10px]">
                                                         <Clock className="w-3 h-3 text-muted-foreground" />
-                                                        <span>{t.due_date}</span>
+                                                        <span className="whitespace-nowrap font-mono">{formatDateDisplay(t.due_date)}</span>
                                                     </span>
                                                 )}
                                             </div>
@@ -644,10 +658,10 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                                 <span className="text-muted-foreground">Prioritas:</span> <strong className="text-foreground">{selectedTask.priority}</strong>
                             </div>
                             <div>
-                                <span className="text-muted-foreground">Start:</span> <strong className="text-foreground">{selectedTask.start_date || '-'}</strong>
+                                <span className="text-muted-foreground">Start:</span> <strong className="text-foreground">{formatDateDisplay(selectedTask.start_date) || '-'}</strong>
                             </div>
                             <div>
-                                <span className="text-muted-foreground">Due:</span> <strong className="text-foreground">{selectedTask.due_date || '-'}</strong> ({selectedTask.duration_days} Hari)
+                                <span className="text-muted-foreground">Due:</span> <strong className="text-foreground">{formatDateDisplay(selectedTask.due_date) || '-'}</strong> ({selectedTask.duration_days} Hari)
                             </div>
                         </div>
 

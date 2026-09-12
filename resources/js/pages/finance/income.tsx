@@ -84,6 +84,20 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
         }).format(val);
     };
 
+    const formatDateDisplay = (dateStr?: string) => {
+        if (!dateStr) return '';
+        const cleanDate = dateStr.split('T')[0];
+        try {
+            const [y, m, d] = cleanDate.split('-');
+            if (y && m && d) {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const mIdx = parseInt(m, 10) - 1;
+                return `${parseInt(d, 10)} ${months[mIdx] || m} ${y}`;
+            }
+        } catch (e) {}
+        return cleanDate;
+    };
+
     const handleOpenCreateModal = () => {
         setEditingIncome(null);
         reset();
@@ -168,10 +182,10 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
 
                     <button
                         onClick={handleOpenCreateModal}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 self-start md:self-auto"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 self-start md:self-auto shrink-0"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>+ Tambahkan Income</span>
+                        <span>Tambahkan Income</span>
                     </button>
                 </div>
 
@@ -245,8 +259,8 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                                 ) : (
                                     filteredIncomes.map((inc) => (
                                         <tr key={inc.id} className="hover:bg-muted/30 transition-colors">
-                                            <td className="p-4 font-mono text-muted-foreground">
-                                                <div>{inc.date}</div>
+                                            <td className="p-4 font-mono text-muted-foreground whitespace-nowrap">
+                                                <div>{formatDateDisplay(inc.date)}</div>
                                                 <div className="text-[10px] text-emerald-500 font-semibold">{inc.invoice_number || '-'}</div>
                                             </td>
                                             <td className="p-4">
