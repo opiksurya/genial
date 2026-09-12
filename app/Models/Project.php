@@ -55,6 +55,16 @@ class Project extends Model
         return $this->hasMany(ProjectCredential::class);
     }
 
+    public function incomes(): HasMany
+    {
+        return $this->hasMany(Income::class);
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
 
     /**
      * Recalculate progress % automatically based on completed tasks.
