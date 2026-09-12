@@ -42,6 +42,10 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'metaPixel' => [
+                'pixel_id' => \App\Models\Setting::get('meta_pixel_id', ''),
+                'enabled' => \App\Models\Setting::get('meta_enabled', '0') === '1',
+            ],
         ];
     }
 }

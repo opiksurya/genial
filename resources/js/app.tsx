@@ -6,6 +6,8 @@ import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 
+import MetaPixelProvider from '@/components/meta-pixel-provider';
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 void createInertiaApp({
@@ -26,7 +28,9 @@ void createInertiaApp({
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>
-                {app}
+                <MetaPixelProvider>
+                    {app}
+                </MetaPixelProvider>
                 <Toaster />
             </TooltipProvider>
         );

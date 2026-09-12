@@ -24,6 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
+
+    Route::get('settings/pixel', [\App\Http\Controllers\Settings\PixelSettingController::class, 'edit'])->name('pixel.edit');
+    Route::put('settings/pixel', [\App\Http\Controllers\Settings\PixelSettingController::class, 'update'])->name('pixel.update');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

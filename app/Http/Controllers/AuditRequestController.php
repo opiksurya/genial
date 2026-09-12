@@ -25,6 +25,24 @@ class AuditRequestController extends Controller
 
         $audit = AuditRequest::create($validated);
 
+        // Send server-side Meta CAPI Lead Event for Audit Form Submit
+        \App\Services\MetaCapiService::sendEvent(
+            'Lead',
+            [
+                'phone' => $audit->whatsapp,
+                'first_name' => $audit->name,
+                'client_ip_address' => $request->ip(),
+                'client_user_agent' => $request->userAgent(),
+                'fbp' => $request->cookie('_fbp'),
+                'fbc' => $request->cookie('_fbc'),
+            ],
+            [
+                'content_name' => 'Audit Form Submission',
+                'business_type' => $audit->business_type,
+            ],
+            $request->header('X-Meta-Event-ID')
+        );
+
         // Format WhatsApp message for instant consultation redirect
         $phone = '6281234567890'; // Agency Official WhatsApp Number
         $message = rawurlencode(

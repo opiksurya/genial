@@ -4,8 +4,11 @@ use App\Http\Controllers\AuditRequestController;
 use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\MetaCapiController;
+
 Route::inertia('/', 'welcome')->name('home');
 Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('audit.request');
+Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name('meta.capi.track');
 
 // Google OAuth Login Routes
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
