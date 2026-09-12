@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditRequest;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+
 
 class AuditRequestController extends Controller
 {
@@ -44,8 +46,9 @@ class AuditRequestController extends Controller
         );
 
         // Format WhatsApp message for instant consultation redirect
-        $phone = '6281234567890'; // Agency Official WhatsApp Number
+        $phone = Setting::get('whatsapp_number', '6281234567890'); // Agency Official WhatsApp Number
         $message = rawurlencode(
+
             "Halo Genial Digital Solution! Saya ingin klaim Audit Digital Gratis untuk bisnis saya.\n\n".
             "*Nama:* {$audit->name}\n".
             "*WhatsApp:* {$audit->whatsapp}\n".

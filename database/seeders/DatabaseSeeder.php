@@ -52,7 +52,16 @@ class DatabaseSeeder extends Seeder
 
         $user->assignRole($superAdminRole);
 
+        // Seed Default Settings
+        if (!\App\Models\Setting::find('whatsapp_number')) {
+            \App\Models\Setting::set('whatsapp_number', '6281234567890');
+        }
+        if (!\App\Models\Setting::find('whatsapp_default_message')) {
+            \App\Models\Setting::set('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin konsultasi strategi digital marketing');
+        }
+
         // Seed Sample ProjectFlow Data if empty
+
         if (\App\Models\Project::count() === 0) {
             $p1 = \App\Models\Project::create([
                 'name' => 'Website E-Commerce Development',

@@ -36,13 +36,23 @@ interface PageProps {
         client_logo?: string;
         category: string;
     }[];
+    whatsappNumber?: string;
+    whatsappDefaultMessage?: string;
     [key: string]: any;
 }
 
 export default function Welcome() {
     useMetaPixel();
     useGtm();
-    const { flash, clientProjects = [] } = usePage<PageProps>().props;
+    const { 
+        flash, 
+        clientProjects = [], 
+        whatsappNumber = '6281234567890',
+        whatsappDefaultMessage = 'Halo Genial Digital Solution, saya ingin konsultasi strategi digital marketing' 
+    } = usePage<PageProps>().props;
+
+    const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappDefaultMessage)}`;
+
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light'); // Default Light Mode
@@ -222,9 +232,10 @@ export default function Welcome() {
 
                             {/* WhatsApp Button */}
                             <a 
-                                href="https://wa.me/6281234567890?text=Halo%20Genial%20Digital%20Solution,%20saya%20ingin%20konsultasi%20strategi%20marketing" 
+                                href={waUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
+
                                 className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-sm ${
                                     isDark 
                                         ? 'text-emerald-400 border-slate-800 bg-[#0c1322] hover:bg-slate-900' 
@@ -317,9 +328,10 @@ export default function Welcome() {
                                     <span className="font-extrabold">Gratis Audit Digital Bisnis Anda</span>
                                 </a>
                                 <a 
-                                    href="https://wa.me/6281234567890?text=Halo%20Genial%20Digital%20Solution,%20saya%20ingin%20konsultasi%20strategi%20pemasaran%20digital"
+                                    href={waUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
+
                                     className={`inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-base font-semibold border transition-all ${
                                         isDark 
                                             ? 'text-slate-200 border-slate-700 bg-[#0c1322] hover:bg-slate-800' 
@@ -1236,7 +1248,7 @@ export default function Welcome() {
                         <div className="flex gap-4">
                             <a href="#services" className="hover:text-[#00A9E7] transition-colors">Layanan</a>
                             <a href="#audit" className="hover:text-[#00A9E7] transition-colors">Audit Gratis</a>
-                            <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors">WhatsApp</a>
+                            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors">WhatsApp</a>
                         </div>
                     </div>
                 </footer>
@@ -1244,9 +1256,10 @@ export default function Welcome() {
 
                 {/* FLOATING WHATSAPP BUTTON */}
                 <a 
-                    href="https://wa.me/6281234567890?text=Halo%20Genial%20Digital%20Solution,%20saya%20ingin%20konsultasi%20strategi%20digital%20marketing"
+                    href={waUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+
                     className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-2xl shadow-emerald-500/40 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
                     title="Konsultasi WhatsApp"
                 >
