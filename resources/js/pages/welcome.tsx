@@ -176,43 +176,44 @@ export default function Welcome() {
                             <a href="#testimonials" className={navText}>Testimoni</a>
                         </nav>
 
-                        {/* Action Buttons & Theme Switcher */}
-                        <div className="hidden md:flex items-center gap-4">
+                        {/* Action Buttons & Theme Switcher (Icon Only) */}
+                        <div className="hidden md:flex items-center gap-3">
                             
                             {/* Theme Toggle Button */}
                             <button
                                 onClick={toggleTheme}
-                                className={`p-2.5 rounded-xl border transition-all flex items-center gap-2 text-xs font-semibold ${
+                                className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 ${
                                     isDark 
                                         ? 'bg-slate-900 border-slate-800 text-amber-400 hover:bg-slate-800' 
                                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
                                 }`}
                                 title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                             >
-                                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
-                                <span>{isDark ? 'Light' : 'Dark'}</span>
+                                {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
                             </button>
 
+                            {/* WhatsApp Button */}
                             <a 
                                 href="https://wa.me/6281234567890?text=Halo%20Genial%20Digital%20Solution,%20saya%20ingin%20konsultasi%20strategi%20marketing" 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all shadow-sm ${
+                                className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-sm ${
                                     isDark 
-                                        ? 'text-slate-200 border-slate-700 bg-slate-900/60 hover:bg-slate-800' 
-                                        : 'text-slate-700 border-slate-300 bg-white hover:bg-slate-100'
+                                        ? 'text-emerald-400 border-slate-700 bg-slate-900/60 hover:bg-slate-800' 
+                                        : 'text-emerald-600 border-slate-200 bg-white hover:bg-slate-100'
                                 }`}
+                                title="Konsultasi WhatsApp"
                             >
-                                <Phone className="w-4 h-4 text-emerald-500" />
-                                <span>WA Konsultasi</span>
+                                <MessageSquare className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
                             </a>
                             
+                            {/* Klaim Audit Button */}
                             <a 
                                 href="#audit" 
-                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 hover:opacity-95 transition-all shadow-lg shadow-blue-500/25 active:scale-95"
+                                className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 hover:opacity-95 transition-all shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95"
+                                title="Klaim Audit Gratis"
                             >
-                                <span>Klaim Audit Gratis</span>
-                                <ArrowRight className="w-4 h-4" />
+                                <Zap className="w-5 h-5 fill-amber-300 text-amber-300" />
                             </a>
                         </div>
 
