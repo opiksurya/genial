@@ -46,6 +46,10 @@ class HandleInertiaRequests extends Middleware
                 'pixel_id' => \App\Models\Setting::get('meta_pixel_id', ''),
                 'enabled' => \App\Models\Setting::get('meta_enabled', '0') === '1',
             ],
+            'gtm' => [
+                'gtm_id' => \App\Models\Setting::get('gtm_id', ''),
+                'enabled' => \App\Models\Setting::get('gtm_enabled', '0') === '1',
+            ],
         ];
     }
 }

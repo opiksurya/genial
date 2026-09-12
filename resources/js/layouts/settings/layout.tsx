@@ -27,7 +27,7 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
-        title: 'Meta Pixel & CAPI',
+        title: 'Tracking & Analytics',
         href: '/settings/pixel',
         icon: null,
     },

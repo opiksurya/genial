@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
+import { useGtm } from '@/hooks/use-gtm';
 
 interface PageProps {
     flash?: {
@@ -33,6 +34,7 @@ interface PageProps {
 
 export default function Welcome() {
     useMetaPixel();
+    useGtm();
     const { flash } = usePage<PageProps>().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light'); // Default Light Mode
@@ -55,6 +57,21 @@ export default function Welcome() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Push GTM DataLayer Lead Event for Audit Form Submit
+        if (typeof window !== 'undefined') {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                event: 'generate_lead',
+                event_category: 'Lead',
+                event_action: 'Audit Form Submit',
+                event_label: 'Free Audit Digital Request',
+                business_type: data.business_type,
+                value: 0.00,
+                currency: 'IDR',
+            });
+        }
+
         post('/audit-request', {
             onSuccess: () => {
                 setFormSubmitted(true);

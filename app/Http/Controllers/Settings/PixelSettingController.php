@@ -21,13 +21,15 @@ class PixelSettingController extends Controller
                 'meta_access_token' => Setting::get('meta_access_token', ''),
                 'meta_test_event_code' => Setting::get('meta_test_event_code', ''),
                 'meta_enabled' => Setting::get('meta_enabled', '0') === '1',
+                'gtm_id' => Setting::get('gtm_id', ''),
+                'gtm_enabled' => Setting::get('gtm_enabled', '0') === '1',
             ],
             'status' => session('status'),
         ]);
     }
 
     /**
-     * Update Meta Pixel & CAPI settings.
+     * Update Meta Pixel, CAPI & GTM settings.
      */
     public function update(Request $request)
     {
@@ -36,6 +38,8 @@ class PixelSettingController extends Controller
             'meta_access_token' => 'nullable|string',
             'meta_test_event_code' => 'nullable|string|max:255',
             'meta_enabled' => 'boolean',
+            'gtm_id' => 'nullable|string|max:255',
+            'gtm_enabled' => 'boolean',
         ]);
 
         Setting::set('meta_pixel_id', $validated['meta_pixel_id'] ?? '');
@@ -43,6 +47,9 @@ class PixelSettingController extends Controller
         Setting::set('meta_test_event_code', $validated['meta_test_event_code'] ?? '');
         Setting::set('meta_enabled', !empty($validated['meta_enabled']) ? '1' : '0');
 
-        return redirect()->route('pixel.edit')->with('status', 'Pengaturan Meta Pixel & CAPI berhasil disimpan.');
+        Setting::set('gtm_id', $validated['gtm_id'] ?? '');
+        Setting::set('gtm_enabled', !empty($validated['gtm_enabled']) ? '1' : '0');
+
+        return redirect()->route('pixel.edit')->with('status', 'Pengaturan Tracking & Analytics (Meta Pixel & GTM) berhasil disimpan.');
     }
 }
