@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Activity, BarChart3, CheckCircle2, Info, MessageSquare, Phone, ExternalLink } from 'lucide-react';
+import SettingsLayout from '@/layouts/settings/layout';
+import { Activity, BarChart3, CheckCircle2 } from 'lucide-react';
 
 type Props = {
     settings: {
@@ -15,8 +16,6 @@ type Props = {
         meta_enabled: boolean;
         gtm_id: string;
         gtm_enabled: boolean;
-        whatsapp_number: string;
-        whatsapp_default_message: string;
     };
     status?: string;
 };
@@ -29,8 +28,6 @@ export default function TrackingSettings({ settings, status }: Props) {
         meta_enabled: settings.meta_enabled || false,
         gtm_id: settings.gtm_id || '',
         gtm_enabled: settings.gtm_enabled || false,
-        whatsapp_number: settings.whatsapp_number || '6281234567890',
-        whatsapp_default_message: settings.whatsapp_default_message || 'Halo Genial Digital Solution, saya ingin konsultasi strategi digital marketing',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -41,7 +38,7 @@ export default function TrackingSettings({ settings, status }: Props) {
     };
 
     return (
-        <>
+        <SettingsLayout>
             <Head title="Tracking & Analytics Settings" />
 
             <div className="space-y-8">
@@ -102,34 +99,22 @@ export default function TrackingSettings({ settings, status }: Props) {
                                 className="font-mono text-sm"
                             />
                             <p className="text-xs text-muted-foreground">
-                                Masukkan ID Container GTM Anda dari dashboard Google Tag Manager (misal: GTM-XXXXXXX).
+                                Dapatkan Container ID dari akun Google Tag Manager Anda.
                             </p>
                             <InputError message={errors.gtm_id} />
                         </div>
-
-                        <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300 space-y-2">
-                            <div className="font-bold flex items-center gap-1.5">
-                                <Info className="w-4 h-4 text-blue-500" />
-                                <span>Otomatisasi DataLayer yang Aktif:</span>
-                            </div>
-                            <ul className="list-disc list-inside space-y-1 text-[11px] text-muted-foreground pl-1">
-                                <li><strong>`page_view`</strong>: Otomatis terdeteksi saat pengunjung masuk ke Home / Landing Page.</li>
-                                <li><strong>`generate_lead` (WhatsApp)</strong>: Otomatis terdeteksi saat pengunjung klik tombol WA (`wa.me` / `whatsapp.com`).</li>
-                                <li><strong>`generate_lead` (Audit Form)</strong>: Otomatis terdeteksi saat pengaju mengisi Form Audit Digital.</li>
-                            </ul>
-                        </div>
                     </div>
 
-                    {/* SECTION 2: META PIXEL & CAPI */}
+                    {/* SECTION 2: META PIXEL & CONVERSIONS API (CAPI) */}
                     <div className="p-6 rounded-2xl border border-sidebar-border bg-card shadow-sm space-y-5">
                         <div className="flex items-center gap-3 border-b border-sidebar-border pb-4">
-                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                                 <Activity className="w-5 h-5" />
                             </div>
                             <div>
                                 <h3 className="text-base font-bold text-foreground">Meta Pixel & Conversions API (CAPI)</h3>
                                 <p className="text-xs text-muted-foreground">
-                                    Pelacakan otomatis event 'Lead' Meta Ads Manager untuk WhatsApp & Form Audit
+                                    Tracking iklan Facebook/Instagram Ads hybrid browser & server-side
                                 </p>
                             </div>
                         </div>
@@ -142,16 +127,18 @@ export default function TrackingSettings({ settings, status }: Props) {
                             />
                             <div>
                                 <Label htmlFor="meta_enabled" className="font-semibold cursor-pointer text-sm">
-                                    Aktifkan Meta Pixel & Conversions API (CAPI)
+                                    Aktifkan Meta Pixel & Conversions API
                                 </Label>
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                    Lacak otomatis event 'Lead' browser pixel & server CAPI ke Meta Ads Manager.
+                                    Mengirimkan event PageView dan Lead ke Meta Event Manager secara real-time.
                                 </p>
                             </div>
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="meta_pixel_id" className="font-semibold text-xs">Meta Pixel ID</Label>
+                            <Label htmlFor="meta_pixel_id" className="font-semibold text-xs">
+                                Meta Pixel ID *
+                            </Label>
                             <Input
                                 id="meta_pixel_id"
                                 value={data.meta_pixel_id}
@@ -159,21 +146,18 @@ export default function TrackingSettings({ settings, status }: Props) {
                                 placeholder="Contoh: 123456789012345"
                                 className="font-mono text-sm"
                             />
-                            <p className="text-xs text-muted-foreground">
-                                Dapatkan Pixel ID dari Meta Events Manager &gt; Data Sources.
-                            </p>
                             <InputError message={errors.meta_pixel_id} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="meta_access_token" className="font-semibold text-xs">Conversions API (CAPI) Access Token</Label>
-                            <Input
+                            <Label htmlFor="meta_access_token" className="font-semibold text-xs">Conversions API Token (CAPI)</Label>
+                            <textarea
                                 id="meta_access_token"
-                                type="password"
+                                rows={3}
                                 value={data.meta_access_token}
                                 onChange={(e) => setData('meta_access_token', e.target.value)}
                                 placeholder="EAAG..."
-                                className="font-mono text-sm"
+                                className="w-full rounded-md border border-input bg-background p-2.5 font-mono text-xs shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
                             />
                             <p className="text-xs text-muted-foreground">
                                 System User Access Token untuk server-side event tracking (CAPI) dengan keakuratan tinggi.
@@ -197,85 +181,13 @@ export default function TrackingSettings({ settings, status }: Props) {
                         </div>
                     </div>
 
-                    {/* SECTION 3: KONTAK WHATSAPP & KONSULTASI AGENCY */}
-                    <div className="p-6 rounded-2xl border border-sidebar-border bg-card shadow-sm space-y-5">
-                        <div className="flex items-center justify-between border-b border-sidebar-border pb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                                    <MessageSquare className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-base font-bold text-foreground">Kontak WhatsApp & Konsultasi Website</h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        Atur nomor WhatsApp resmi dan teks pesan otomatis untuk tombol CTA di seluruh website
-                                    </p>
-                                </div>
-                            </div>
-
-                            {data.whatsapp_number && (
-                                <a
-                                    href={`https://wa.me/${data.whatsapp_number}?text=${encodeURIComponent(data.whatsapp_default_message)}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-500/20 transition-all"
-                                >
-                                    <span>Tes Link WhatsApp</span>
-                                    <ExternalLink className="w-3.5 h-3.5" />
-                                </a>
-                            )}
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="whatsapp_number" className="font-semibold text-xs">
-                                Nomor WhatsApp Resmi Agency *
-                            </Label>
-                            <Input
-                                id="whatsapp_number"
-                                value={data.whatsapp_number}
-                                onChange={(e) => setData('whatsapp_number', e.target.value)}
-                                placeholder="Contoh: 081234567890 atau 6281234567890"
-                                className="font-mono text-sm"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Nomor ini akan digunakan untuk tombol chat WhatsApp di Header, Hero CTA, Footer, dan redirect form Audit Digital. Format 08... akan otomatis dikonversi ke kode negara 62...
-                            </p>
-                            <InputError message={errors.whatsapp_number} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="whatsapp_default_message" className="font-semibold text-xs">
-                                Pesan Konsultasi Otomatis (Default Greeting)
-                            </Label>
-                            <textarea
-                                id="whatsapp_default_message"
-                                rows={2}
-                                value={data.whatsapp_default_message}
-                                onChange={(e) => setData('whatsapp_default_message', e.target.value)}
-                                placeholder="Halo Genial Digital Solution, saya ingin konsultasi strategi digital marketing..."
-                                className="w-full rounded-md border border-input bg-background p-2.5 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring font-sans"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Teks yang otomatis terisi saat pengunjung mengklik tombol WhatsApp di website.
-                            </p>
-                            <InputError message={errors.whatsapp_default_message} />
-                        </div>
+                    <div className="flex items-center justify-end">
+                        <Button type="submit" disabled={processing} className="px-6 py-2.5 font-bold shadow-md">
+                            Simpan Pengaturan Tracking
+                        </Button>
                     </div>
-
-                    <Button type="submit" disabled={processing} className="px-6 py-2.5 font-bold shadow-md">
-                        Simpan Semua Pengaturan
-                    </Button>
-
                 </form>
             </div>
-        </>
+        </SettingsLayout>
     );
 }
-
-TrackingSettings.layout = {
-    breadcrumbs: [
-        {
-            title: 'Tracking & Analytics Settings',
-            href: '/settings/pixel',
-        },
-    ],
-};
