@@ -153,17 +153,11 @@ export default function Welcome() {
                         
                         {/* Logo */}
                         <a href="#" className="flex items-center gap-3 group">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-400 p-[2px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
-                                <div className={`w-full h-full ${isDark ? 'bg-slate-950' : 'bg-white'} rounded-[10px] flex items-center justify-center`}>
-                                    <Sparkles className="w-5 h-5 text-blue-500" />
-                                </div>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className={`font-bold text-lg tracking-tight ${textPrimary} flex items-center gap-1`}>
-                                    Genial <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 font-extrabold">Digital</span>
-                                </span>
-                                <span className={`text-[10px] tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'} uppercase font-semibold`}>Solution</span>
-                            </div>
+                            <img 
+                                src="/logo.png" 
+                                alt="Genial Digital Solution" 
+                                className="h-10 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                            />
                         </a>
 
                         {/* Desktop Nav Items */}
@@ -1139,10 +1133,7 @@ export default function Welcome() {
                 <footer className={`border-t ${isDark ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-white'} py-12 px-4 sm:px-6 lg:px-8`}>
                     <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">
-                                G
-                            </div>
-                            <span className={`font-bold ${textPrimary}`}>Genial Digital Solution</span>
+                            <img src="/logo.png" alt="Genial Digital Solution" className="h-8 w-auto object-contain" />
                         </div>
                         <div>
                             © 2026 Genial Digital Solution. All rights reserved. High Conversion Digital Agency.
