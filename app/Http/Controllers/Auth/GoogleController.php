@@ -31,26 +31,23 @@ class GoogleController extends Controller
                 ->first();
 
             if (! $user) {
-                $user = User::create([
-                    'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? 'Google User',
-                    'email' => $googleUser->getEmail(),
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                    'password' => bcrypt(Str::random(24)),
-                    'email_verified_at' => now(),
-                ]);
-            } else {
-                $user->update([
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Email ('.$googleUser->getEmail().') belum terdaftar di sistem. Pendaftaran akun hanya dapat dilakukan oleh Super Admin.',
                 ]);
             }
+
+            $user->update([
+                'google_id' => $googleUser->getId(),
+                'avatar' => $googleUser->getAvatar(),
+            ]);
 
             Auth::login($user, true);
 
             return redirect()->intended('/dashboard');
         } catch (\Exception $e) {
-            return redirect()->route('login')->with('error', 'Gagal login menggunakan Google: '.$e->getMessage());
+            return redirect()->route('login')->withErrors([
+                'email' => 'Gagal login menggunakan Google: '.$e->getMessage(),
+            ]);
         }
     }
 }
