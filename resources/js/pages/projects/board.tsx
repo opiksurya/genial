@@ -17,8 +17,12 @@ import {
     Send,
     Tag,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    ShieldCheck,
+    KeyRound
 } from 'lucide-react';
+import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
+
 
 interface TaskItem {
     id: number;
@@ -50,7 +54,9 @@ interface ProjectItem {
     end_date: string;
     manager?: { id: number; name: string };
     members?: { id: number; user: { name: string }; role: string }[];
+    credentials?: any[];
 }
+
 
 interface UserItem {
     id: number;
@@ -99,8 +105,10 @@ const ROLES = [
 export default function ProjectBoard({ projects, activeProject, tasks, users }: Props) {
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
     const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+    const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
     const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
+
 
     // Project Form
     const projectForm = useForm({
@@ -230,6 +238,15 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
 
                     <div className="flex items-center gap-2 shrink-0">
                         <button
+                            onClick={() => setIsCredentialsModalOpen(true)}
+                            disabled={!activeProject}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-all shadow-xs disabled:opacity-50"
+                        >
+                            <ShieldCheck className="w-4 h-4 text-primary" />
+                            <span>Vault Akses ({activeProject?.credentials?.length || 0})</span>
+                        </button>
+
+                        <button
                             onClick={() => setIsCreateProjectOpen(true)}
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-sidebar-border bg-card hover:bg-muted text-foreground transition-all shadow-sm"
                         >
@@ -249,6 +266,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                             <span>Tambah Task</span>
                         </button>
                     </div>
+
                 </div>
 
                 {/* 5 Column Horizontal Kanban Grid */}
@@ -649,6 +667,12 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                 </div>
             )}
 
+            <ProjectCredentialsModal
+                project={activeProject || null}
+                isOpen={isCredentialsModalOpen}
+                onClose={() => setIsCredentialsModalOpen(false)}
+            />
         </AppLayout>
     );
 }
+

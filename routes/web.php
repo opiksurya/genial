@@ -22,6 +22,7 @@ use App\Http\Controllers\ProjectFlow\ProjectBoardController;
 use App\Http\Controllers\ProjectFlow\ProjectTimelineController;
 use App\Http\Controllers\ProjectFlow\ProjectTeamController;
 use App\Http\Controllers\ProjectFlow\ProjectReportController;
+use App\Http\Controllers\ProjectFlow\ProjectCredentialController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -37,10 +38,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('tasks/{task}/status', [ProjectBoardController::class, 'updateTaskStatus'])->name('tasks.updateStatus');
         Route::post('tasks/{task}/comments', [ProjectBoardController::class, 'storeComment'])->name('tasks.comments.store');
         Route::put('checklists/{checklist}/toggle', [ProjectBoardController::class, 'toggleChecklist'])->name('checklists.toggle');
+        Route::post('{project}/credentials', [ProjectCredentialController::class, 'store'])->name('credentials.store');
+        Route::put('credentials/{credential}', [ProjectCredentialController::class, 'update'])->name('credentials.update');
+        Route::delete('credentials/{credential}', [ProjectCredentialController::class, 'destroy'])->name('credentials.destroy');
         Route::get('timeline', [ProjectTimelineController::class, 'index'])->name('timeline');
         Route::get('team', [ProjectTeamController::class, 'index'])->name('team');
         Route::get('reports', [ProjectReportController::class, 'index'])->name('reports');
     });
 });
+
 
 require __DIR__.'/settings.php';

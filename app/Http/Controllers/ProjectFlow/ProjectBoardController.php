@@ -19,15 +19,16 @@ class ProjectBoardController extends Controller
     {
         $selectedProjectId = $request->query('project_id');
 
-        $projects = Project::with(['manager', 'members.user'])->latest()->get();
+        $projects = Project::with(['manager', 'members.user', 'credentials'])->latest()->get();
 
         if (!$selectedProjectId && $projects->isNotEmpty()) {
             $selectedProjectId = $projects->first()->id;
         }
 
         $activeProject = $selectedProjectId
-            ? Project::with(['manager', 'members.user', 'milestones'])->find($selectedProjectId)
+            ? Project::with(['manager', 'members.user', 'milestones', 'credentials'])->find($selectedProjectId)
             : null;
+
 
         $tasks = $activeProject
             ? Task::with(['assignee', 'comments.user', 'checklists', 'dependencies'])

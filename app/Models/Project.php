@@ -48,6 +48,12 @@ class Project extends Model
         return $this->hasMany(Milestone::class);
     }
 
+    public function credentials(): HasMany
+    {
+        return $this->hasMany(ProjectCredential::class);
+    }
+
+
     /**
      * Recalculate progress % automatically based on completed tasks.
      */

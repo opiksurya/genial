@@ -150,8 +150,65 @@ class DatabaseSeeder extends Seeder
                 'order' => 1,
             ]);
 
+            // Seed Sample Project Credentials
+            \App\Models\ProjectCredential::create([
+                'project_id' => $p1->id,
+                'platform' => 'Shopee',
+                'title' => 'Official Store Shopee BatikKu',
+                'username_email' => 'shopee_batikku_official',
+                'password' => 'ShopeeBatik123!',
+                'url_link' => 'https://seller.shopee.co.id',
+                'notes' => 'OTP via WhatsApp Admin CS 081234567890',
+                'created_by' => $user->id,
+            ]);
+
+            \App\Models\ProjectCredential::create([
+                'project_id' => $p1->id,
+                'platform' => 'Meta Ads',
+                'title' => 'Business Manager Meta Ads',
+                'username_email' => 'ads@batikku.co.id',
+                'password' => 'MetaAds2026Secure#',
+                'url_link' => 'https://business.facebook.com',
+                'notes' => 'Pixel ID: 8871239912 | BM ID: 90212384',
+                'created_by' => $user->id,
+            ]);
+
+            \App\Models\ProjectCredential::create([
+                'project_id' => $p1->id,
+                'platform' => 'Website / cPanel',
+                'title' => 'cPanel Hosting Server Utama',
+                'username_email' => 'admin_batikku',
+                'password' => 'NiagaHoster!2026Pass',
+                'url_link' => 'https://cpanel.batikku.co.id:2083',
+                'notes' => 'DB Name: batikku_prod, DB User: batikku_user',
+                'created_by' => $user->id,
+            ]);
+
+            \App\Models\ProjectCredential::create([
+                'project_id' => $p2->id,
+                'platform' => 'TikTok Ads',
+                'title' => 'TikTok Ads Manager Official',
+                'username_email' => 'ads.skincareglowing@gmail.com',
+                'password' => 'TikTokAds#2026Val',
+                'url_link' => 'https://ads.tiktok.com',
+                'notes' => 'Business Center ID: 7781293812',
+                'created_by' => $user->id,
+            ]);
+
+            \App\Models\ProjectCredential::create([
+                'project_id' => $p2->id,
+                'platform' => 'Google Ads',
+                'title' => 'Google Ads & Search Console',
+                'username_email' => 'seo.skincareglowing@gmail.com',
+                'password' => 'GoogleSEO2026!',
+                'url_link' => 'https://ads.google.com',
+                'notes' => 'Customer ID: 412-990-1283',
+                'created_by' => $user->id,
+            ]);
+
             $p1->recalculateProgress();
             $p2->recalculateProgress();
         }
     }
 }
+
