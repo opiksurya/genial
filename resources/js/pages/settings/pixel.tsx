@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import SettingsLayout from '@/layouts/settings/layout';
 import { Activity, BarChart3, CheckCircle2 } from 'lucide-react';
 
 type Props = {
@@ -38,8 +37,9 @@ export default function TrackingSettings({ settings, status }: Props) {
     };
 
     return (
-        <SettingsLayout>
+        <>
             <Head title="Tracking & Analytics Settings" />
+
 
             <div className="space-y-8">
                 <Heading
@@ -188,6 +188,7 @@ export default function TrackingSettings({ settings, status }: Props) {
                     </div>
                 </form>
             </div>
-        </SettingsLayout>
+        </>
     );
 }
+
