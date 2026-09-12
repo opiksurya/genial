@@ -4,7 +4,12 @@ import {
     ShieldCheck, 
     Users, 
     ExternalLink, 
-    Sparkles 
+    Sparkles,
+    FolderKanban,
+    Kanban,
+    Clock,
+    UserCheck,
+    BarChart3
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -26,6 +31,38 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'ProjectFlow',
+        href: '/projects/dashboard',
+        icon: FolderKanban,
+        items: [
+            {
+                title: 'Dashboard Project',
+                href: '/projects/dashboard',
+                icon: LayoutGrid,
+            },
+            {
+                title: 'Project Board',
+                href: '/projects/board',
+                icon: Kanban,
+            },
+            {
+                title: 'Timeline View',
+                href: '/projects/timeline',
+                icon: Clock,
+            },
+            {
+                title: 'Team Management',
+                href: '/projects/team',
+                icon: UserCheck,
+            },
+            {
+                title: 'Reports',
+                href: '/projects/reports',
+                icon: BarChart3,
+            },
+        ],
     },
     {
         title: 'User Management',
