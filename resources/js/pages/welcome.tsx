@@ -499,49 +499,31 @@ export default function Welcome() {
                             Dipercaya Oleh Brand & Klien Digital Marketing Agency
                         </p>
 
-                        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 lg:gap-16">
+                        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-14 lg:gap-20">
                             {clientProjects && clientProjects.length > 0 ? (
                                 clientProjects.map((p) => (
                                     <div
                                         key={p.id}
-                                        className="flex items-center justify-center transition-all hover:scale-105"
+                                        className="flex items-center justify-center transition-all duration-300 hover:scale-110"
                                         title={p.client}
                                     >
-                                        {p.client_logo ? (
-                                            <img
-                                                src={p.client_logo}
-                                                alt={p.client}
-                                                className="h-10 sm:h-12 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-80 hover:opacity-100 transition-all duration-300"
-                                            />
-                                        ) : (
-                                            <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D90CA] to-[#05BAF0] text-white font-extrabold text-base flex items-center justify-center shadow-xs">
-                                                    {p.client.charAt(0)}
-                                                </div>
-                                                <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{p.client}</span>
-                                            </div>
-                                        )}
+                                        <img
+                                            src={p.client_logo || `/images/brands/${p.id % 3 === 0 ? 'genial.svg' : p.id % 2 === 0 ? 'batikku.svg' : 'skincare.svg'}`}
+                                            alt={p.client}
+                                            className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300"
+                                        />
                                     </div>
                                 ))
                             ) : (
                                 <>
-                                    <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
-                                        <div className="w-10 h-10 rounded-xl bg-[#2D90CA] text-white font-extrabold text-base flex items-center justify-center shadow-xs">
-                                            G
-                                        </div>
-                                        <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Genial</span>
+                                    <div className="flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                        <img src="/images/brands/genial.svg" alt="Genial" className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300" />
                                     </div>
-                                    <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
-                                        <div className="w-10 h-10 rounded-xl bg-[#2D90CA] text-white font-extrabold text-base flex items-center justify-center shadow-xs">
-                                            B
-                                        </div>
-                                        <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>BatikKu Indonesia</span>
+                                    <div className="flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                        <img src="/images/brands/batikku.svg" alt="BatikKu" className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300" />
                                     </div>
-                                    <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
-                                        <div className="w-10 h-10 rounded-xl bg-[#FAD03D] text-slate-900 font-extrabold text-base flex items-center justify-center shadow-xs">
-                                            S
-                                        </div>
-                                        <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Skincare Glowing ID</span>
+                                    <div className="flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                        <img src="/images/brands/skincare.svg" alt="GlowingID" className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300" />
                                     </div>
                                 </>
                             )}
