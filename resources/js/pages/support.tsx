@@ -42,7 +42,7 @@ export default function SupportPage({
     const [activeTab, setActiveTab] = useState<'all' | 'creative' | 'erp'>('all');
 
     // Initialize GTM tracking
-    const { trackEvent } = useGtm();
+    useGtm();
 
     // System theme sync
     useEffect(() => {
@@ -63,12 +63,15 @@ export default function SupportPage({
     const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappDefaultMessage)}`;
 
     const handleWaClick = (sourceLocation: string) => {
-        trackEvent({
-            event: 'generate_lead',
-            category: 'Engagement',
-            action: 'Click WhatsApp',
-            label: `Support Page - ${sourceLocation}`,
-        });
+        if (typeof window !== 'undefined') {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                event: 'generate_lead',
+                category: 'Engagement',
+                action: 'Click WhatsApp',
+                label: `Support Page - ${sourceLocation}`,
+            });
+        }
     };
 
     // Styling constants
