@@ -61,6 +61,17 @@ class ProjectBoardController extends Controller
             'client' => 'required|string|max:255',
             'client_logo' => 'nullable',
             'client_logo_file' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:3072',
+            'slug' => 'nullable|string|max:255',
+            'article_title' => 'nullable|string|max:255',
+            'article_subtitle' => 'nullable|string',
+            'article_content' => 'nullable|string',
+            'initial_revenue' => 'nullable|string|max:255',
+            'current_revenue' => 'nullable|string|max:255',
+            'initial_roas' => 'nullable|string|max:255',
+            'current_roas' => 'nullable|string|max:255',
+            'growth_percentage' => 'nullable|string|max:255',
+            'collaboration_story' => 'nullable|string',
+            'key_results' => 'nullable|string',
             'description' => 'nullable|string',
             'category' => 'required|string',
             'start_date' => 'required|date',
@@ -85,10 +96,21 @@ class ProjectBoardController extends Controller
             $logoUrl = $request->input('client_logo');
         }
 
-        $project = Project::create([
+        $projectData = [
             'name' => $validated['name'],
             'client' => $validated['client'],
             'client_logo' => $logoUrl,
+            'slug' => $validated['slug'] ?? null,
+            'article_title' => $validated['article_title'] ?? null,
+            'article_subtitle' => $validated['article_subtitle'] ?? null,
+            'article_content' => $validated['article_content'] ?? null,
+            'initial_revenue' => $validated['initial_revenue'] ?? null,
+            'current_revenue' => $validated['current_revenue'] ?? null,
+            'initial_roas' => $validated['initial_roas'] ?? null,
+            'current_roas' => $validated['current_roas'] ?? null,
+            'growth_percentage' => $validated['growth_percentage'] ?? null,
+            'collaboration_story' => $validated['collaboration_story'] ?? null,
+            'key_results' => $validated['key_results'] ?? null,
             'description' => $validated['description'] ?? null,
             'category' => $validated['category'],
             'status' => 'Planning',
@@ -99,7 +121,9 @@ class ProjectBoardController extends Controller
             'manager_id' => $validated['manager_id'] ?? auth()->id(),
             'agent_id' => $validated['agent_id'] ?? null,
             'is_show_on_home' => $validated['is_show_on_home'] ?? true,
-        ]);
+        ];
+
+        $project = Project::create($projectData);
 
 
         if (!empty($validated['members'])) {

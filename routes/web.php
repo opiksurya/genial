@@ -12,7 +12,7 @@ use App\Models\Setting;
 
 Route::get('/', function () {
     $clientProjects = Project::where('is_show_on_home', true)
-        ->select('id', 'name', 'client', 'client_logo', 'category', 'status')
+        ->select('id', 'name', 'client', 'client_logo', 'slug', 'category', 'status', 'article_title', 'growth_percentage')
         ->latest()
         ->get();
 
@@ -22,6 +22,16 @@ Route::get('/', function () {
         'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin konsultasi strategi digital marketing'),
     ]);
 })->name('home');
+
+Route::get('/case-study/{slug}', function ($slug) {
+    $project = Project::where('slug', $slug)->firstOrFail();
+
+    return Inertia\Inertia::render('case-study', [
+        'project' => $project,
+        'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya tertarik dengan studi kasus ' . $project->client . ' dan ingin berdiskusi lebih lanjut'),
+    ]);
+})->name('case-study.show');
 
 Route::get('/activation', function () {
     return Inertia\Inertia::render('activation', [

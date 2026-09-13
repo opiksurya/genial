@@ -57,6 +57,17 @@ interface ProjectItem {
     name: string;
     client: string;
     client_logo?: string;
+    slug?: string;
+    article_title?: string;
+    article_subtitle?: string;
+    article_content?: string;
+    initial_revenue?: string;
+    current_revenue?: string;
+    initial_roas?: string;
+    current_roas?: string;
+    growth_percentage?: string;
+    collaboration_story?: string;
+    key_results?: string;
     category: string;
     status: string;
     priority: string;
@@ -144,6 +155,17 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         client: string;
         client_logo: string;
         client_logo_file: File | null;
+        slug: string;
+        article_title: string;
+        article_subtitle: string;
+        article_content: string;
+        initial_revenue: string;
+        current_revenue: string;
+        initial_roas: string;
+        current_roas: string;
+        growth_percentage: string;
+        collaboration_story: string;
+        key_results: string;
         description: string;
         category: string;
         start_date: string;
@@ -157,9 +179,19 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         client: '',
         client_logo: '',
         client_logo_file: null,
+        slug: '',
+        article_title: '',
+        article_subtitle: '',
+        article_content: '',
+        initial_revenue: '',
+        current_revenue: '',
+        initial_roas: '',
+        current_roas: '',
+        growth_percentage: '',
+        collaboration_story: '',
+        key_results: '',
         description: '',
         category: CATEGORIES[0],
-
         start_date: new Date().toISOString().split('T')[0],
         end_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         priority: 'Medium',
@@ -175,6 +207,17 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         client: string;
         client_logo: string;
         client_logo_file: File | null;
+        slug: string;
+        article_title: string;
+        article_subtitle: string;
+        article_content: string;
+        initial_revenue: string;
+        current_revenue: string;
+        initial_roas: string;
+        current_roas: string;
+        growth_percentage: string;
+        collaboration_story: string;
+        key_results: string;
         description: string;
         category: string;
         start_date: string;
@@ -189,6 +232,17 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         client: '',
         client_logo: '',
         client_logo_file: null,
+        slug: '',
+        article_title: '',
+        article_subtitle: '',
+        article_content: '',
+        initial_revenue: '',
+        current_revenue: '',
+        initial_roas: '',
+        current_roas: '',
+        growth_percentage: '',
+        collaboration_story: '',
+        key_results: '',
         description: '',
         category: CATEGORIES[0],
         start_date: '',
@@ -207,6 +261,17 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
             client: p.client,
             client_logo: p.client_logo || '',
             client_logo_file: null,
+            slug: p.slug || '',
+            article_title: p.article_title || '',
+            article_subtitle: p.article_subtitle || '',
+            article_content: p.article_content || '',
+            initial_revenue: p.initial_revenue || '',
+            current_revenue: p.current_revenue || '',
+            initial_roas: p.initial_roas || '',
+            current_roas: p.current_roas || '',
+            growth_percentage: p.growth_percentage || '',
+            collaboration_story: p.collaboration_story || '',
+            key_results: p.key_results || '',
             description: p.description || '',
             category: p.category || CATEGORIES[0],
             start_date: p.start_date ? p.start_date.split('T')[0] : '',
@@ -843,9 +908,139 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                 />
                             </div>
 
+                            {/* CASE STUDY & ARTICLE SECTION FOR PUBLIC SHOWCASE */}
+                            <div className="pt-3 border-t border-sidebar-border space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Pengaturan Artikel Case Study Client</h4>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-foreground mb-1">URL Slug (Unik)</label>
+                                        <input 
+                                            type="text"
+                                            value={editProjectForm.data.slug}
+                                            onChange={(e) => editProjectForm.setData('slug', e.target.value)}
+                                            placeholder="contoh: glowing-id"
+                                            className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                        <span className="text-[10px] text-muted-foreground mt-0.5 block">URL: /case-study/{editProjectForm.data.slug || 'slug-client'}</span>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-foreground mb-1">Peningkatan Growth (% Badge)</label>
+                                        <input 
+                                            type="text"
+                                            value={editProjectForm.data.growth_percentage}
+                                            onChange={(e) => editProjectForm.setData('growth_percentage', e.target.value)}
+                                            placeholder="contoh: +380%"
+                                            className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Judul Artikel Studi Kasus</label>
+                                    <input 
+                                        type="text"
+                                        value={editProjectForm.data.article_title}
+                                        onChange={(e) => editProjectForm.setData('article_title', e.target.value)}
+                                        placeholder="Judul utama artikel case study..."
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Subtitle / Ringkasan Singkat Artikel</label>
+                                    <textarea 
+                                        rows={2}
+                                        value={editProjectForm.data.article_subtitle}
+                                        onChange={(e) => editProjectForm.setData('article_subtitle', e.target.value)}
+                                        placeholder="Ringkasan singkat cerita sukses..."
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 p-3 rounded-xl bg-muted/30 border border-sidebar-border">
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1">Omset Awal (Sebelum Genial)</label>
+                                        <input 
+                                            type="text"
+                                            value={editProjectForm.data.initial_revenue}
+                                            onChange={(e) => editProjectForm.setData('initial_revenue', e.target.value)}
+                                            placeholder="contoh: Rp 25.000.000 / bln"
+                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-emerald-400 mb-1">Omset Sekarang (Post Genial)</label>
+                                        <input 
+                                            type="text"
+                                            value={editProjectForm.data.current_revenue}
+                                            onChange={(e) => editProjectForm.setData('current_revenue', e.target.value)}
+                                            placeholder="contoh: Rp 142.500.000 / bln"
+                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-bold text-emerald-400"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1">ROAS / Performa Awal</label>
+                                        <input 
+                                            type="text"
+                                            value={editProjectForm.data.initial_roas}
+                                            onChange={(e) => editProjectForm.setData('initial_roas', e.target.value)}
+                                            placeholder="contoh: 1.8x"
+                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-sky-400 mb-1">ROAS Iklan Sekarang</label>
+                                        <input 
+                                            type="text"
+                                            value={editProjectForm.data.current_roas}
+                                            onChange={(e) => editProjectForm.setData('current_roas', e.target.value)}
+                                            placeholder="contoh: 8.4x"
+                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-bold text-sky-400"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Perjalanan Awal Bertemu Genial (Cerita Latar Belakang)</label>
+                                    <textarea 
+                                        rows={3}
+                                        value={editProjectForm.data.collaboration_story}
+                                        onChange={(e) => editProjectForm.setData('collaboration_story', e.target.value)}
+                                        placeholder="Tuliskan bagaimana pertama kali bertemu dan kendala awal yang dihadapi..."
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Narasi Utama & Eksekusi Strategi Artikel</label>
+                                    <textarea 
+                                        rows={4}
+                                        value={editProjectForm.data.article_content}
+                                        onChange={(e) => editProjectForm.setData('article_content', e.target.value)}
+                                        placeholder="Isi lengkap naskah artikel studi kasus..."
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Poin Hasil / Perubahan Utama (Pisahkan dengan baris baru)</label>
+                                    <textarea 
+                                        rows={3}
+                                        value={editProjectForm.data.key_results}
+                                        onChange={(e) => editProjectForm.setData('key_results', e.target.value)}
+                                        placeholder="- Peningkatan omset 4x lipat&#10;- ROAS mencapai 8.4x&#10;- Zero selisih stok barang"
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-mono text-[11px]"
+                                    />
+                                </div>
+                            </div>
+
                             <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">
                                 <button type="button" onClick={() => setEditingProject(null)} className="px-4 py-2 rounded-lg border border-sidebar-border text-xs font-medium text-muted-foreground hover:bg-muted">Batal</button>
-                                <button type="submit" disabled={editProjectForm.processing} className="px-4 py-2 rounded-lg bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50">Simpan Perubahan</button>
+                                <button type="submit" disabled={editProjectForm.processing} className="px-4 py-2 rounded-lg bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50">Simpan Perubahan & Artikel</button>
                             </div>
                         </form>
                     </div>

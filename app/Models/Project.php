@@ -13,6 +13,17 @@ class Project extends Model
         'name',
         'client',
         'client_logo',
+        'slug',
+        'article_title',
+        'article_subtitle',
+        'article_content',
+        'initial_revenue',
+        'current_revenue',
+        'initial_roas',
+        'current_roas',
+        'growth_percentage',
+        'collaboration_story',
+        'key_results',
         'description',
         'category',
         'status',
@@ -24,6 +35,25 @@ class Project extends Model
         'agent_id',
         'is_show_on_home',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($project) {
+            if (empty($project->slug) && !empty($project->client)) {
+                $baseSlug = \Illuminate\Support\Str::slug($project->client);
+                $slug = $baseSlug;
+                $count = 1;
+
+                while (static::where('slug', $slug)->where('id', '!=', $project->id ?? 0)->exists()) {
+                    $slug = $baseSlug . '-' . $count++;
+                }
+
+                $project->slug = $slug;
+            }
+        });
+    }
 
     protected $casts = [
         'start_date' => 'date',

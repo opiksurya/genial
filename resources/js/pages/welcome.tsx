@@ -498,32 +498,40 @@ export default function Welcome() {
                             Dipercaya Oleh Brand & Klien Digital Marketing Agency
                         </p>
 
-                        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-14 lg:gap-20">
+                        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 lg:gap-14">
                             {clientProjects && clientProjects.length > 0 ? (
                                 clientProjects.map((p) => (
-                                    <div
+                                    <a
                                         key={p.id}
-                                        className="flex items-center justify-center transition-all duration-300 hover:scale-110"
-                                        title={p.client}
+                                        href={p.slug ? `/case-study/${p.slug}` : '#'}
+                                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border transition-all duration-300 group hover:scale-105 shadow-sm ${
+                                            isDark 
+                                                ? 'bg-[#0c1322]/80 border-slate-800/80 hover:border-[#00A9E7]/60 hover:bg-[#0c1322]' 
+                                                : 'bg-white border-slate-200/80 hover:border-[#00A9E7]/60 hover:shadow-md'
+                                        }`}
+                                        title={`Lihat Artikel & Studi Kasus ${p.client}`}
                                     >
                                         <img
                                             src={p.client_logo || `/images/brands/${p.id % 3 === 0 ? 'genial.svg' : p.id % 2 === 0 ? 'batikku.svg' : 'skincare.svg'}`}
                                             alt={p.client}
-                                            className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300"
+                                            className="h-8 sm:h-10 w-auto max-w-[140px] object-contain transition-all duration-300"
                                         />
-                                    </div>
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00A9E7] bg-[#00A9E7]/10 px-2 py-0.5 rounded-full border border-[#00A9E7]/20 group-hover:bg-[#00A9E7] group-hover:text-slate-900 transition-all">
+                                            <span>Lihat Story</span>
+                                            <ArrowUpRight className="w-3 h-3" />
+                                        </span>
+                                    </a>
                                 ))
                             ) : (
                                 <>
-                                    <div className="flex items-center justify-center transition-all duration-300 hover:scale-110">
-                                        <img src="/images/brands/genial.svg" alt="Genial" className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300" />
-                                    </div>
-                                    <div className="flex items-center justify-center transition-all duration-300 hover:scale-110">
-                                        <img src="/images/brands/batikku.svg" alt="BatikKu" className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300" />
-                                    </div>
-                                    <div className="flex items-center justify-center transition-all duration-300 hover:scale-110">
-                                        <img src="/images/brands/skincare.svg" alt="GlowingID" className="h-9 sm:h-11 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-75 hover:opacity-100 transition-all duration-300" />
-                                    </div>
+                                    <a href="/case-study/batikku" className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border bg-white border-slate-200 hover:scale-105 transition-all">
+                                        <img src="/images/brands/batikku.svg" alt="BatikKu" className="h-9 w-auto object-contain" />
+                                        <span className="text-[11px] font-bold text-[#00A9E7]">Lihat Story →</span>
+                                    </a>
+                                    <a href="/case-study/glowing-id" className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border bg-white border-slate-200 hover:scale-105 transition-all">
+                                        <img src="/images/brands/skincare.svg" alt="GlowingID" className="h-9 w-auto object-contain" />
+                                        <span className="text-[11px] font-bold text-[#00A9E7]">Lihat Story →</span>
+                                    </a>
                                 </>
                             )}
                         </div>
