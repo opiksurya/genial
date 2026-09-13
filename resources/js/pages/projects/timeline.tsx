@@ -295,14 +295,18 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
 
                                                         {isInRange && (
                                                             <div 
-                                                                className={`h-7 flex items-center justify-center text-[10px] font-bold text-white shadow-sm transition-all relative z-10 ${roundingClass} ${
+                                                                className={`h-7 flex items-center justify-start text-[10px] font-bold text-white shadow-sm transition-all relative z-10 ${roundingClass} ${
                                                                     task.status === 'DONE' ? 'bg-emerald-500' :
                                                                     task.status === 'IN_PROGRESS' ? 'bg-amber-500' :
                                                                     task.priority === 'Urgent' ? 'bg-rose-500' : 'bg-primary'
                                                                 }`}
                                                                 title={`${task.title} (${task.start_date} - ${task.due_date})`}
                                                             >
-                                                                {isStart && <span className="truncate px-2">{task.title || task.status}</span>}
+                                                                {isStart && (
+                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 whitespace-nowrap z-30 text-white font-bold text-[10px] pointer-events-none drop-shadow-sm">
+                                                                        {task.title} <span className="opacity-80 font-mono text-[9px]">({task.duration_days}h)</span>
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </td>
