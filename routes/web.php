@@ -11,7 +11,8 @@ use App\Models\Project;
 use App\Models\Setting;
 
 Route::get('/', function () {
-    $clientProjects = Project::select('id', 'name', 'client', 'client_logo', 'category', 'status')
+    $clientProjects = Project::where('is_show_on_home', true)
+        ->select('id', 'name', 'client', 'client_logo', 'category', 'status')
         ->latest()
         ->get();
 
@@ -56,6 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('dashboard', [ProjectDashboardController::class, 'index'])->name('dashboard');
         Route::get('board', [ProjectBoardController::class, 'index'])->name('board');
         Route::post('store', [ProjectBoardController::class, 'storeProject'])->name('store');
+        Route::put('{project}/toggle-home-visibility', [ProjectBoardController::class, 'toggleHomeVisibility'])->name('toggleHomeVisibility');
         Route::post('tasks', [ProjectBoardController::class, 'storeTask'])->name('tasks.store');
         Route::put('tasks/{task}/status', [ProjectBoardController::class, 'updateTaskStatus'])->name('tasks.updateStatus');
         Route::post('tasks/{task}/comments', [ProjectBoardController::class, 'storeComment'])->name('tasks.comments.store');

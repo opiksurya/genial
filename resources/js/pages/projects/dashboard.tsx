@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { 
@@ -14,7 +14,9 @@ import {
     Sparkles,
     Briefcase,
     ChevronRight,
-    AlertTriangle
+    AlertTriangle,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 
 interface ProjectItem {
@@ -29,6 +31,7 @@ interface ProjectItem {
     start_date: string;
     end_date: string;
     is_overdue: boolean;
+    is_show_on_home?: boolean;
     tasks_count: number;
     completed_tasks_count: number;
     manager?: {
@@ -76,7 +79,25 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const formatDateDisplay = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    const cleanDate = dateStr.split('T')[0];
+    try {
+        const [y, m, d] = cleanDate.split('-');
+        if (y && m && d) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const mIdx = parseInt(m, 10) - 1;
+            return `${parseInt(d, 10)} ${months[mIdx] || m} ${y}`;
+        }
+    } catch (e) {}
+    return cleanDate;
+};
+
 export default function ProjectDashboard({ stats, projects, upcomingDeadlines }: Props) {
+    const handleToggleHomeVisibility = (projectId: number) => {
+        router.put(`/projects/${projectId}/toggle-home-visibility`, {}, { preserveScroll: true });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="ProjectFlow Dashboard" />
@@ -205,14 +226,38 @@ export default function ProjectDashboard({ stats, projects, upcomingDeadlines }:
                                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/20">
                                                 {p.category}
                                             </span>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                                p.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
-                                                p.is_overdue ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' :
-                                                p.status === 'In Progress' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                                                'bg-slate-500/10 text-slate-500 border border-slate-500/20'
-                                            }`}>
-                                                {p.is_overdue ? 'Overdue' : p.status}
-                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleToggleHomeVisibility(p.id)}
+                                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+                                                        p.is_show_on_home
+                                                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20'
+                                                            : 'bg-slate-500/10 text-slate-500 border-slate-500/20 hover:bg-slate-500/20'
+                                                    }`}
+                                                    title={p.is_show_on_home ? 'Tampil di Home Page (Klik untuk sembunyikan)' : 'Sembunyi dari Home Page (Klik untuk tampilkan)'}
+                                                >
+                                                    {p.is_show_on_home ? (
+                                                        <>
+                                                            <Eye className="w-3 h-3 text-emerald-500" />
+                                                            <span>Home Page</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <EyeOff className="w-3 h-3 text-slate-400" />
+                                                            <span>Hidden</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                                    p.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                                                    p.is_overdue ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' :
+                                                    p.status === 'In Progress' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
+                                                    'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                                                }`}>
+                                                    {p.is_overdue ? 'Overdue' : p.status}
+                                                </span>
+                                            </div>
                                         </div>
 
                                         <h3 className="font-extrabold text-foreground text-base line-clamp-1">{p.name}</h3>
@@ -275,7 +320,7 @@ export default function ProjectDashboard({ stats, projects, upcomingDeadlines }:
                                         <div key={task.id} className="p-3.5 rounded-xl border border-sidebar-border bg-muted/30 space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                                                    Due: {task.due_date}
+                                                    Due: {formatDateDisplay(task.due_date)}
                                                 </span>
                                                 <span className="text-[10px] font-bold text-muted-foreground">
                                                     {task.project?.client}

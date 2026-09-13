@@ -63,6 +63,7 @@ class ProjectBoardController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'priority' => 'required|string',
             'manager_id' => 'nullable|exists:users,id',
+            'is_show_on_home' => 'nullable|boolean',
             'members' => 'nullable|array',
             'members.*.user_id' => 'required|exists:users,id',
             'members.*.role' => 'required|string',
@@ -80,6 +81,7 @@ class ProjectBoardController extends Controller
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'manager_id' => $validated['manager_id'] ?? auth()->id(),
+            'is_show_on_home' => $validated['is_show_on_home'] ?? true,
         ]);
 
 
@@ -177,5 +179,15 @@ class ProjectBoardController extends Controller
         ]);
 
         return redirect()->back();
+    }
+
+    public function toggleHomeVisibility(Project $project)
+    {
+        $project->update([
+            'is_show_on_home' => !$project->is_show_on_home,
+        ]);
+
+        $statusText = $project->is_show_on_home ? 'ditampilkan di' : 'disembunyikan dari';
+        return redirect()->back()->with('success', 'Project "' . $project->name . '" berhasil ' . $statusText . ' Home Page!');
     }
 }

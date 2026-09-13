@@ -19,7 +19,9 @@ import {
     AlertCircle,
     CheckCircle2,
     ShieldCheck,
-    KeyRound
+    KeyRound,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
 
@@ -53,6 +55,7 @@ interface ProjectItem {
     progress: number;
     start_date: string;
     end_date: string;
+    is_show_on_home?: boolean;
     manager?: { id: number; name: string };
     members?: { id: number; user: { name: string }; role: string }[];
     credentials?: any[];
@@ -137,7 +140,12 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
         end_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         priority: 'Medium',
         manager_id: users[0]?.id || '',
+        is_show_on_home: true,
     });
+
+    const handleToggleHomeVisibility = (projectId: number) => {
+        router.put(`/projects/${projectId}/toggle-home-visibility`, {}, { preserveScroll: true });
+    };
 
     // Task Form
     const taskForm = useForm({
@@ -263,6 +271,30 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
 
 
                     <div className="flex items-center gap-2 shrink-0">
+                        {activeProject && (
+                            <button
+                                onClick={() => handleToggleHomeVisibility(activeProject.id)}
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shadow-xs ${
+                                    activeProject.is_show_on_home
+                                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
+                                        : 'border-slate-500/30 bg-slate-500/10 text-slate-500 hover:bg-slate-500/20'
+                                }`}
+                                title={activeProject.is_show_on_home ? 'Klik untuk sembunyikan dari Home Page' : 'Klik untuk tampilkan di Home Page'}
+                            >
+                                {activeProject.is_show_on_home ? (
+                                    <>
+                                        <Eye className="w-4 h-4 text-emerald-500" />
+                                        <span>Tampil di Home: Ya</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <EyeOff className="w-4 h-4 text-slate-400" />
+                                        <span>Tampil di Home: Tidak</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+
                         <button
                             onClick={() => setIsCredentialsModalOpen(true)}
                             disabled={!activeProject}
@@ -504,6 +536,20 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                                     placeholder="Rincian scope of work project..."
                                     className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                                 />
+                            </div>
+
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-sidebar-border">
+                                <input 
+                                    type="checkbox" 
+                                    id="is_show_on_home"
+                                    checked={projectForm.data.is_show_on_home}
+                                    onChange={(e) => projectForm.setData('is_show_on_home', e.target.checked)}
+                                    className="w-4 h-4 rounded text-primary focus:ring-primary border-sidebar-border cursor-pointer"
+                                />
+                                <label htmlFor="is_show_on_home" className="text-xs font-semibold text-foreground cursor-pointer select-none">
+                                    Tampilkan di Halaman Utama (Home Page)
+                                    <span className="block text-[11px] font-normal text-muted-foreground">Klien ini akan muncul di banner showcase halaman depan.</span>
+                                </label>
                             </div>
 
 

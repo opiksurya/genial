@@ -21,13 +21,14 @@ class Project extends Model
         'start_date',
         'end_date',
         'manager_id',
+        'is_show_on_home',
     ];
-
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'progress' => 'integer',
+        'is_show_on_home' => 'boolean',
     ];
 
     public function manager(): BelongsTo
