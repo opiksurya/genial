@@ -82,7 +82,8 @@ export default function HowWeWorkPage({
     const funnelStages = [
         {
             id: 'tofu',
-            stageName: 'TOFU (Top of Funnel)',
+            stageName: 'TOFU',
+            shortTitle: 'Brand Awareness & Cold Traffic',
             title: '1. Brand Awareness & Cold Traffic Reach',
             badgeColor: 'bg-[#2D90CA]/20 text-[#2D90CA] border-[#2D90CA]/40',
             icon: Eye,
@@ -110,7 +111,8 @@ export default function HowWeWorkPage({
         },
         {
             id: 'mofu',
-            stageName: 'MOFU (Middle of Funnel)',
+            stageName: 'MOFU',
+            shortTitle: 'Demand & Consideration',
             title: '2. Demand Generation & Consideration',
             badgeColor: 'bg-[#00A9E7]/20 text-[#00A9E7] border-[#00A9E7]/40',
             icon: Users,
@@ -138,7 +140,8 @@ export default function HowWeWorkPage({
         },
         {
             id: 'bofu',
-            stageName: 'BOFU (Bottom of Funnel)',
+            stageName: 'BOFU',
+            shortTitle: 'Precision Retargeting & Sales',
             title: '3. Conversion & Precision Retargeting',
             badgeColor: 'bg-[#FAD03D]/20 text-[#FAD03D] border-[#FAD03D]/40',
             icon: Flame,
@@ -166,7 +169,8 @@ export default function HowWeWorkPage({
         },
         {
             id: 'retention',
-            stageName: 'RETENTION (Post-Purchase)',
+            stageName: 'RETENTION',
+            shortTitle: 'Repeat Order & Loyalty',
             title: '4. Repeat Buyer & Lifetime Value (LTV) Expansion',
             badgeColor: 'bg-[#05BAF0]/20 text-[#05BAF0] border-[#05BAF0]/40',
             icon: Repeat,
@@ -341,11 +345,15 @@ export default function HowWeWorkPage({
                     </p>
 
                     {/* Funnel Diagram Quick Selector Bar */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-10">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-10">
                         {funnelStages.map((stage) => (
                             <button
                                 key={stage.id}
-                                onClick={() => setActiveFunnelStage(stage.id as any)}
+                                onClick={() => {
+                                    setActiveFunnelStage(stage.id as any);
+                                    const el = document.getElementById(stage.id);
+                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                }}
                                 className={`p-4 rounded-2xl border text-left transition-all ${
                                     activeFunnelStage === stage.id
                                         ? 'bg-gradient-to-r from-[#2D90CA]/20 to-[#00A9E7]/20 border-[#00A9E7] shadow-lg shadow-[#00A9E7]/15 scale-105'
@@ -353,9 +361,11 @@ export default function HowWeWorkPage({
                                 }`}
                             >
                                 <span className={`inline-block text-[10px] font-extrabold px-2.5 py-0.5 rounded-md border mb-2 ${stage.badgeColor}`}>
-                                    {stage.stageName.split(' ')[0]}
+                                    {stage.stageName}
                                 </span>
-                                <h3 className="text-xs font-bold line-clamp-1">{stage.title.split('. ')[1]}</h3>
+                                <h3 className="text-xs sm:text-sm font-extrabold leading-snug whitespace-normal break-words text-foreground">
+                                    {stage.shortTitle}
+                                </h3>
                             </button>
                         ))}
                     </div>
