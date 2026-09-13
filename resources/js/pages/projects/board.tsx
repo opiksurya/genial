@@ -44,6 +44,12 @@ interface TaskItem {
     checklists?: { id: number; title: string; is_completed: boolean }[];
 }
 
+interface AgentItem {
+    id: number;
+    name: string;
+    commission_rate: number;
+}
+
 interface ProjectItem {
     id: number;
     name: string;
@@ -57,6 +63,7 @@ interface ProjectItem {
     end_date: string;
     is_show_on_home?: boolean;
     manager?: { id: number; name: string };
+    agent?: AgentItem;
     members?: { id: number; user: { name: string }; role: string }[];
     credentials?: any[];
 }
@@ -73,6 +80,7 @@ interface Props {
     activeProject?: ProjectItem;
     tasks: TaskItem[];
     users: UserItem[];
+    agents?: AgentItem[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -120,7 +128,7 @@ const formatDateDisplay = (dateStr?: string) => {
     return cleanDate;
 };
 
-export default function ProjectBoard({ projects, activeProject, tasks, users }: Props) {
+export default function ProjectBoard({ projects, activeProject, tasks, users, agents = [] }: Props) {
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
     const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
     const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
@@ -140,6 +148,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
         end_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         priority: 'Medium',
         manager_id: users[0]?.id || '',
+        agent_id: '',
         is_show_on_home: true,
     });
 
@@ -514,6 +523,22 @@ export default function ProjectBoard({ projects, activeProject, tasks, users }: 
                                         className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Agent / Referrer (Optional)</label>
+                                <select 
+                                    value={projectForm.data.agent_id}
+                                    onChange={(e) => projectForm.setData('agent_id', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-purple-500/30 bg-purple-500/5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                >
+                                    <option value="">-- Tanpa Agent (No Agent) --</option>
+                                    {agents.map((ag) => (
+                                        <option key={ag.id} value={ag.id}>
+                                            {ag.name} (Komisi {ag.commission_rate}%)
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>

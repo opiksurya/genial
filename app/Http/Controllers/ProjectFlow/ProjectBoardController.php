@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ProjectFlow;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agent;
 use App\Models\Project;
 use App\Models\ProjectMember;
 use App\Models\Task;
@@ -19,14 +20,14 @@ class ProjectBoardController extends Controller
     {
         $selectedProjectId = $request->query('project_id');
 
-        $projects = Project::with(['manager', 'members.user', 'credentials'])->latest()->get();
+        $projects = Project::with(['manager', 'members.user', 'credentials', 'agent'])->latest()->get();
 
         if (!$selectedProjectId && $projects->isNotEmpty()) {
             $selectedProjectId = $projects->first()->id;
         }
 
         $activeProject = $selectedProjectId
-            ? Project::with(['manager', 'members.user', 'milestones', 'credentials'])->find($selectedProjectId)
+            ? Project::with(['manager', 'members.user', 'milestones', 'credentials', 'agent'])->find($selectedProjectId)
             : null;
 
 
@@ -42,12 +43,14 @@ class ProjectBoardController extends Controller
             : collect([]);
 
         $users = User::select('id', 'name', 'email', 'avatar')->get();
+        $agents = Agent::where('status', 'active')->select('id', 'name', 'commission_rate')->get();
 
         return Inertia::render('projects/board', [
             'projects' => $projects,
             'activeProject' => $activeProject,
             'tasks' => $tasks,
             'users' => $users,
+            'agents' => $agents,
         ]);
     }
 
@@ -63,6 +66,7 @@ class ProjectBoardController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'priority' => 'required|string',
             'manager_id' => 'nullable|exists:users,id',
+            'agent_id' => 'nullable|exists:agents,id',
             'is_show_on_home' => 'nullable|boolean',
             'members' => 'nullable|array',
             'members.*.user_id' => 'required|exists:users,id',
@@ -81,6 +85,7 @@ class ProjectBoardController extends Controller
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'manager_id' => $validated['manager_id'] ?? auth()->id(),
+            'agent_id' => $validated['agent_id'] ?? null,
             'is_show_on_home' => $validated['is_show_on_home'] ?? true,
         ]);
 
