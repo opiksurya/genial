@@ -113,6 +113,11 @@ const mainNavItems: NavItem[] = [
         ],
     },
     {
+        title: 'Agent Portal & Komisi',
+        href: '/finance/agents',
+        icon: UserCheck,
+    },
+    {
         title: 'User Management',
         href: '/users',
         icon: Users,

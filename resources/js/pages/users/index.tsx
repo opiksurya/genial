@@ -308,6 +308,15 @@ export default function UsersIndex({ users, roles }: Props) {
                                             {/* Actions */}
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    {u.roles.includes('Agent') && (
+                                                        <a
+                                                            href="/finance/agents"
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-bold transition-all shadow-sm"
+                                                            title="Buka Agent Portal & Fee Komisi"
+                                                        >
+                                                            <span>Portal Agent ↗</span>
+                                                        </a>
+                                                    )}
                                                     <button
                                                         onClick={() => handleEditOpen(u)}
                                                         className="p-2 rounded-xl border border-sidebar-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all shadow-sm"
