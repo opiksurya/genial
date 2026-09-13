@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { 
@@ -8,12 +8,7 @@ import {
     Flag, 
     Layers, 
     User, 
-    ChevronLeft, 
-    ChevronRight, 
-    ZoomIn, 
-    ZoomOut,
-    CheckCircle2,
-    ArrowRight
+    CheckCircle2
 } from 'lucide-react';
 
 interface TaskItem {
@@ -46,6 +41,14 @@ interface ProjectItem {
     milestones?: MilestoneItem[];
 }
 
+interface WeekItem {
+    id: string;
+    label: string;
+    sublabel: string;
+    startDate: string;
+    endDate: string;
+    isCurrentWeek: boolean;
+}
 
 interface Props {
     projects: ProjectItem[];
@@ -66,12 +69,51 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
         router.get('/projects/timeline', { project_id: id }, { preserveState: true });
     };
 
-    // Calculate calendar days list for current project month
-    const daysInTimeline = Array.from({ length: 30 }, (_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - 5 + i);
-        return d.toISOString().split('T')[0];
-    });
+    // Calculate 30 calendar days list for 'day' scale
+    const daysInTimeline = useMemo(() => {
+        return Array.from({ length: 30 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - 5 + i);
+            return d.toISOString().split('T')[0];
+        });
+    }, []);
+
+    // Calculate 8 weeks list for 'week' scale
+    const weeksInTimeline = useMemo(() => {
+        const weeks: WeekItem[] = [];
+        const today = new Date(todayDate || Date.now());
+        
+        // Find Monday of 2 weeks ago
+        const startMonday = new Date(today);
+        const dayOfWeek = startMonday.getDay();
+        const diffToMonday = startMonday.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        startMonday.setDate(diffToMonday - 14); // 2 weeks back
+
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        for (let i = 0; i < 8; i++) {
+            const wStart = new Date(startMonday);
+            wStart.setDate(wStart.getDate() + (i * 7));
+            
+            const wEnd = new Date(wStart);
+            wEnd.setDate(wEnd.getDate() + 6);
+
+            const startStr = wStart.toISOString().split('T')[0];
+            const endStr = wEnd.toISOString().split('T')[0];
+
+            const isCurrentWeek = todayDate >= startStr && todayDate <= endStr;
+
+            weeks.push({
+                id: `W${i + 1}`,
+                label: `Minggu ${i + 1}`,
+                sublabel: `${wStart.getDate()} ${months[wStart.getMonth()]} - ${wEnd.getDate()} ${months[wEnd.getMonth()]}`,
+                startDate: startStr,
+                endDate: endStr,
+                isCurrentWeek,
+            });
+        }
+        return weeks;
+    }, [todayDate]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -110,20 +152,27 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                         </div>
                     </div>
 
-
                     <div className="flex items-center gap-2 shrink-0">
                         <div className="flex items-center p-1 rounded-xl bg-muted border border-sidebar-border text-xs font-semibold">
                             <button
                                 onClick={() => setZoomLevel('day')}
-                                className={`px-3 py-1 rounded-lg transition-all ${zoomLevel === 'day' ? 'bg-card text-foreground shadow-sm font-bold' : 'text-muted-foreground'}`}
+                                className={`px-3 py-1.5 rounded-lg transition-all ${
+                                    zoomLevel === 'day' 
+                                        ? 'bg-primary text-white shadow-md font-bold' 
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
                             >
-                                Skala Harian
+                                Skala Harian (30 Hari)
                             </button>
                             <button
                                 onClick={() => setZoomLevel('week')}
-                                className={`px-3 py-1 rounded-lg transition-all ${zoomLevel === 'week' ? 'bg-card text-foreground shadow-sm font-bold' : 'text-muted-foreground'}`}
+                                className={`px-3 py-1.5 rounded-lg transition-all ${
+                                    zoomLevel === 'week' 
+                                        ? 'bg-primary text-white shadow-md font-bold' 
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
                             >
-                                Skala Mingguan
+                                Skala Mingguan (8 Minggu)
                             </button>
                         </div>
                     </div>
@@ -153,27 +202,42 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                     <div className="overflow-x-auto flex-1">
                         <table className="w-full text-left text-xs border-collapse">
                             
-                            {/* Calendar Header */}
+                            {/* Calendar Header: DAY vs WEEK Scale */}
                             <thead className="bg-muted/60 text-muted-foreground font-bold uppercase tracking-wider border-b border-sidebar-border sticky top-0 z-10">
                                 <tr>
                                     <th className="px-4 py-3 min-w-[260px] border-r border-sidebar-border sticky left-0 bg-muted/90 backdrop-blur z-20">
                                         Task & Assignee
                                     </th>
-                                    {daysInTimeline.map((dateStr) => {
-                                        const isToday = dateStr === todayDate;
-                                        const dayNum = dateStr.split('-')[2];
-                                        const monthStr = dateStr.split('-')[1];
-                                        return (
+
+                                    {zoomLevel === 'day' ? (
+                                        daysInTimeline.map((dateStr) => {
+                                            const isToday = dateStr === todayDate;
+                                            const dayNum = dateStr.split('-')[2];
+                                            const monthStr = dateStr.split('-')[1];
+                                            return (
+                                                <th 
+                                                    key={dateStr}
+                                                    className={`px-2 py-2 text-center min-w-[45px] border-r border-sidebar-border/50 text-[10px] ${
+                                                        isToday ? 'bg-primary/20 text-primary font-extrabold' : ''
+                                                    }`}
+                                                >
+                                                    <div>{dayNum}/{monthStr}</div>
+                                                </th>
+                                            );
+                                        })
+                                    ) : (
+                                        weeksInTimeline.map((w) => (
                                             <th 
-                                                key={dateStr}
-                                                className={`px-2 py-2 text-center min-w-[45px] border-r border-sidebar-border/50 text-[10px] ${
-                                                    isToday ? 'bg-primary/20 text-primary font-extrabold' : ''
+                                                key={w.id}
+                                                className={`px-3 py-2 text-center min-w-[140px] border-r border-sidebar-border/50 ${
+                                                    w.isCurrentWeek ? 'bg-primary/20 text-primary font-extrabold' : ''
                                                 }`}
                                             >
-                                                <div>{dayNum}/{monthStr}</div>
+                                                <div className="text-xs font-bold">{w.label}</div>
+                                                <div className="text-[10px] font-normal text-muted-foreground lowercase mt-0.5">{w.sublabel}</div>
                                             </th>
-                                        );
-                                    })}
+                                        ))
+                                    )}
                                 </tr>
                             </thead>
 
@@ -198,11 +262,10 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                                                 </div>
                                             </td>
 
-                                            {/* Gantt Bar Grid */}
-                                            {daysInTimeline.map((dateStr) => {
+                                            {/* DAY SCALE GRID */}
+                                            {zoomLevel === 'day' && daysInTimeline.map((dateStr) => {
                                                 const isToday = dateStr === todayDate;
                                                 const isStart = dateStr === taskStart;
-                                                const isDue = dateStr === taskDue;
                                                 const isInRange = dateStr >= taskStart && dateStr <= taskDue;
 
                                                 return (
@@ -213,7 +276,7 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                                                         }`}
                                                     >
                                                         {isToday && (
-                                                            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-primary/40 pointer-events-none z-10" title="Today Indicator" />
+                                                            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-primary/40 pointer-events-none z-10" title="Hari Ini" />
                                                         )}
 
                                                         {isInRange && (
@@ -226,6 +289,35 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                                                                 title={`${task.title} (${task.start_date} - ${task.due_date})`}
                                                             >
                                                                 {isStart && <span className="truncate px-1">{task.status}</span>}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+
+                                            {/* WEEK SCALE GRID */}
+                                            {zoomLevel === 'week' && weeksInTimeline.map((w) => {
+                                                // Task overlaps with this week if weekStart <= taskDue AND weekEnd >= taskStart
+                                                const isOverlapping = w.startDate <= taskDue && w.endDate >= taskStart;
+
+                                                return (
+                                                    <td 
+                                                        key={w.id}
+                                                        className={`px-1 py-2 border-r border-sidebar-border/30 relative text-center ${
+                                                            w.isCurrentWeek ? 'bg-primary/5' : ''
+                                                        }`}
+                                                    >
+                                                        {isOverlapping && (
+                                                            <div 
+                                                                className={`h-7 rounded-lg px-2 flex items-center justify-between text-[10px] font-bold text-white shadow-sm transition-all ${
+                                                                    task.status === 'DONE' ? 'bg-emerald-500' :
+                                                                    task.status === 'IN_PROGRESS' ? 'bg-amber-500' :
+                                                                    task.priority === 'Urgent' ? 'bg-rose-500' : 'bg-primary'
+                                                                }`}
+                                                                title={`${task.title} (${task.start_date} - ${task.due_date})`}
+                                                            >
+                                                                <span className="truncate">{task.title}</span>
+                                                                <span className="text-[9px] opacity-90 font-mono shrink-0 ml-1">({task.duration_days}h)</span>
                                                             </div>
                                                         )}
                                                     </td>
