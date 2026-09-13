@@ -8,12 +8,13 @@ interface TiltedCardProps {
 
 export function TiltedCard({
     children,
-    maxDegree = 12,
+    maxDegree = 15,
     className = '',
 }: TiltedCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const [rotateX, setRotateX] = useState(0);
     const [rotateY, setRotateY] = useState(0);
+    const [isHovered, setIsHovered] = useState(false);
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!cardRef.current) return;
@@ -33,16 +34,18 @@ export function TiltedCard({
     const handleMouseLeave = () => {
         setRotateX(0);
         setRotateY(0);
+        setIsHovered(false);
     };
 
     return (
         <div
             ref={cardRef}
             onMouseMove={handleMouseMove}
+            onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={handleMouseLeave}
-            className={`transition-transform duration-200 ease-out ${className}`}
+            className={`transition-transform duration-150 ease-out cursor-pointer ${className}`}
             style={{
-                transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+                transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(${isHovered ? 1.02 : 1}, ${isHovered ? 1.02 : 1}, 1)`,
                 transformStyle: 'preserve-3d',
             }}
         >

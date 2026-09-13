@@ -11,7 +11,7 @@ interface BlurTextProps {
 
 export function BlurText({
     text,
-    delay = 150,
+    delay = 100,
     className = '',
     animateBy = 'words',
     direction = 'top',
@@ -30,17 +30,17 @@ export function BlurText({
 
     const itemVariants = {
         hidden: {
-            filter: 'blur(10px)',
+            filter: 'blur(12px)',
             opacity: 0,
-            y: direction === 'top' ? -20 : 20,
+            y: direction === 'top' ? -30 : 30,
         },
         visible: {
             filter: 'blur(0px)',
             opacity: 1,
             y: 0,
             transition: {
-                duration: 0.5,
-                ease: 'easeOut',
+                duration: 0.6,
+                ease: [0.25, 0.4, 0.25, 1],
             },
         },
     };
@@ -50,7 +50,8 @@ export function BlurText({
             className={`inline-flex flex-wrap ${className}`}
             variants={containerVariants}
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
         >
             {elements.map((el, i) => (
                 <motion.span

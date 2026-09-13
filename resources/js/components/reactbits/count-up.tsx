@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface CountUpProps {
     to: number;
@@ -20,17 +20,37 @@ export function CountUp({
     className = '',
 }: CountUpProps) {
     const [count, setCount] = useState(from);
+    const [isVisible, setIsVisible] = useState(false);
+    const elementRef = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.2 }
+        );
+
+        if (elementRef.current) {
+            observer.observe(elementRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (!isVisible) return;
+
         let startTime: number | null = null;
         let animationFrame: number;
 
         const updateCount = (timestamp: number) => {
             if (!startTime) startTime = timestamp;
             const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
-            
-            // EaseOutQuad formula
-            const easeProgress = 1 - (1 - progress) * (1 - progress);
+            const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
             const current = from + (to - from) * easeProgress;
             
             setCount(current);
@@ -43,10 +63,10 @@ export function CountUp({
         animationFrame = requestAnimationFrame(updateCount);
 
         return () => cancelAnimationFrame(animationFrame);
-    }, [to, from, duration]);
+    }, [isVisible, to, from, duration]);
 
     return (
-        <span className={className}>
+        <span ref={elementRef} className={className}>
             {prefix}
             {count.toFixed(decimals)}
             {suffix}
