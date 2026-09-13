@@ -290,110 +290,114 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
             <div className="flex h-full flex-1 flex-col gap-6 p-4 sm:p-6 overflow-hidden">
                 
                 {/* Board Header & Controls */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <Kanban className="w-7 h-7 text-primary" />
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-xl font-extrabold text-foreground">Kanban Board</h1>
-                                
-                                {/* Project Selector Dropdown */}
+                <div className="flex flex-col gap-4 bg-card p-4 rounded-2xl border border-sidebar-border shadow-xs">
+                    {/* Top Row: Title, Project Selector & Main Action Buttons */}
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <Kanban className="w-7 h-7 text-primary shrink-0" />
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h1 className="text-xl font-extrabold text-foreground tracking-tight">Kanban Board</h1>
                                 <select
                                     value={activeProject?.id || ''}
                                     onChange={(e) => handleProjectChange(Number(e.target.value))}
-                                    className="px-3 py-1.5 rounded-lg border border-sidebar-border bg-card text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                                    className="px-3 py-1.5 rounded-xl border border-sidebar-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
                                 >
                                     {projects.map((p) => (
                                         <option key={p.id} value={p.id}>{p.name} ({p.client})</option>
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                                {activeProject?.client_logo ? (
-                                    <img src={activeProject.client_logo} alt={activeProject.client} className="w-4 h-4 rounded-full object-cover border border-sidebar-border" />
-                                ) : (
-                                    <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] font-extrabold flex items-center justify-center border border-primary/30">
-                                        {activeProject?.client?.charAt(0) || 'C'}
-                                    </div>
-                                )}
-                                <span>Client: <strong className="text-foreground">{activeProject?.client || '-'}</strong></span>
-                                <span>| Category: <strong className="text-primary">{activeProject?.category || '-'}</strong></span>
-                                {activeProject?.agent && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold text-[11px]">
-                                        <UserCheck className="w-3 h-3" />
-                                        Agent: {activeProject.agent.name}
-                                    </span>
-                                )}
-                            </div>
+                        </div>
+
+                        {/* Primary Action Buttons */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                                onClick={() => setIsCreateProjectOpen(true)}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-sidebar-border bg-background hover:bg-muted text-foreground transition-all shadow-xs"
+                            >
+                                <Plus className="w-4 h-4 text-primary" />
+                                <span>Project Baru</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    taskForm.setData('project_id', activeProject?.id || '');
+                                    setIsCreateTaskOpen(true);
+                                }}
+                                disabled={!activeProject}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-50"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Tambah Task</span>
+                            </button>
                         </div>
                     </div>
 
+                    {/* Bottom Row: Active Project Meta Info & Tools */}
+                    {activeProject && (
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pt-3 border-t border-sidebar-border/60">
+                            {/* Meta Info */}
+                            <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
+                                {activeProject.client_logo ? (
+                                    <img src={activeProject.client_logo} alt={activeProject.client} className="w-5 h-5 rounded-full object-cover border border-sidebar-border" />
+                                ) : (
+                                    <div className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-extrabold flex items-center justify-center border border-primary/30">
+                                        {activeProject.client?.charAt(0) || 'C'}
+                                    </div>
+                                )}
+                                <span>Client: <strong className="text-foreground">{activeProject.client}</strong></span>
+                                <span className="text-muted-foreground/40">•</span>
+                                <span>Category: <strong className="text-primary">{activeProject.category}</strong></span>
+                                {activeProject.agent && (
+                                    <>
+                                        <span className="text-muted-foreground/40">•</span>
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold text-[11px]">
+                                            <UserCheck className="w-3.5 h-3.5" />
+                                            Agent: {activeProject.agent.name}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                        {activeProject && (
-                            <>
+                            {/* Tools */}
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <button
                                     onClick={() => handleOpenEditProject(activeProject)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-sidebar-border bg-card hover:bg-muted text-foreground transition-all shadow-sm"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 transition-all shadow-xs"
                                     title="Edit Detail Project & Agent"
                                 >
-                                    <Edit3 className="w-4 h-4 text-purple-400" />
+                                    <Edit3 className="w-3.5 h-3.5" />
                                     <span>Edit Project</span>
                                 </button>
                                 <button
+                                    onClick={() => setIsCredentialsModalOpen(true)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-all shadow-xs"
+                                >
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    <span>Vault Akses ({activeProject.credentials?.length || 0})</span>
+                                </button>
+                                <button
                                     onClick={() => handleToggleHomeVisibility(activeProject.id)}
-                                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shadow-xs ${
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-xs ${
                                         activeProject.is_show_on_home
-                                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
-                                            : 'border-slate-500/30 bg-slate-500/10 text-slate-500 hover:bg-slate-500/20'
+                                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+                                            : 'border-slate-500/30 bg-slate-500/10 text-slate-400 hover:bg-slate-500/20'
                                     }`}
-                                    title={activeProject.is_show_on_home ? 'Klik untuk sembunyikan dari Home Page' : 'Klik untuk tampilkan di Home Page'}
                                 >
                                     {activeProject.is_show_on_home ? (
                                         <>
-                                            <Eye className="w-4 h-4 text-emerald-500" />
+                                            <Eye className="w-3.5 h-3.5 text-emerald-500" />
                                             <span>Tampil di Home: Ya</span>
                                         </>
                                     ) : (
                                         <>
-                                            <EyeOff className="w-4 h-4 text-slate-400" />
+                                            <EyeOff className="w-3.5 h-3.5 text-slate-400" />
                                             <span>Tampil di Home: Tidak</span>
                                         </>
                                     )}
                                 </button>
-                            </>
-                        )}
-
-                        <button
-                            onClick={() => setIsCredentialsModalOpen(true)}
-                            disabled={!activeProject}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-all shadow-xs disabled:opacity-50"
-                        >
-                            <ShieldCheck className="w-4 h-4 text-primary" />
-                            <span>Vault Akses ({activeProject?.credentials?.length || 0})</span>
-                        </button>
-
-                        <button
-                            onClick={() => setIsCreateProjectOpen(true)}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-sidebar-border bg-card hover:bg-muted text-foreground transition-all shadow-sm"
-                        >
-                            <Plus className="w-4 h-4 text-primary" />
-                            <span>Project Baru</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                taskForm.setData('project_id', activeProject?.id || '');
-                                setIsCreateTaskOpen(true);
-                            }}
-                            disabled={!activeProject}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-md disabled:opacity-50"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Tambah Task</span>
-                        </button>
-                    </div>
-
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* 5 Column Horizontal Kanban Grid */}
