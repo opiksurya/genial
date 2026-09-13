@@ -241,6 +241,7 @@ export default function ActivationPage({
                     {/* Desktop Nav Items */}
                     <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
                         <a href="/" className={navText}>Beranda</a>
+                        <a href="/our-story" className={navText}>Cerita & Filosofi</a>
                         <a href="/how-we-work" className={navText}>Metode & Funnel</a>
                         <a href="/activation" className="text-[#00A9E7] font-bold border-b-2 border-[#00A9E7] pb-1">Cara Aktivasi</a>
                         <a href="/support" className={navText}>Penunjang Bisnis & ERP</a>
@@ -306,6 +307,7 @@ export default function ActivationPage({
                 {mobileMenuOpen && (
                     <div className={`md:hidden ${isDark ? 'bg-[#000000] border-slate-800' : 'bg-white border-slate-200'} border-b px-4 pt-3 pb-6 space-y-3`}>
                         <a href="/" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Beranda</a>
+                        <a href="/our-story" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Cerita & Filosofi</a>
                         <a href="/how-we-work" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Metode & Funnel Strategy</a>
                         <a href="/activation" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Cara Aktivasi & Onboarding</a>
                         <a href="/support" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Penunjang Bisnis & ERP</a>

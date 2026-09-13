@@ -44,6 +44,13 @@ Route::get('/support', function () {
     ]);
 })->name('support');
 
+Route::get('/our-story', function () {
+    return Inertia\Inertia::render('our-story', [
+        'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya tertarik dengan cerita & filosofi Genial dan ingin berdiskusi lebih lanjut'),
+    ]);
+})->name('our-story');
+
 Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('audit.request');
 
 Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name('meta.capi.track');
