@@ -18,7 +18,8 @@ import {
     Edit3,
     Trash2,
     X,
-    Sparkles
+    Sparkles,
+    UserCheck
 } from 'lucide-react';
 
 interface Project {
@@ -27,10 +28,17 @@ interface Project {
     client: string;
 }
 
+interface AgentItem {
+    id: number;
+    name: string;
+    commission_rate: number;
+}
+
 interface Income {
     id: number;
     name: string;
     project_id?: number;
+    agent_id?: number;
     client_name?: string;
     amount: number;
     date: string;
@@ -41,11 +49,13 @@ interface Income {
     total_expenses?: number;
     real_money?: number;
     project?: Project;
+    agent?: AgentItem;
 }
 
 interface Props {
     incomes: Income[];
     projects: Project[];
+    agents?: AgentItem[];
     stats: {
         totalIncome: number;
         totalPaid: number;
@@ -58,7 +68,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Income Management', href: '/finance/income' },
 ];
 
-export default function IncomeManagement({ incomes, projects, stats }: Props) {
+export default function IncomeManagement({ incomes, projects, agents = [], stats }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingIncome, setEditingIncome] = useState<Income | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +77,7 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
     const { data, setData, post, put, processing, reset, errors } = useForm({
         name: '',
         project_id: '',
+        agent_id: '',
         client_name: '',
         amount: '',
         date: new Date().toISOString().split('T')[0],
@@ -109,6 +120,7 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
         setData({
             name: inc.name,
             project_id: inc.project_id ? String(inc.project_id) : '',
+            agent_id: inc.agent_id ? String(inc.agent_id) : '',
             client_name: inc.client_name || '',
             amount: String(inc.amount),
             date: inc.date,
@@ -148,7 +160,8 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
     const filteredIncomes = incomes.filter((inc) => {
         const matchesSearch = inc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (inc.client_name && inc.client_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (inc.invoice_number && inc.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()));
+            (inc.invoice_number && inc.invoice_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (inc.agent && inc.agent.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const matchesStatus = statusFilter === 'all' || inc.status === statusFilter;
         return matchesSearch && matchesStatus;
@@ -211,7 +224,7 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                         <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
                         <input
                             type="text"
-                            placeholder="Cari income, client, invoice..."
+                            placeholder="Cari income, client, agent, invoice..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -236,11 +249,12 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                 {/* Incomes Table */}
                 <div className="rounded-2xl bg-card border border-border overflow-hidden shadow-sm w-full">
                     <div className="overflow-x-auto w-full">
-                        <table className="w-full text-left text-xs min-w-[850px]">
+                        <table className="w-full text-left text-xs min-w-[950px]">
                             <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
                                 <tr>
                                     <th className="p-4">Tanggal & Invoice</th>
                                     <th className="p-4">Income Name & Client</th>
+                                    <th className="p-4">Agent (Fee 5%)</th>
                                     <th className="p-4">Project Link</th>
                                     <th className="p-4">Gross Nominal</th>
                                     <th className="p-4">Expense Deduction</th>
@@ -252,7 +266,7 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                             <tbody className="divide-y divide-border">
                                 {filteredIncomes.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                                        <td colSpan={9} className="p-8 text-center text-muted-foreground">
                                             Belum ada data income yang sesuai filter.
                                         </td>
                                     </tr>
@@ -269,6 +283,16 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                                                     <Building2 className="w-3 h-3 text-slate-400" />
                                                     {inc.client_name || 'Direct Client'}
                                                 </div>
+                                            </td>
+                                            <td className="p-4">
+                                                {inc.agent ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
+                                                        <UserCheck className="w-3 h-3" />
+                                                        {inc.agent.name} ({inc.agent.commission_rate}%)
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground font-italic text-[11px]">Tanpa Agent</span>
+                                                )}
                                             </td>
                                             <td className="p-4">
                                                 {inc.project ? (
@@ -336,7 +360,7 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
             {/* Create / Edit Income Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-6 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between border-b border-border pb-4">
                             <h3 className="text-lg font-bold text-foreground">
                                 {editingIncome ? 'Edit Income' : 'Tambah Uang Masuk Baru'}
@@ -417,6 +441,26 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                                 </div>
                             </div>
 
+                            {/* Agent Selection */}
+                            <div>
+                                <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                                    <span>Agent (Dapat Komisi 5%)</span>
+                                    <span className="text-[10px] text-purple-400 font-normal">Optional</span>
+                                </label>
+                                <select
+                                    value={data.agent_id}
+                                    onChange={(e) => setData('agent_id', e.target.value)}
+                                    className="mt-1 w-full px-3 py-2 bg-purple-500/5 border border-purple-500/20 rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option value="">-- Tanpa Agent (No Agent) --</option>
+                                    {agents.map((ag) => (
+                                        <option key={ag.id} value={ag.id}>
+                                            {ag.name} (Komisi {ag.commission_rate}%)
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-xs font-semibold text-foreground">Nominal (IDR) *</label>
@@ -492,3 +536,4 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
         </AppLayout>
     );
 }
+

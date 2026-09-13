@@ -11,6 +11,7 @@ class Income extends Model
 
     protected $fillable = [
         'project_id',
+        'agent_id',
         'client_name',
         'name',
         'amount',
@@ -30,6 +31,11 @@ class Income extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function agent()
+    {
+        return $this->belongsTo(Agent::class);
     }
 
     public function creator()

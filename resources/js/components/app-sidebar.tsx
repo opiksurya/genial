@@ -101,6 +101,11 @@ const mainNavItems: NavItem[] = [
                 icon: FileSpreadsheet,
             },
             {
+                title: 'Agent Portal & Komisi',
+                href: '/finance/agents',
+                icon: UserCheck,
+            },
+            {
                 title: 'Settings',
                 href: '/finance/settings',
                 icon: Settings,

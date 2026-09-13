@@ -47,6 +47,11 @@ use App\Http\Controllers\FinanceFlow\AllocationController;
 use App\Http\Controllers\FinanceFlow\FinancialReportController;
 use App\Http\Controllers\FinanceFlow\FinanceSettingController;
 
+use App\Http\Controllers\AgentPortalController;
+use App\Http\Controllers\FinanceFlow\AgentController;
+
+Route::get('/agent/portal/{access_token}', [AgentPortalController::class, 'index'])->name('agent.portal');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
@@ -90,6 +95,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('allocation/{allocation}', [AllocationController::class, 'update'])->name('allocation.update');
         Route::post('allocation/{allocation}/sub', [AllocationController::class, 'storeSub'])->name('allocation.storeSub');
         Route::delete('allocation/{allocation}', [AllocationController::class, 'destroy'])->name('allocation.destroy');
+
+        Route::get('agents', [AgentController::class, 'index'])->name('agents.index');
+        Route::post('agents', [AgentController::class, 'store'])->name('agents.store');
+        Route::put('agents/{agent}', [AgentController::class, 'update'])->name('agents.update');
+        Route::delete('agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
+        Route::post('agents/{agent}/regenerate-token', [AgentController::class, 'regenerateToken'])->name('agents.regenerateToken');
+        Route::put('agent-commissions/{commission}/pay', [AgentController::class, 'payCommission'])->name('agents.payCommission');
         
         Route::get('reports', [FinancialReportController::class, 'index'])->name('reports.index');
         Route::get('reports/export', [FinancialReportController::class, 'export'])->name('reports.export');
@@ -101,3 +113,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 require __DIR__.'/settings.php';
+

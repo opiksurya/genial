@@ -21,6 +21,7 @@ class Project extends Model
         'start_date',
         'end_date',
         'manager_id',
+        'agent_id',
         'is_show_on_home',
     ];
 
@@ -34,6 +35,11 @@ class Project extends Model
     public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class, 'agent_id');
     }
 
     public function tasks(): HasMany

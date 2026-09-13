@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\FinanceFlow;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agent;
+use App\Models\AgentCommission;
 use App\Models\FinancialTransaction;
 use App\Models\Income;
 use App\Models\Project;
@@ -13,7 +15,7 @@ class IncomeController extends Controller
 {
     public function index()
     {
-        $incomes = Income::with(['project', 'expenses', 'creator'])
+        $incomes = Income::with(['project', 'expenses', 'creator', 'agent'])
             ->latest('date')
             ->get()
             ->map(function ($inc) {
@@ -24,6 +26,7 @@ class IncomeController extends Controller
             });
 
         $projects = Project::select('id', 'name', 'client')->get();
+        $agents = Agent::where('status', 'active')->select('id', 'name', 'commission_rate')->get();
 
         $totalIncome = Income::sum('amount');
         $totalPaid = Income::where('status', 'paid')->sum('amount');
@@ -32,6 +35,7 @@ class IncomeController extends Controller
         return Inertia::render('finance/income', [
             'incomes' => $incomes,
             'projects' => $projects,
+            'agents' => $agents,
             'stats' => [
                 'totalIncome' => (float)$totalIncome,
                 'totalPaid' => (float)$totalPaid,
@@ -45,6 +49,7 @@ class IncomeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'project_id' => 'nullable|exists:projects,id',
+            'agent_id' => 'nullable|exists:agents,id',
             'client_name' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',
@@ -65,6 +70,26 @@ class IncomeController extends Controller
 
         $income = Income::create($validated);
 
+        // Sync Agent Commission if Agent is attached
+        if (!empty($income->agent_id)) {
+            $agent = Agent::find($income->agent_id);
+            if ($agent) {
+                $rate = $agent->commission_rate ?? 5.00;
+                AgentCommission::updateOrCreate(
+                    ['income_id' => $income->id],
+                    [
+                        'agent_id' => $agent->id,
+                        'project_id' => $income->project_id,
+                        'client_name' => $income->client_name ?? ($income->project ? $income->project->client : 'Client'),
+                        'income_amount' => $income->amount,
+                        'commission_rate' => $rate,
+                        'commission_amount' => ($income->amount * $rate) / 100,
+                        'payment_status' => 'unpaid',
+                    ]
+                );
+            }
+        }
+
         FinancialTransaction::create([
             'type' => 'income',
             'reference_type' => Income::class,
@@ -83,6 +108,7 @@ class IncomeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'project_id' => 'nullable|exists:projects,id',
+            'agent_id' => 'nullable|exists:agents,id',
             'client_name' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',
@@ -92,6 +118,27 @@ class IncomeController extends Controller
         ]);
 
         $income->update($validated);
+
+        // Sync Agent Commission
+        if (!empty($income->agent_id)) {
+            $agent = Agent::find($income->agent_id);
+            if ($agent) {
+                $rate = $agent->commission_rate ?? 5.00;
+                AgentCommission::updateOrCreate(
+                    ['income_id' => $income->id],
+                    [
+                        'agent_id' => $agent->id,
+                        'project_id' => $income->project_id,
+                        'client_name' => $income->client_name ?? ($income->project ? $income->project->client : 'Client'),
+                        'income_amount' => $income->amount,
+                        'commission_rate' => $rate,
+                        'commission_amount' => ($income->amount * $rate) / 100,
+                    ]
+                );
+            }
+        } else {
+            AgentCommission::where('income_id', $income->id)->delete();
+        }
 
         FinancialTransaction::create([
             'type' => 'income',
@@ -108,7 +155,9 @@ class IncomeController extends Controller
 
     public function destroy(Income $income)
     {
+        AgentCommission::where('income_id', $income->id)->delete();
         $income->delete();
         return redirect()->back()->with('success', 'Income berhasil dihapus!');
     }
 }
+
