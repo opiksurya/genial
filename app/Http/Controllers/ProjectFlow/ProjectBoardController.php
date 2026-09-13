@@ -195,4 +195,25 @@ class ProjectBoardController extends Controller
         $statusText = $project->is_show_on_home ? 'ditampilkan di' : 'disembunyikan dari';
         return redirect()->back()->with('success', 'Project "' . $project->name . '" berhasil ' . $statusText . ' Home Page!');
     }
+
+    public function updateProject(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'client' => 'required|string|max:255',
+            'client_logo' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
+            'category' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'priority' => 'required|string',
+            'manager_id' => 'nullable|exists:users,id',
+            'agent_id' => 'nullable|exists:agents,id',
+            'is_show_on_home' => 'nullable|boolean',
+        ]);
+
+        $project->update($validated);
+
+        return redirect()->back()->with('success', 'Project "' . $project->name . '" berhasil diperbarui!');
+    }
 }

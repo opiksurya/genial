@@ -62,6 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('dashboard', [ProjectDashboardController::class, 'index'])->name('dashboard');
         Route::get('board', [ProjectBoardController::class, 'index'])->name('board');
         Route::post('store', [ProjectBoardController::class, 'storeProject'])->name('store');
+        Route::put('{project}', [ProjectBoardController::class, 'updateProject'])->name('update');
         Route::put('{project}/toggle-home-visibility', [ProjectBoardController::class, 'toggleHomeVisibility'])->name('toggleHomeVisibility');
         Route::post('tasks', [ProjectBoardController::class, 'storeTask'])->name('tasks.store');
         Route::put('tasks/{task}/status', [ProjectBoardController::class, 'updateTaskStatus'])->name('tasks.updateStatus');

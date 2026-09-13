@@ -21,7 +21,9 @@ import {
     ShieldCheck,
     KeyRound,
     Eye,
-    EyeOff
+    EyeOff,
+    Edit3,
+    UserCheck
 } from 'lucide-react';
 import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
 
@@ -152,6 +154,48 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         is_show_on_home: true,
     });
 
+    const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
+    const editProjectForm = useForm({
+        name: '',
+        client: '',
+        client_logo: '',
+        description: '',
+        category: CATEGORIES[0],
+        start_date: '',
+        end_date: '',
+        priority: 'Medium',
+        manager_id: '',
+        agent_id: '',
+        is_show_on_home: true,
+    });
+
+    const handleOpenEditProject = (p: ProjectItem) => {
+        setEditingProject(p);
+        editProjectForm.setData({
+            name: p.name,
+            client: p.client,
+            client_logo: p.client_logo || '',
+            description: p.description || '',
+            category: p.category || CATEGORIES[0],
+            start_date: p.start_date ? p.start_date.split('T')[0] : '',
+            end_date: p.end_date ? p.end_date.split('T')[0] : '',
+            priority: p.priority || 'Medium',
+            manager_id: p.manager?.id ? String(p.manager.id) : '',
+            agent_id: p.agent?.id ? String(p.agent.id) : '',
+            is_show_on_home: p.is_show_on_home ?? true,
+        });
+    };
+
+    const handleEditProjectSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingProject) return;
+        editProjectForm.put(`/projects/${editingProject.id}`, {
+            onSuccess: () => {
+                setEditingProject(null);
+            },
+        });
+    };
+
     const handleToggleHomeVisibility = (projectId: number) => {
         router.put(`/projects/${projectId}/toggle-home-visibility`, {}, { preserveScroll: true });
     };
@@ -274,6 +318,12 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                 )}
                                 <span>Client: <strong className="text-foreground">{activeProject?.client || '-'}</strong></span>
                                 <span>| Category: <strong className="text-primary">{activeProject?.category || '-'}</strong></span>
+                                {activeProject?.agent && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold text-[11px]">
+                                        <UserCheck className="w-3 h-3" />
+                                        Agent: {activeProject.agent.name}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -281,27 +331,37 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
 
                     <div className="flex items-center gap-2 shrink-0">
                         {activeProject && (
-                            <button
-                                onClick={() => handleToggleHomeVisibility(activeProject.id)}
-                                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shadow-xs ${
-                                    activeProject.is_show_on_home
-                                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
-                                        : 'border-slate-500/30 bg-slate-500/10 text-slate-500 hover:bg-slate-500/20'
-                                }`}
-                                title={activeProject.is_show_on_home ? 'Klik untuk sembunyikan dari Home Page' : 'Klik untuk tampilkan di Home Page'}
-                            >
-                                {activeProject.is_show_on_home ? (
-                                    <>
-                                        <Eye className="w-4 h-4 text-emerald-500" />
-                                        <span>Tampil di Home: Ya</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <EyeOff className="w-4 h-4 text-slate-400" />
-                                        <span>Tampil di Home: Tidak</span>
-                                    </>
-                                )}
-                            </button>
+                            <>
+                                <button
+                                    onClick={() => handleOpenEditProject(activeProject)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-sidebar-border bg-card hover:bg-muted text-foreground transition-all shadow-sm"
+                                    title="Edit Detail Project & Agent"
+                                >
+                                    <Edit3 className="w-4 h-4 text-purple-400" />
+                                    <span>Edit Project</span>
+                                </button>
+                                <button
+                                    onClick={() => handleToggleHomeVisibility(activeProject.id)}
+                                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shadow-xs ${
+                                        activeProject.is_show_on_home
+                                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
+                                            : 'border-slate-500/30 bg-slate-500/10 text-slate-500 hover:bg-slate-500/20'
+                                    }`}
+                                    title={activeProject.is_show_on_home ? 'Klik untuk sembunyikan dari Home Page' : 'Klik untuk tampilkan di Home Page'}
+                                >
+                                    {activeProject.is_show_on_home ? (
+                                        <>
+                                            <Eye className="w-4 h-4 text-emerald-500" />
+                                            <span>Tampil di Home: Ya</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <EyeOff className="w-4 h-4 text-slate-400" />
+                                            <span>Tampil di Home: Tidak</span>
+                                        </>
+                                    )}
+                                </button>
+                            </>
                         )}
 
                         <button
@@ -581,6 +641,134 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                             <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">
                                 <button type="button" onClick={() => setIsCreateProjectOpen(false)} className="px-4 py-2 rounded-lg border border-sidebar-border text-xs font-medium text-muted-foreground hover:bg-muted">Batal</button>
                                 <button type="submit" disabled={projectForm.processing} className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 disabled:opacity-50">Simpan Project</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT PROJECT MODAL */}
+            {editingProject && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-card border border-sidebar-border rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 relative animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-sidebar-border pb-3">
+                            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                <Edit3 className="w-5 h-5 text-purple-400" />
+                                <span>Edit Detail Project & Agent</span>
+                            </h3>
+                            <button onClick={() => setEditingProject(null)} className="text-muted-foreground hover:text-foreground">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleEditProjectSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Nama Project *</label>
+                                <input 
+                                    type="text" required
+                                    value={editProjectForm.data.name}
+                                    onChange={(e) => editProjectForm.setData('name', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Nama Client *</label>
+                                <input 
+                                    type="text" required
+                                    value={editProjectForm.data.client}
+                                    onChange={(e) => editProjectForm.setData('client', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Kategori Project</label>
+                                    <select 
+                                        value={editProjectForm.data.category}
+                                        onChange={(e) => editProjectForm.setData('category', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    >
+                                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Prioritas</label>
+                                    <select 
+                                        value={editProjectForm.data.priority}
+                                        onChange={(e) => editProjectForm.setData('priority', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    >
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Agent Selection */}
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Agent / Referrer (Optional)</label>
+                                <select 
+                                    value={editProjectForm.data.agent_id}
+                                    onChange={(e) => editProjectForm.setData('agent_id', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-purple-500/30 bg-purple-500/5 text-xs text-foreground font-semibold focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                >
+                                    <option value="">-- Tanpa Agent (No Agent) --</option>
+                                    {agents.map((ag) => (
+                                        <option key={ag.id} value={ag.id}>
+                                            {ag.name} (Komisi {ag.commission_rate}%)
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Tanggal Mulai</label>
+                                    <input 
+                                        type="date" required
+                                        value={editProjectForm.data.start_date}
+                                        onChange={(e) => editProjectForm.setData('start_date', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Tanggal Selesai (Due)</label>
+                                    <input 
+                                        type="date" required
+                                        value={editProjectForm.data.end_date}
+                                        onChange={(e) => editProjectForm.setData('end_date', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">URL Logo Client (Opsional)</label>
+                                <input 
+                                    type="text" 
+                                    value={editProjectForm.data.client_logo}
+                                    onChange={(e) => editProjectForm.setData('client_logo', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Deskripsi Project</label>
+                                <textarea 
+                                    rows={3}
+                                    value={editProjectForm.data.description}
+                                    onChange={(e) => editProjectForm.setData('description', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
+                            <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">
+                                <button type="button" onClick={() => setEditingProject(null)} className="px-4 py-2 rounded-lg border border-sidebar-border text-xs font-medium text-muted-foreground hover:bg-muted">Batal</button>
+                                <button type="submit" disabled={editProjectForm.processing} className="px-4 py-2 rounded-lg bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50">Simpan Perubahan</button>
                             </div>
                         </form>
                     </div>
