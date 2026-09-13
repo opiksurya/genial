@@ -101,15 +101,18 @@ export default function CaseStudyPage({
     const headerBg = isDark ? 'bg-[#000000]/85 border-slate-800/80' : 'bg-white/85 border-slate-200/80';
     const navText = isDark ? 'text-slate-300 hover:text-[#05BAF0]' : 'text-slate-600 hover:text-[#2D90CA]';
 
-    const keyResultsList = project.key_results 
+    const keyResultsList = project?.key_results 
         ? project.key_results.split('\n').filter(item => item.trim() !== '')
         : [];
+
+    const articleTitle = project?.article_title || `Studi Kasus Transformasi ${project?.client || 'Client'}`;
+    const articleSubtitle = project?.article_subtitle || `Pelajari kisah sukses dan data perubahan omset ${project?.client || 'Client'} setelah berkolaborasi dengan Genial Digital Solution.`;
 
     return (
         <div className={`min-h-screen font-sans ${bgClass} transition-colors duration-300 selection:bg-[#00A9E7] selection:text-white`}>
             <Head>
-                <title>{project.article_title || `Studi Kasus Transformaasi ${project.client}`} - Genial Digital Solution</title>
-                <meta name="description" content={project.article_subtitle || `Pelajari kisah sukses dan data perubahan omset ${project.client} setelah berkolaborasi dengan Genial Digital Solution.`} />
+                <title>{`${articleTitle} - Genial Digital Solution`}</title>
+                <meta name="description" content={articleSubtitle} />
             </Head>
 
             {/* NAVIGATION HEADER */}
@@ -342,7 +345,7 @@ export default function CaseStudyPage({
                             </h3>
                             <div 
                                 className={`prose ${isDark ? 'prose-invert' : ''} max-w-none text-base ${textMuted} leading-relaxed prose-img:rounded-2xl prose-img:border prose-img:border-slate-700/50 prose-img:shadow-lg`}
-                                dangerouslySetInnerHTML={{ __html: project.article_content }}
+                                dangerouslySetInnerHTML={{ __html: project?.article_content || '' }}
                             />
                         </div>
                     )}
