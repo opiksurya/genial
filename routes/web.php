@@ -37,6 +37,13 @@ Route::get('/how-we-work', function () {
     ]);
 })->name('how-we-work');
 
+Route::get('/support', function () {
+    return Inertia\Inertia::render('support', [
+        'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin konsultasi mengenai Penunjang Bisnis (Digital Creative & Sistem ERP)'),
+    ]);
+})->name('support');
+
 Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('audit.request');
 
 Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name('meta.capi.track');

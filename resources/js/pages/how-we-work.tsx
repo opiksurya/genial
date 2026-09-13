@@ -244,6 +244,7 @@ export default function HowWeWorkPage({
                         <a href="/" className={navText}>Beranda</a>
                         <a href="/how-we-work" className="text-[#00A9E7] font-bold border-b-2 border-[#00A9E7] pb-1">Metode & Funnel</a>
                         <a href="/activation" className={navText}>Cara Aktivasi</a>
+                        <a href="/support" className={navText}>Penunjang Bisnis & ERP</a>
                     </nav>
 
                     {/* Action Buttons & Theme Switcher */}
@@ -308,6 +309,7 @@ export default function HowWeWorkPage({
                         <a href="/" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Beranda</a>
                         <a href="/how-we-work" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Metode & Funnel Strategy</a>
                         <a href="/activation" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Cara Aktivasi & Onboarding</a>
+                        <a href="/support" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Penunjang Bisnis & ERP</a>
                         <div className="pt-2">
                             <a 
                                 href={waUrl} 
