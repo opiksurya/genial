@@ -28,7 +28,7 @@ Route::get('/', function () {
 Route::get('/case-study/{slug}', function ($slug) {
     $project = Project::where('slug', $slug)
         ->orWhere('id', is_numeric($slug) ? $slug : 0)
-        ->orWhere('client', 'ILIKE', '%' . str_replace('-', ' ', $slug) . '%')
+        ->orWhere('client', 'LIKE', '%' . str_replace('-', ' ', $slug) . '%')
         ->first();
 
     if (!$project) {

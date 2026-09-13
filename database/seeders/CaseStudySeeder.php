@@ -15,20 +15,20 @@ class CaseStudySeeder extends Seeder
         $endDate = now()->endOfMonth();
 
         // 1. CLEANUP DUPLICATES IN DATABASE
-        $allBatik = Project::where('client', 'ILIKE', '%Batik%')->get();
+        $allBatik = Project::where('client', 'LIKE', '%Batik%')->get();
         if ($allBatik->count() > 1) {
             $keep = $allBatik->first();
-            Project::where('client', 'ILIKE', '%Batik%')->where('id', '!=', $keep->id)->delete();
+            Project::where('client', 'LIKE', '%Batik%')->where('id', '!=', $keep->id)->delete();
         }
 
-        $allGlowing = Project::where('client', 'ILIKE', '%Glowing%')->get();
+        $allGlowing = Project::where('client', 'LIKE', '%Glowing%')->get();
         if ($allGlowing->count() > 1) {
             $keep = $allGlowing->first();
-            Project::where('client', 'ILIKE', '%Glowing%')->where('id', '!=', $keep->id)->delete();
+            Project::where('client', 'LIKE', '%Glowing%')->where('id', '!=', $keep->id)->delete();
         }
 
         // 2. SEED GLOWING ID
-        $glowingProject = Project::where('client', 'ILIKE', '%Glowing%')->first() ?? new Project();
+        $glowingProject = Project::where('client', 'LIKE', '%Glowing%')->first() ?? new Project();
         $glowingProject->fill([
             'slug' => 'glowing-id',
             'name' => 'SEO & Performance Marketing Campaign',
