@@ -214,11 +214,11 @@ export default function Welcome() {
                         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
                             <a href="#services" className={navText}>Layanan</a>
                             <a href="#audit" className={navText}>Gratis Audit</a>
-                            <a href="/activation" className="text-[#00A9E7] font-bold hover:opacity-90">Cara Aktivasi</a>
+                            <a href="/activation" className={navText}>Cara Aktivasi</a>
+                            <a href="/how-we-work" className="text-[#00A9E7] font-bold hover:opacity-90">Metode & Funnel</a>
                             <a href="#why-us" className={navText}>Keunggulan</a>
                             <a href="#results" className={navText}>Case Study</a>
                             <a href="#packages" className={navText}>Paket Harga</a>
-                            <a href="#testimonials" className={navText}>Testimoni</a>
                         </nav>
 
                         {/* Action Buttons & Theme Switcher (Icon Only) */}
@@ -285,7 +285,8 @@ export default function Welcome() {
                         <div className={`md:hidden ${isDark ? 'bg-[#000000] border-slate-800' : 'bg-white border-slate-200'} border-b px-4 pt-3 pb-6 space-y-3`}>
                             <a href="#services" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Layanan</a>
                             <a href="#audit" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Gratis Audit</a>
-                            <a href="/activation" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Cara Aktivasi & Onboarding</a>
+                            <a href="/activation" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Cara Aktivasi</a>
+                            <a href="/how-we-work" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Metode & Funnel Strategy</a>
                             <a href="#why-us" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Keunggulan</a>
                             <a href="#results" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Case Study</a>
                             <a href="#packages" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Paket Harga</a>
@@ -1291,9 +1292,11 @@ export default function Welcome() {
                         <div>
                             © 2026 Genial Digital Solution. All rights reserved. High Conversion Digital Agency.
                         </div>
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-4 font-semibold">
                             <a href="#services" className="hover:text-[#00A9E7] transition-colors">Layanan</a>
-                            <a href="#audit" className="hover:text-[#00A9E7] transition-colors">Audit Gratis</a>
+                            <a href="/activation" className="hover:text-[#00A9E7] transition-colors">Cara Aktivasi</a>
+                            <a href="/how-we-work" className="hover:text-[#00A9E7] transition-colors">Metode & Funnel</a>
+                            <a href="#packages" className="hover:text-[#00A9E7] transition-colors">Paket Harga</a>
                             <a href={waUrl} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors">WhatsApp</a>
                         </div>
                     </div>

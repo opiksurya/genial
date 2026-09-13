@@ -30,6 +30,13 @@ Route::get('/activation', function () {
     ]);
 })->name('activation');
 
+Route::get('/how-we-work', function () {
+    return Inertia\Inertia::render('how-we-work', [
+        'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin konsultasi mengenai Skema Metode & Funnel Strategy digital marketing'),
+    ]);
+})->name('how-we-work');
+
 Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('audit.request');
 
 Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name('meta.capi.track');
