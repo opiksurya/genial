@@ -463,6 +463,8 @@ class DatabaseSeeder extends Seeder
                 'status' => 'completed',
             ]);
         }
+
+        $this->call(CaseStudySeeder::class);
     }
 }
 

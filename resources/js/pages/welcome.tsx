@@ -525,7 +525,7 @@ export default function Welcome() {
                                 ))
                             ) : (
                                 <>
-                                    <a href="/case-study/batikku" className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border bg-white border-slate-200 hover:scale-105 transition-all">
+                                    <a href="/case-study/batikku-indonesia" className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border bg-white border-slate-200 hover:scale-105 transition-all">
                                         <img src="/images/brands/batikku.svg" alt="BatikKu" className="h-9 w-auto object-contain" />
                                         <span className="text-[11px] font-bold text-[#00A9E7]">Lihat Story →</span>
                                     </a>
