@@ -23,6 +23,13 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('/activation', function () {
+    return Inertia\Inertia::render('activation', [
+        'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin konsultasi mengenai alur aktivasi kerjasama digital marketing'),
+    ]);
+})->name('activation');
+
 Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('audit.request');
 
 Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name('meta.capi.track');

@@ -214,6 +214,7 @@ export default function Welcome() {
                         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
                             <a href="#services" className={navText}>Layanan</a>
                             <a href="#audit" className={navText}>Gratis Audit</a>
+                            <a href="/activation" className="text-[#00A9E7] font-bold hover:opacity-90">Cara Aktivasi</a>
                             <a href="#why-us" className={navText}>Keunggulan</a>
                             <a href="#results" className={navText}>Case Study</a>
                             <a href="#packages" className={navText}>Paket Harga</a>
@@ -284,6 +285,7 @@ export default function Welcome() {
                         <div className={`md:hidden ${isDark ? 'bg-[#000000] border-slate-800' : 'bg-white border-slate-200'} border-b px-4 pt-3 pb-6 space-y-3`}>
                             <a href="#services" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Layanan</a>
                             <a href="#audit" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Gratis Audit</a>
+                            <a href="/activation" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Cara Aktivasi & Onboarding</a>
                             <a href="#why-us" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Keunggulan</a>
                             <a href="#results" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Case Study</a>
                             <a href="#packages" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Paket Harga</a>
@@ -1005,6 +1007,56 @@ export default function Welcome() {
                             </ul>
                         </div>
 
+                    </div>
+                </section>
+
+
+                {/* ACTIVATION FLOW TEASER SECTION */}
+                <section className={`py-16 px-4 sm:px-6 lg:px-8 border-y ${isDark ? 'bg-[#060a12] border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00A9E7]/10 border border-[#00A9E7]/30 text-[#00A9E7] text-xs font-bold uppercase tracking-wider">
+                                <span>Alur Transparan & Terstruktur</span>
+                            </div>
+                            <h2 className={`text-3xl sm:text-4xl font-extrabold ${textPrimary} tracking-tight`}>
+                                Bagaimana <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0]">Cara Aktivasi</span> & Maintenance Kerjasama?
+                            </h2>
+                            <p className={`${textMuted} text-sm sm:text-base`}>
+                                Proses onboarding 5 langkah cepat, akses portal monitoring real-time, serta sistem optimasi & maintenance berkelanjutan.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                            <div className={`p-6 rounded-3xl border ${cardBg} hover:border-[#00A9E7]/50 transition-all`}>
+                                <div className="w-10 h-10 rounded-2xl bg-[#2D90CA]/20 text-[#00A9E7] font-extrabold text-sm flex items-center justify-center mb-4">01</div>
+                                <h3 className="font-bold text-base text-foreground mb-1">Audit & Konsultasi</h3>
+                                <p className={`text-xs ${textMuted}`}>Analisa kesehatan akun & potensi omset iklan Anda secara gratis.</p>
+                            </div>
+                            <div className={`p-6 rounded-3xl border ${cardBg} hover:border-[#00A9E7]/50 transition-all`}>
+                                <div className="w-10 h-10 rounded-2xl bg-[#2D90CA]/20 text-[#00A9E7] font-extrabold text-sm flex items-center justify-center mb-4">02</div>
+                                <h3 className="font-bold text-base text-foreground mb-1">MoU Kerjasama</h3>
+                                <p className={`text-xs ${textMuted}`}>Penyusunan Media Plan & kesepakatan kontrak kerjasama resmi.</p>
+                            </div>
+                            <div className={`p-6 rounded-3xl border ${cardBg} hover:border-[#00A9E7]/50 transition-all`}>
+                                <div className="w-10 h-10 rounded-2xl bg-[#2D90CA]/20 text-[#00A9E7] font-extrabold text-sm flex items-center justify-center mb-4">03</div>
+                                <h3 className="font-bold text-base text-foreground mb-1">Setup & Onboarding</h3>
+                                <p className={`text-xs ${textMuted}`}>Integrasi Meta CAPI, Portal Client Board, & WA Support Group.</p>
+                            </div>
+                            <div className={`p-6 rounded-3xl border ${cardBg} hover:border-[#00A9E7]/50 transition-all`}>
+                                <div className="w-10 h-10 rounded-2xl bg-[#2D90CA]/20 text-[#00A9E7] font-extrabold text-sm flex items-center justify-center mb-4">04</div>
+                                <h3 className="font-bold text-base text-foreground mb-1">Campaign Launch</h3>
+                                <p className={`text-xs ${textMuted}`}>Official launch campaign & optimasi performa harian.</p>
+                            </div>
+                        </div>
+
+                        <div className="text-center">
+                            <a 
+                                href="/activation" 
+                                className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-xs sm:text-sm font-extrabold text-slate-900 bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0] hover:opacity-95 transition-all shadow-xl shadow-[#00A9E7]/25 hover:scale-105 active:scale-95"
+                            >
+                                <span>Pelajari Alur Aktivasi, Hak Klien, & System Maintenance Selengkapnya →</span>
+                            </a>
+                        </div>
                     </div>
                 </section>
 
