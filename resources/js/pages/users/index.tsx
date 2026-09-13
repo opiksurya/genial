@@ -1,4 +1,4 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import React, { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -121,7 +121,7 @@ export default function UsersIndex({ users, roles }: Props) {
 
     const handleDelete = (user: UserItem) => {
         if (confirm(`Apakah Anda yakin ingin menghapus user "${user.name}"?`)) {
-            useForm().delete(`/users/${user.id}`);
+            router.delete(`/users/${user.id}`);
         }
     };
 

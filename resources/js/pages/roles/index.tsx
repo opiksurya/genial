@@ -1,4 +1,4 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -50,30 +50,32 @@ export default function RolesIndex({ roles, permissions }: Props) {
     const [editingRole, setEditingRole] = useState<RoleItem | null>(null);
 
     // Form for creating new role
-    const createForm = useForm<{
-        name: string;
-        permissions: string[];
-    }>({
+    const createForm = useForm({
         name: '',
-        permissions: [],
+        permissions: [] as string[],
     });
 
     // Form for editing existing role
-    const editForm = useForm<{
-        name: string;
-        permissions: string[];
-    }>({
+    const editForm = useForm({
         name: '',
-        permissions: [],
+        permissions: [] as string[],
     });
 
-    const togglePermission = (perm: string, isEdit = false) => {
-        const form = isEdit ? editForm : createForm;
-        const current = form.data.permissions;
+    const handleCreatePermissionToggle = (perm: string) => {
+        const current = createForm.data.permissions;
         if (current.includes(perm)) {
-            form.setData('permissions', current.filter((p) => p !== perm));
+            createForm.setData('permissions', current.filter((p) => p !== perm));
         } else {
-            form.setData('permissions', [...current, perm]);
+            createForm.setData('permissions', [...current, perm]);
+        }
+    };
+
+    const handleEditPermissionToggle = (perm: string) => {
+        const current = editForm.data.permissions;
+        if (current.includes(perm)) {
+            editForm.setData('permissions', current.filter((p) => p !== perm));
+        } else {
+            editForm.setData('permissions', [...current, perm]);
         }
     };
 
@@ -109,7 +111,7 @@ export default function RolesIndex({ roles, permissions }: Props) {
 
     const handleDelete = (role: RoleItem) => {
         if (confirm(`Apakah Anda yakin ingin menghapus Role "${role.name}"?`)) {
-            useForm().delete(`/roles/${role.id}`);
+            router.delete(`/roles/${role.id}`);
         }
     };
 
