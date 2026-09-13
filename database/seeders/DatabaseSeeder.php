@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
         $staffRole = Role::firstOrCreate(['name' => 'Staff']);
+        $clientRole = Role::firstOrCreate(['name' => 'Client']);
 
         // Assign permissions to roles
         $superAdminRole->syncPermissions(Permission::all());

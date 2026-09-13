@@ -10,28 +10,52 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Models\ProjectMember;
+
 class ProjectDashboardController extends Controller
 {
     public function index(): Response
     {
+        $user = auth()->user();
         $today = now()->format('Y-m-d');
 
-        $activeProjects = Project::where('status', 'In Progress')->count();
-        $completedProjects = Project::where('status', 'Completed')->count();
-        $overdueProjects = Project::where('status', '!=', 'Completed')
+        $projectQuery = Project::query();
+        $taskQuery = Task::query();
+
+        if ($user && $user->hasRole('Client')) {
+            $userProjectIds = ProjectMember::where('user_id', $user->id)->pluck('project_id');
+            $projectQuery->whereIn('id', $userProjectIds);
+            $taskQuery->whereIn('project_id', $userProjectIds);
+        }
+
+        $activeProjects = (clone $projectQuery)->where('status', 'In Progress')->count();
+        $completedProjects = (clone $projectQuery)->where('status', 'Completed')->count();
+        $overdueProjects = (clone $projectQuery)->where('status', '!=', 'Completed')
             ->where('end_date', '<', $today)
             ->count();
 
-        $pendingTasks = Task::where('status', '!=', 'DONE')->count();
-        $todayTasks = Task::whereDate('due_date', $today)->count();
-        $upcomingDeadlines = Task::with(['project', 'assignee'])
+        $pendingTasks = (clone $taskQuery)->where('status', '!=', 'DONE')->count();
+        $todayTasks = (clone $taskQuery)->whereDate('due_date', $today)->count();
+        
+        $upcomingDeadlinesQuery = Task::with(['project', 'assignee'])
             ->where('status', '!=', 'DONE')
-            ->whereBetween('due_date', [$today, now()->addDays(7)->format('Y-m-d')])
+            ->whereBetween('due_date', [$today, now()->addDays(7)->format('Y-m-d')]);
+
+        if ($user && $user->hasRole('Client')) {
+            $upcomingDeadlinesQuery->whereIn('project_id', $userProjectIds);
+        }
+
+        $upcomingDeadlines = $upcomingDeadlinesQuery
             ->orderBy('due_date', 'asc')
             ->take(6)
             ->get();
 
-        $projects = Project::with(['manager', 'tasks', 'members.user'])
+        $projectsQueryWithRelations = Project::with(['manager', 'tasks', 'members.user']);
+        if ($user && $user->hasRole('Client')) {
+            $projectsQueryWithRelations->whereIn('id', $userProjectIds);
+        }
+
+        $projects = $projectsQueryWithRelations
             ->latest()
             ->get()
             ->map(function ($p) {

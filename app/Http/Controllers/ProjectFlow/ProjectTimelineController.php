@@ -9,13 +9,27 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Models\ProjectMember;
+
 class ProjectTimelineController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = auth()->user();
         $selectedProjectId = $request->query('project_id');
 
-        $projects = Project::with(['manager', 'milestones'])->latest()->get();
+        $projectsQuery = Project::with(['manager', 'milestones']);
+
+        if ($user && $user->hasRole('Client')) {
+            $userProjectIds = ProjectMember::where('user_id', $user->id)->pluck('project_id');
+            $projectsQuery->whereIn('id', $userProjectIds);
+        }
+
+        $projects = $projectsQuery->latest()->get();
+
+        if ($selectedProjectId && !$projects->pluck('id')->contains((int)$selectedProjectId)) {
+            $selectedProjectId = null;
+        }
 
         if (!$selectedProjectId && $projects->isNotEmpty()) {
             $selectedProjectId = $projects->first()->id;

@@ -18,18 +18,27 @@ import {
     UserCheck
 } from 'lucide-react';
 
+interface ProjectOption {
+    id: number;
+    name: string;
+    client: string;
+}
+
 interface UserItem {
     id: number;
     name: string;
     email: string;
     avatar?: string;
     roles: string[];
+    project_ids?: number[];
+    assigned_projects?: ProjectOption[];
     created_at: string;
 }
 
 interface Props {
     users: UserItem[];
     roles: string[];
+    projects?: ProjectOption[];
     flash?: {
         success?: string;
         error?: string;
@@ -47,7 +56,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function UsersIndex({ users, roles }: Props) {
+export default function UsersIndex({ users, roles, projects = [] }: Props) {
     const { flash } = usePage<any>().props;
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserItem | null>(null);
@@ -70,21 +79,36 @@ export default function UsersIndex({ users, roles }: Props) {
     const superAdminCount = users.filter((u) => u.roles.includes('Super Admin')).length;
     const adminCount = users.filter((u) => u.roles.includes('Admin')).length;
     const staffCount = users.filter((u) => u.roles.includes('Staff')).length;
+    const clientCount = users.filter((u) => u.roles.includes('Client')).length;
 
     // Form for creating new user
-    const createForm = useForm({
+    const createForm = useForm<{
+        name: string;
+        email: string;
+        password: string;
+        role: string;
+        project_ids: number[];
+    }>({
         name: '',
         email: '',
         password: '',
         role: roles[0] || 'Staff',
+        project_ids: [],
     });
 
     // Form for editing existing user
-    const editForm = useForm({
+    const editForm = useForm<{
+        name: string;
+        email: string;
+        password: string;
+        role: string;
+        project_ids: number[];
+    }>({
         name: '',
         email: '',
         password: '',
         role: 'Staff',
+        project_ids: [],
     });
 
     const handleCreateSubmit = (e: React.FormEvent) => {
@@ -104,6 +128,7 @@ export default function UsersIndex({ users, roles }: Props) {
             email: user.email,
             password: '',
             role: user.roles[0] || roles[0] || 'Staff',
+            project_ids: user.project_ids || [],
         });
     };
 
@@ -272,27 +297,42 @@ export default function UsersIndex({ users, roles }: Props) {
                                                 </div>
                                             </td>
 
-                                            {/* Roles */}
+                                            {/* Roles & Projects */}
                                             <td className="px-6 py-4">
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {u.roles.length > 0 ? (
-                                                        u.roles.map((r, i) => (
-                                                            <span 
-                                                                key={i} 
-                                                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                                                                    r === 'Super Admin' 
-                                                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
-                                                                        : r === 'Admin'
-                                                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30'
-                                                                        : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/30'
-                                                                }`}
-                                                            >
-                                                                <Shield className="w-3.5 h-3.5" />
-                                                                <span>{r}</span>
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <span className="text-xs text-muted-foreground italic">Tanpa Role</span>
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {u.roles.length > 0 ? (
+                                                            u.roles.map((r, i) => (
+                                                                <span 
+                                                                    key={i} 
+                                                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                                                                        r === 'Super Admin' 
+                                                                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                                                                            : r === 'Admin'
+                                                                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30'
+                                                                            : r === 'Client'
+                                                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                                                            : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/30'
+                                                                    }`}
+                                                                >
+                                                                    <Shield className="w-3.5 h-3.5" />
+                                                                    <span>{r}</span>
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-xs text-muted-foreground italic">Tanpa Role</span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Assigned Projects */}
+                                                    {u.assigned_projects && u.assigned_projects.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {u.assigned_projects.map((p) => (
+                                                                <span key={p.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
+                                                                    <span>📁 {p.client} ({p.name})</span>
+                                                                </span>
+                                                            ))}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>
@@ -418,6 +458,42 @@ export default function UsersIndex({ users, roles }: Props) {
                                 </select>
                             </div>
 
+                            {/* Project Selection for Client / User */}
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">
+                                    Project Client (Akses Khusus Board & Timeline)
+                                </label>
+                                <p className="text-[11px] text-muted-foreground mb-2">
+                                    Pilih project yang boleh diakses. Client hanya bisa melihat Kanban Board & Timeline untuk project yang dipilih.
+                                </p>
+                                <div className="max-h-40 overflow-y-auto space-y-1 p-2 rounded-lg border border-sidebar-border bg-background">
+                                    {projects.length > 0 ? (
+                                        projects.map((p) => {
+                                            const isSelected = createForm.data.project_ids.includes(p.id);
+                                            return (
+                                                <label key={p.id} className="flex items-center gap-2 text-xs text-foreground cursor-pointer hover:bg-muted/50 p-1.5 rounded">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                createForm.setData('project_ids', [...createForm.data.project_ids, p.id]);
+                                                            } else {
+                                                                createForm.setData('project_ids', createForm.data.project_ids.filter(id => id !== p.id));
+                                                            }
+                                                        }}
+                                                        className="rounded border-sidebar-border text-primary focus:ring-primary"
+                                                    />
+                                                    <span><strong className="text-primary">{p.client}</strong> - {p.name}</span>
+                                                </label>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground italic">Belum ada project yang dibuat.</p>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">
                                 <button 
                                     type="button" 
@@ -499,6 +575,42 @@ export default function UsersIndex({ users, roles }: Props) {
                                         <option key={r} value={r}>{r}</option>
                                     ))}
                                 </select>
+                            </div>
+
+                            {/* Project Selection for Edit User */}
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">
+                                    Project Client (Akses Khusus Board & Timeline)
+                                </label>
+                                <p className="text-[11px] text-muted-foreground mb-2">
+                                    Pilih project yang boleh diakses. Client hanya bisa melihat Kanban Board & Timeline untuk project yang dipilih.
+                                </p>
+                                <div className="max-h-40 overflow-y-auto space-y-1 p-2 rounded-lg border border-sidebar-border bg-background">
+                                    {projects.length > 0 ? (
+                                        projects.map((p) => {
+                                            const isSelected = editForm.data.project_ids.includes(p.id);
+                                            return (
+                                                <label key={p.id} className="flex items-center gap-2 text-xs text-foreground cursor-pointer hover:bg-muted/50 p-1.5 rounded">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                editForm.setData('project_ids', [...editForm.data.project_ids, p.id]);
+                                                            } else {
+                                                                editForm.setData('project_ids', editForm.data.project_ids.filter(id => id !== p.id));
+                                                            }
+                                                        }}
+                                                        className="rounded border-sidebar-border text-primary focus:ring-primary"
+                                                    />
+                                                    <span><strong className="text-primary">{p.client}</strong> - {p.name}</span>
+                                                </label>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground italic">Belum ada project yang dibuat.</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">

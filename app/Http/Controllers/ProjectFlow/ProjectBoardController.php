@@ -18,9 +18,21 @@ class ProjectBoardController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = auth()->user();
         $selectedProjectId = $request->query('project_id');
 
-        $projects = Project::with(['manager', 'members.user', 'credentials', 'agent'])->latest()->get();
+        $projectsQuery = Project::with(['manager', 'members.user', 'credentials', 'agent']);
+
+        if ($user && $user->hasRole('Client')) {
+            $userProjectIds = ProjectMember::where('user_id', $user->id)->pluck('project_id');
+            $projectsQuery->whereIn('id', $userProjectIds);
+        }
+
+        $projects = $projectsQuery->latest()->get();
+
+        if ($selectedProjectId && !$projects->pluck('id')->contains((int)$selectedProjectId)) {
+            $selectedProjectId = null;
+        }
 
         if (!$selectedProjectId && $projects->isNotEmpty()) {
             $selectedProjectId = $projects->first()->id;
