@@ -115,22 +115,22 @@ export default function FinancialReports({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Financial Reports - Genial FinanceFlow" />
 
-            <div className="space-y-8 p-6 max-w-[1600px] mx-auto print:p-0">
+            <div className="space-y-8 p-4 sm:p-6 w-full max-w-full min-w-0">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full print:hidden">
                     <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Financial Reports</h1>
-                            <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 text-xs font-semibold">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">Financial Reports</h1>
+                            <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 text-xs font-semibold shrink-0">
                                 Analytics Suite
                             </span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             Laporan analisis bulanan, keuntungan per project & client, analisis pengeluaran, dan alokasi dana.
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <button
                             onClick={handleExportCSV}
                             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-card hover:bg-muted border border-border text-foreground text-xs font-semibold transition-all"

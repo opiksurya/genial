@@ -165,24 +165,24 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Income Management - Genial FinanceFlow" />
 
-            <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
+            <div className="space-y-8 p-4 sm:p-6 w-full max-w-full min-w-0">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
                     <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Income Management</h1>
-                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-semibold">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">Income Management</h1>
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-semibold shrink-0">
                                 Financial Inflow
                             </span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             Pencatatan seluruh uang masuk bisnis digital agency dari client, project retainer, dan campaign.
                         </p>
                     </div>
 
                     <button
                         onClick={handleOpenCreateModal}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 self-start md:self-auto shrink-0"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 shrink-0 self-start sm:self-auto"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Tambahkan Income</span>
@@ -190,7 +190,7 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                 </div>
 
                 {/* Quick Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                     <div className="rounded-2xl bg-card border border-border p-5 shadow-sm">
                         <span className="text-xs text-muted-foreground uppercase font-semibold">Total Revenue Inflow</span>
                         <div className="text-2xl font-black text-emerald-500 mt-1">{formatIDR(stats.totalIncome)}</div>
@@ -206,7 +206,7 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                 </div>
 
                 {/* Filters & Search */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border w-full">
                     <div className="relative w-full sm:w-80">
                         <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
                         <input
@@ -234,9 +234,9 @@ export default function IncomeManagement({ incomes, projects, stats }: Props) {
                 </div>
 
                 {/* Incomes Table */}
-                <div className="rounded-2xl bg-card border border-border overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                <div className="rounded-2xl bg-card border border-border overflow-hidden shadow-sm w-full">
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left text-xs min-w-[850px]">
                             <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
                                 <tr>
                                     <th className="p-4">Tanggal & Invoice</th>

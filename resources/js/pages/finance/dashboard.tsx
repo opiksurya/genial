@@ -82,35 +82,35 @@ export default function FinanceDashboard({ kpis, trends, allocationDistribution,
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Finance Dashboard - Genial FinanceFlow" />
 
-            <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
+            <div className="space-y-8 p-4 sm:p-6 w-full max-w-full min-w-0">
                 {/* Header Banner */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 p-8 border border-emerald-500/20 shadow-2xl">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 p-6 sm:p-8 border border-emerald-500/20 shadow-2xl">
                     <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                         <div>
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-3">
                                 <Sparkles className="w-3.5 h-3.5" />
                                 Genial FinanceFlow Engine v1.0
                             </div>
-                            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                                 Management Keuangan Real-Time
                             </h1>
-                            <p className="mt-1 text-slate-300 text-sm max-w-xl">
+                            <p className="mt-1 text-slate-300 text-xs sm:text-sm max-w-xl">
                                 Pantau arus uang masuk, efisiensi operasional, net profit bersih, dan distribusi alokasi otomatis bisnis digital agency Anda.
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                             <Link
                                 href="/finance/income"
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-600/30 active:scale-95"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm transition-all shadow-lg shadow-emerald-600/30 active:scale-95 shrink-0"
                             >
                                 <Plus className="w-4 h-4" />
                                 <span>Tambah Income</span>
                             </Link>
                             <Link
                                 href="/finance/expense"
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold text-sm transition-all active:scale-95"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold text-xs sm:text-sm transition-all active:scale-95 shrink-0"
                             >
                                 <Plus className="w-4 h-4 text-rose-400" />
                                 <span>Tambah Expense</span>

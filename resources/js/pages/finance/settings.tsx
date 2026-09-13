@@ -44,8 +44,8 @@ export default function FinanceSettings({ settings }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="FinanceFlow Settings - Genial Digital Solution" />
 
-            <div className="space-y-8 p-6 max-w-[1200px] mx-auto">
-                <div className="flex items-center justify-between">
+            <div className="space-y-8 p-4 sm:p-6 w-full max-w-full min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-2">
                             <h1 className="text-3xl font-extrabold text-foreground tracking-tight">FinanceFlow Settings</h1>
