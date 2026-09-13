@@ -243,9 +243,6 @@ export default function ActivationPage({
                         <a href="/" className={navText}>Beranda</a>
                         <a href="/how-we-work" className={navText}>Metode & Funnel</a>
                         <a href="/activation" className="text-[#00A9E7] font-bold border-b-2 border-[#00A9E7] pb-1">Cara Aktivasi</a>
-                        <a href="/#services" className={navText}>Layanan</a>
-                        <a href="/#audit" className={navText}>Gratis Audit</a>
-                        <a href="/#packages" className={navText}>Paket Harga</a>
                     </nav>
 
                     {/* Action Buttons & Theme Switcher */}
@@ -310,9 +307,6 @@ export default function ActivationPage({
                         <a href="/" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Beranda</a>
                         <a href="/how-we-work" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Metode & Funnel Strategy</a>
                         <a href="/activation" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Cara Aktivasi & Onboarding</a>
-                        <a href="/#services" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Layanan</a>
-                        <a href="/#audit" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Gratis Audit</a>
-                        <a href="/#packages" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Paket Harga</a>
                         <div className="pt-2">
                             <a 
                                 href={waUrl} 
