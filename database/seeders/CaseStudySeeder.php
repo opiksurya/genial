@@ -97,7 +97,7 @@ class CaseStudySeeder extends Seeder
 
 
         // 3. SEED BATIKKU INDONESIA
-        $batikProject = Project::where('client', 'ILIKE', '%Batik%')->first() ?? new Project();
+        $batikProject = Project::where('client', 'LIKE', '%Batik%')->first() ?? new Project();
         $batikProject->fill([
             'slug' => 'batikku-indonesia',
             'name' => 'E-Commerce Website & Omnichannel Growth',
