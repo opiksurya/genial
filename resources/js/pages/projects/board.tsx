@@ -139,10 +139,24 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
 
 
     // Project Form
-    const projectForm = useForm({
+    const projectForm = useForm<{
+        name: string;
+        client: string;
+        client_logo: string;
+        client_logo_file: File | null;
+        description: string;
+        category: string;
+        start_date: string;
+        end_date: string;
+        priority: string;
+        manager_id: string | number;
+        agent_id: string;
+        is_show_on_home: boolean;
+    }>({
         name: '',
         client: '',
         client_logo: '',
+        client_logo_file: null,
         description: '',
         category: CATEGORIES[0],
 
@@ -155,10 +169,26 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
     });
 
     const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
-    const editProjectForm = useForm({
+    const editProjectForm = useForm<{
+        _method: string;
+        name: string;
+        client: string;
+        client_logo: string;
+        client_logo_file: File | null;
+        description: string;
+        category: string;
+        start_date: string;
+        end_date: string;
+        priority: string;
+        manager_id: string;
+        agent_id: string;
+        is_show_on_home: boolean;
+    }>({
+        _method: 'put',
         name: '',
         client: '',
         client_logo: '',
+        client_logo_file: null,
         description: '',
         category: CATEGORIES[0],
         start_date: '',
@@ -172,9 +202,11 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
     const handleOpenEditProject = (p: ProjectItem) => {
         setEditingProject(p);
         editProjectForm.setData({
+            _method: 'put',
             name: p.name,
             client: p.client,
             client_logo: p.client_logo || '',
+            client_logo_file: null,
             description: p.description || '',
             category: p.category || CATEGORIES[0],
             start_date: p.start_date ? p.start_date.split('T')[0] : '',
@@ -189,7 +221,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
     const handleEditProjectSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingProject) return;
-        editProjectForm.put(`/projects/${editingProject.id}`, {
+        editProjectForm.post(`/projects/${editingProject.id}`, {
             onSuccess: () => {
                 setEditingProject(null);
             },
@@ -606,14 +638,34 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-foreground mb-1">URL Logo Client (Opsional)</label>
-                                <input 
-                                    type="text" 
-                                    value={projectForm.data.client_logo}
-                                    onChange={(e) => projectForm.setData('client_logo', e.target.value)}
-                                    placeholder="https://example.com/logo-client.png"
-                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                />
+                                <label className="block text-xs font-semibold text-foreground mb-1">Logo Client (File PNG / Gambar)</label>
+                                <div className="flex items-center gap-3">
+                                    {projectForm.data.client_logo_file ? (
+                                        <img
+                                            src={URL.createObjectURL(projectForm.data.client_logo_file)}
+                                            alt="Preview"
+                                            className="w-10 h-10 rounded-lg object-cover border border-sidebar-border shadow-xs shrink-0"
+                                        />
+                                    ) : projectForm.data.client_logo ? (
+                                        <img
+                                            src={projectForm.data.client_logo}
+                                            alt="Preview"
+                                            className="w-10 h-10 rounded-lg object-cover border border-sidebar-border shadow-xs shrink-0"
+                                        />
+                                    ) : null}
+                                    <input 
+                                        type="file" 
+                                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                projectForm.setData('client_logo_file', file);
+                                            }
+                                        }}
+                                        className="w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer border border-sidebar-border rounded-lg bg-background"
+                                    />
+                                </div>
+                                <span className="text-[10px] text-muted-foreground mt-1 block">Format disarankan: PNG (latar belakang transparan) atau JPG/SVG. Max 3MB.</span>
                             </div>
 
                             <div>
@@ -751,13 +803,34 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-foreground mb-1">URL Logo Client (Opsional)</label>
-                                <input 
-                                    type="text" 
-                                    value={editProjectForm.data.client_logo}
-                                    onChange={(e) => editProjectForm.setData('client_logo', e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                />
+                                <label className="block text-xs font-semibold text-foreground mb-1">Logo Client (File PNG / Gambar)</label>
+                                <div className="flex items-center gap-3">
+                                    {editProjectForm.data.client_logo_file ? (
+                                        <img
+                                            src={URL.createObjectURL(editProjectForm.data.client_logo_file)}
+                                            alt="Preview"
+                                            className="w-10 h-10 rounded-lg object-cover border border-sidebar-border shadow-xs shrink-0"
+                                        />
+                                    ) : editProjectForm.data.client_logo ? (
+                                        <img
+                                            src={editProjectForm.data.client_logo}
+                                            alt="Preview"
+                                            className="w-10 h-10 rounded-lg object-cover border border-sidebar-border shadow-xs shrink-0"
+                                        />
+                                    ) : null}
+                                    <input 
+                                        type="file" 
+                                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                editProjectForm.setData('client_logo_file', file);
+                                            }
+                                        }}
+                                        className="w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-600 hover:file:bg-purple-500/20 cursor-pointer border border-sidebar-border rounded-lg bg-background"
+                                    />
+                                </div>
+                                <span className="text-[10px] text-muted-foreground mt-1 block">Pilih file logo PNG baru jika ingin mengganti logo. Max 3MB.</span>
                             </div>
 
                             <div>

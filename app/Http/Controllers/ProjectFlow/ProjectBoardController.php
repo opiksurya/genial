@@ -59,7 +59,8 @@ class ProjectBoardController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'client' => 'required|string|max:255',
-            'client_logo' => 'nullable|string|max:500',
+            'client_logo' => 'nullable',
+            'client_logo_file' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:3072',
             'description' => 'nullable|string',
             'category' => 'required|string',
             'start_date' => 'required|date',
@@ -73,10 +74,21 @@ class ProjectBoardController extends Controller
             'members.*.role' => 'required|string',
         ]);
 
+        $logoUrl = null;
+        if ($request->hasFile('client_logo_file')) {
+            $path = $request->file('client_logo_file')->store('client_logos', 'public');
+            $logoUrl = '/storage/' . $path;
+        } elseif ($request->hasFile('client_logo')) {
+            $path = $request->file('client_logo')->store('client_logos', 'public');
+            $logoUrl = '/storage/' . $path;
+        } elseif (is_string($request->input('client_logo'))) {
+            $logoUrl = $request->input('client_logo');
+        }
+
         $project = Project::create([
             'name' => $validated['name'],
             'client' => $validated['client'],
-            'client_logo' => $validated['client_logo'] ?? null,
+            'client_logo' => $logoUrl,
             'description' => $validated['description'] ?? null,
             'category' => $validated['category'],
             'status' => 'Planning',
@@ -201,7 +213,8 @@ class ProjectBoardController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'client' => 'required|string|max:255',
-            'client_logo' => 'nullable|string|max:500',
+            'client_logo' => 'nullable',
+            'client_logo_file' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:3072',
             'description' => 'nullable|string',
             'category' => 'required|string',
             'start_date' => 'required|date',
@@ -212,6 +225,15 @@ class ProjectBoardController extends Controller
             'is_show_on_home' => 'nullable|boolean',
         ]);
 
+        if ($request->hasFile('client_logo_file')) {
+            $path = $request->file('client_logo_file')->store('client_logos', 'public');
+            $validated['client_logo'] = '/storage/' . $path;
+        } elseif ($request->hasFile('client_logo')) {
+            $path = $request->file('client_logo')->store('client_logos', 'public');
+            $validated['client_logo'] = '/storage/' . $path;
+        }
+
+        unset($validated['client_logo_file']);
         $project->update($validated);
 
         return redirect()->back()->with('success', 'Project "' . $project->name . '" berhasil diperbarui!');
