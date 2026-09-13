@@ -14,7 +14,9 @@ Route::get('/', function () {
     $clientProjects = Project::where('is_show_on_home', true)
         ->select('id', 'name', 'client', 'client_logo', 'slug', 'category', 'status', 'article_title', 'growth_percentage')
         ->latest()
-        ->get();
+        ->get()
+        ->unique('client')
+        ->values();
 
     return Inertia\Inertia::render('welcome', [
         'clientProjects' => $clientProjects,
@@ -24,12 +26,19 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/case-study/{slug}', function ($slug) {
-    $project = Project::where('slug', $slug)->firstOrFail();
+    $project = Project::where('slug', $slug)
+        ->orWhere('id', is_numeric($slug) ? $slug : 0)
+        ->orWhere('client', 'ILIKE', '%' . str_replace('-', ' ', $slug) . '%')
+        ->first();
+
+    if (!$project) {
+        return redirect()->route('home');
+    }
 
     return Inertia\Inertia::render('case-study', [
         'project' => $project,
         'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
-        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya tertarik dengan studi kasus ' . $project->client . ' dan ingin berdiskusi lebih lanjut'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya tertarik dengan studi kasus ' . ($project->client ?? 'brand') . ' dan ingin berdiskusi lebih lanjut'),
     ]);
 })->name('case-study.show');
 

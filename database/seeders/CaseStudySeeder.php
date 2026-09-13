@@ -14,32 +14,45 @@ class CaseStudySeeder extends Seeder
         $startDate = now()->subMonths(6)->startOfMonth();
         $endDate = now()->endOfMonth();
 
-        // 1. GLOWING ID CASE STUDY
-        Project::updateOrCreate(
-            ['slug' => 'glowing-id'],
-            [
-                'name' => 'SEO & Performance Marketing Campaign',
-                'client' => 'GlowingID',
-                'client_logo' => '/images/brands/skincare.svg',
-                'description' => 'Akselerasi omset brand skincare melalui strategi Omni-Channel Funnel, Meta CAPI, dan Video UGC.',
-                'category' => 'Performance Marketing',
-                'status' => 'Completed',
-                'priority' => 'High',
-                'progress' => 100,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'is_show_on_home' => true,
-                'manager_id' => $user?->id,
-                'article_title' => 'Akselerasi Omset Skincare GlowingID: Dari Rp 35 Juta Menjadi Rp 168 Juta per Bulan Melalui Omni-Channel Funnel & UGC Meta CAPI',
-                'article_subtitle' => 'Bagaimana kolaborasi strategis Genial Digital Solution bersama GlowingID merevolusi saluran penjualan digital, mengoptimalkan return on ad spend (ROAS) dari 1.8x menjadi 4.5x, dan membangun pertumbuhan bisnis berkelanjutan.',
-                'initial_revenue' => 'Rp 35.000.000 / bln',
-                'current_revenue' => 'Rp 168.000.000 / bln',
-                'initial_roas' => '1.8x ROAS',
-                'current_roas' => '4.5x ROAS',
-                'growth_percentage' => '+380%',
-                'collaboration_story' => "Pertama kali founder GlowingID berkonsultasi dengan tim Genial pada pertengahan 2023, bisnis skincare ini menghadapi tantangan serius: biaya iklan Meta (Facebook & Instagram Ads) yang terus membengkak tanpa kenaikan konversi yang sepadan. Rasio iklan (ROAS) hanya bertengger di angka 1.8x, stok produk sering menumpuk di gudang karena estimasi permintaan yang tidak akurat, dan tim customer service kewalahan melayani pesan tanpa sistem pengelolaan order yang terintegrasi.\n\nMelihat potensi besar pada kualitas formulasi produk GlowingID, Genial merancang pendekatan holistik. Bukan sekadar \"menjalankan iklan\", kami melakukan pembenahan fundamental pada 3 pilar: Creative UGC Engine, Tracking Presisi (Meta Conversions API + GTM), dan Integrasi Database Order.",
-                'key_results' => "- Lonjakan Omset dari Rp 35 Juta menjadi Rp 168 Juta / bulan (+380% Growth)\n- ROAS Iklan naik dari 1.8x menjadi 4.5x secara konsisten dalam 60 hari\n- Produksi 15+ Video UGC High-Converting setiap bulan\n- Integrasi Meta CAPI Server-Side Tracking dengan akurasi 98.2%\n- Efisiensi penanganan chat CS meningkat 4x lebih cepat dengan bot order dispatching",
-                'article_content' => '<h2>1. Analisis Kendala & Tantangan Awal</h2>
+        // 1. CLEANUP DUPLICATES IN DATABASE
+        $allBatik = Project::where('client', 'ILIKE', '%Batik%')->get();
+        if ($allBatik->count() > 1) {
+            $keep = $allBatik->first();
+            Project::where('client', 'ILIKE', '%Batik%')->where('id', '!=', $keep->id)->delete();
+        }
+
+        $allGlowing = Project::where('client', 'ILIKE', '%Glowing%')->get();
+        if ($allGlowing->count() > 1) {
+            $keep = $allGlowing->first();
+            Project::where('client', 'ILIKE', '%Glowing%')->where('id', '!=', $keep->id)->delete();
+        }
+
+        // 2. SEED GLOWING ID
+        $glowingProject = Project::where('client', 'ILIKE', '%Glowing%')->first() ?? new Project();
+        $glowingProject->fill([
+            'slug' => 'glowing-id',
+            'name' => 'SEO & Performance Marketing Campaign',
+            'client' => 'GlowingID',
+            'client_logo' => '/images/brands/skincare.svg',
+            'description' => 'Akselerasi omset brand skincare melalui strategi Omni-Channel Funnel, Meta CAPI, dan Video UGC.',
+            'category' => 'Performance Marketing',
+            'status' => 'Completed',
+            'priority' => 'High',
+            'progress' => 100,
+            'start_date' => $glowingProject->start_date ?? $startDate,
+            'end_date' => $glowingProject->end_date ?? $endDate,
+            'is_show_on_home' => true,
+            'manager_id' => $user?->id,
+            'article_title' => 'Akselerasi Omset Skincare GlowingID: Dari Rp 35 Juta Menjadi Rp 168 Juta per Bulan Melalui Omni-Channel Funnel & UGC Meta CAPI',
+            'article_subtitle' => 'Bagaimana kolaborasi strategis Genial Digital Solution bersama GlowingID merevolusi saluran penjualan digital, mengoptimalkan return on ad spend (ROAS) dari 1.8x menjadi 4.5x, dan membangun pertumbuhan bisnis berkelanjutan.',
+            'initial_revenue' => 'Rp 35.000.000 / bln',
+            'current_revenue' => 'Rp 168.000.000 / bln',
+            'initial_roas' => '1.8x ROAS',
+            'current_roas' => '4.5x ROAS',
+            'growth_percentage' => '+380%',
+            'collaboration_story' => "Pertama kali founder GlowingID berkonsultasi dengan tim Genial pada pertengahan 2023, bisnis skincare ini menghadapi tantangan serius: biaya iklan Meta (Facebook & Instagram Ads) yang terus membengkak tanpa kenaikan konversi yang sepadan. Rasio iklan (ROAS) hanya bertengger di angka 1.8x, stok produk sering menumpuk di gudang karena estimasi permintaan yang tidak akurat, dan tim customer service kewalahan melayani pesan tanpa sistem pengelolaan order yang terintegrasi.\n\nMelihat potensi besar pada kualitas formulasi produk GlowingID, Genial merancang pendekatan holistik. Bukan sekadar \"menjalankan iklan\", kami melakukan pembenahan fundamental pada 3 pilar: Creative UGC Engine, Tracking Presisi (Meta Conversions API + GTM), dan Integrasi Database Order.",
+            'key_results' => "- Lonjakan Omset dari Rp 35 Juta menjadi Rp 168 Juta / bulan (+380% Growth)\n- ROAS Iklan naik dari 1.8x menjadi 4.5x secara konsisten dalam 60 hari\n- Produksi 15+ Video UGC High-Converting setiap bulan\n- Integrasi Meta CAPI Server-Side Tracking dengan akurasi 98.2%\n- Efisiensi penanganan chat CS meningkat 4x lebih cepat dengan bot order dispatching",
+            'article_content' => '<h2>1. Analisis Kendala & Tantangan Awal</h2>
 <p>Sebelum intervensi strategi dari <strong>Genial Digital Solution</strong>, GlowingID sangat bergantung pada metode pemasaran konvensional dan materi iklan statis yang kurang relevan bagi audiens Gen-Z dan Milenial. Beberapa masalah utama yang diidentifikasi meliputi:</p>
 <ul>
   <li><strong>Iklan Jenuh (Ad Fatigue):</strong> Visual iklan yang kaku menyebabkan Click-Through Rate (CTR) drop di bawah 0.9%.</li>
@@ -79,35 +92,36 @@ class CaseStudySeeder extends Seeder
   <p>"Kerjasama dengan Genial bukan hanya mengubah cara kami beriklan, tapi mengubah cara kami memandang pertumbuhan bisnis secara menyeluruh. Tim Genial sangat proaktif dan transparan dalam setiap keputusan strategi."</p>
   <cite>— Founder & CEO GlowingID</cite>
 </blockquote>',
-            ]
-        );
+        ]);
+        $glowingProject->save();
 
-        // 2. BATIKKU INDONESIA CASE STUDY
-        Project::updateOrCreate(
-            ['slug' => 'batikku-indonesia'],
-            [
-                'name' => 'E-Commerce Website & Omnichannel Growth',
-                'client' => 'BatikKu Indonesia',
-                'client_logo' => '/images/brands/fashion.svg',
-                'description' => 'Digitalisasi brand batik warisan budaya lokal ke kancah e-commerce nasional dengan integrasi payment otomatis.',
-                'category' => 'Website Development',
-                'status' => 'Completed',
-                'priority' => 'High',
-                'progress' => 100,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'is_show_on_home' => true,
-                'manager_id' => $user?->id,
-                'article_title' => 'Transformasi Digital BatikKu Indonesia: Menjangkau Pasar Nasional & Ekspor Melalui Platform E-Commerce Modern',
-                'article_subtitle' => 'Bagaimana sistem toko online berkecepatan tinggi & integrasi payment gateway Midtrans mendongkrak transaksi sebesar 413% dalam rentang waktu kurang dari 5 bulan.',
-                'initial_revenue' => 'Rp 45.000.000 / bln',
-                'current_revenue' => 'Rp 230.000.000 / bln',
-                'initial_roas' => '2.1x ROAS',
-                'current_roas' => '5.2x ROAS',
-                'growth_percentage' => '+413%',
-                'collaboration_story' => "BatikKu Indonesia berawal dari toko fisik tradisional di Bandung yang berjuang mempertahankan omset di tengah peralihan perilaku belanja masyarakat ke ranah digital. Sebelum bertemu Genial, BatikKu hanya berjualan lewat chat manual di Instagram yang membutuhkan waktu berjam-jam untuk mengonfirmasi transaksi satu per satu.\n\nGenial merancang toko online custom yang sangat ringan, cepat, dan dilengkapi fitur cek ongkir otomatis serta pembayaran instant QRIS & Bank VA.",
-                'key_results' => "- Kenaikan Omset Bulanan hingga Rp 230 Juta / bulan (+413% Growth)\n- Pemangkasan Waktu Proses Order dari 20 Menit menjadi 30 Detik secara otomatis\n- Skala Ekspor Produk Batik Tulis ke Singapore & Malaysia\n- Loading Speed Website di bawah 1.2 detik (SEO Optimized)",
-                'article_content' => '<h2>1. Tantangan Penjualan Tradisional</h2>
+
+        // 3. SEED BATIKKU INDONESIA
+        $batikProject = Project::where('client', 'ILIKE', '%Batik%')->first() ?? new Project();
+        $batikProject->fill([
+            'slug' => 'batikku-indonesia',
+            'name' => 'E-Commerce Website & Omnichannel Growth',
+            'client' => 'BatikKu Indonesia',
+            'client_logo' => '/images/brands/fashion.svg',
+            'description' => 'Digitalisasi brand batik warisan budaya lokal ke kancah e-commerce nasional dengan integrasi payment otomatis.',
+            'category' => 'Website Development',
+            'status' => 'Completed',
+            'priority' => 'High',
+            'progress' => 100,
+            'start_date' => $batikProject->start_date ?? $startDate,
+            'end_date' => $batikProject->end_date ?? $endDate,
+            'is_show_on_home' => true,
+            'manager_id' => $user?->id,
+            'article_title' => 'Transformasi Digital BatikKu Indonesia: Menjangkau Pasar Nasional & Ekspor Melalui Platform E-Commerce Modern',
+            'article_subtitle' => 'Bagaimana sistem toko online berkecepatan tinggi & integrasi payment gateway Midtrans mendongkrak transaksi sebesar 413% dalam rentang waktu kurang dari 5 bulan.',
+            'initial_revenue' => 'Rp 45.000.000 / bln',
+            'current_revenue' => 'Rp 230.000.000 / bln',
+            'initial_roas' => '2.1x ROAS',
+            'current_roas' => '5.2x ROAS',
+            'growth_percentage' => '+413%',
+            'collaboration_story' => "BatikKu Indonesia berawal dari toko fisik tradisional di Bandung yang berjuang mempertahankan omset di tengah peralihan perilaku belanja masyarakat ke ranah digital. Sebelum bertemu Genial, BatikKu hanya berjualan lewat chat manual di Instagram yang membutuhkan waktu berjam-jam untuk mengonfirmasi transaksi satu per satu.\n\nGenial merancang toko online custom yang sangat ringan, cepat, dan dilengkapi fitur cek ongkir otomatis serta pembayaran instant QRIS & Bank VA.",
+            'key_results' => "- Kenaikan Omset Bulanan hingga Rp 230 Juta / bulan (+413% Growth)\n- Pemangkasan Waktu Proses Order dari 20 Menit menjadi 30 Detik secara otomatis\n- Skala Ekspor Produk Batik Tulis ke Singapore & Malaysia\n- Loading Speed Website di bawah 1.2 detik (SEO Optimized)",
+            'article_content' => '<h2>1. Tantangan Penjualan Tradisional</h2>
 <p>Sebelum kerjasama dengan Genial, BatikKu Indonesia mengalami kendala operasional yang menghambat skalabilitas bisnis mereka:</p>
 <ul>
   <li><strong>Sistem Pembayaran Manual:</strong> CS harus mengecek mutasi rekening bank satu per satu secara manual.</li>
@@ -126,7 +140,7 @@ class CaseStudySeeder extends Seeder
 
 <h2>3. Pencapaian Rekor Omset</h2>
 <p>Dalam kurun waktu 5 bulan, BatikKu Indonesia mencatatkan peningkatan omset dari Rp 45 Juta per bulan menjadi Rp 230 Juta per bulan dengan rasio kepuasan pelanggan mencapai 99.4%.</p>',
-            ]
-        );
+        ]);
+        $batikProject->save();
     }
 }
