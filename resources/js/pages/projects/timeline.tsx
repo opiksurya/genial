@@ -263,10 +263,24 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                                             </td>
 
                                             {/* DAY SCALE GRID */}
-                                            {zoomLevel === 'day' && daysInTimeline.map((dateStr) => {
+                                            {zoomLevel === 'day' && daysInTimeline.map((dateStr, idx) => {
                                                 const isToday = dateStr === todayDate;
-                                                const isStart = dateStr === taskStart;
                                                 const isInRange = dateStr >= taskStart && dateStr <= taskDue;
+
+                                                const isFirstVisible = idx === 0;
+                                                const isLastVisible = idx === daysInTimeline.length - 1;
+
+                                                const isStart = dateStr === taskStart || (isFirstVisible && taskStart < dateStr);
+                                                const isEnd = dateStr === taskDue || (isLastVisible && taskDue > dateStr);
+
+                                                let roundingClass = "rounded-none -mx-[1px]";
+                                                if (isStart && isEnd) {
+                                                    roundingClass = "rounded-md mx-1";
+                                                } else if (isStart) {
+                                                    roundingClass = "rounded-l-md ml-1 -mr-[1px]";
+                                                } else if (isEnd) {
+                                                    roundingClass = "rounded-r-md mr-1 -ml-[1px]";
+                                                }
 
                                                 return (
                                                     <td 
@@ -276,19 +290,19 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                                                         }`}
                                                     >
                                                         {isToday && (
-                                                            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-primary/40 pointer-events-none z-10" title="Hari Ini" />
+                                                            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-primary/40 pointer-events-none z-20" title="Hari Ini" />
                                                         )}
 
                                                         {isInRange && (
                                                             <div 
-                                                                className={`h-6 mx-0.5 rounded-md flex items-center justify-center text-[9px] font-bold text-white shadow-sm transition-all ${
+                                                                className={`h-7 flex items-center justify-center text-[10px] font-bold text-white shadow-sm transition-all relative z-10 ${roundingClass} ${
                                                                     task.status === 'DONE' ? 'bg-emerald-500' :
                                                                     task.status === 'IN_PROGRESS' ? 'bg-amber-500' :
                                                                     task.priority === 'Urgent' ? 'bg-rose-500' : 'bg-primary'
                                                                 }`}
                                                                 title={`${task.title} (${task.start_date} - ${task.due_date})`}
                                                             >
-                                                                {isStart && <span className="truncate px-1">{task.status}</span>}
+                                                                {isStart && <span className="truncate px-2">{task.title || task.status}</span>}
                                                             </div>
                                                         )}
                                                     </td>
@@ -296,28 +310,42 @@ export default function ProjectTimeline({ projects, activeProject, tasks, todayD
                                             })}
 
                                             {/* WEEK SCALE GRID */}
-                                            {zoomLevel === 'week' && weeksInTimeline.map((w) => {
-                                                // Task overlaps with this week if weekStart <= taskDue AND weekEnd >= taskStart
+                                            {zoomLevel === 'week' && weeksInTimeline.map((w, idx) => {
                                                 const isOverlapping = w.startDate <= taskDue && w.endDate >= taskStart;
+
+                                                const isFirstVisible = idx === 0;
+                                                const isLastVisible = idx === weeksInTimeline.length - 1;
+
+                                                const isStartWeek = (taskStart >= w.startDate && taskStart <= w.endDate) || (isFirstVisible && taskStart < w.startDate);
+                                                const isEndWeek = (taskDue >= w.startDate && taskDue <= w.endDate) || (isLastVisible && taskDue > w.endDate);
+
+                                                let roundingClass = "rounded-none -mx-[1px]";
+                                                if (isStartWeek && isEndWeek) {
+                                                    roundingClass = "rounded-lg mx-1 px-2";
+                                                } else if (isStartWeek) {
+                                                    roundingClass = "rounded-l-lg ml-1 -mr-[1px] pl-2";
+                                                } else if (isEndWeek) {
+                                                    roundingClass = "rounded-r-lg mr-1 -ml-[1px] pr-2";
+                                                }
 
                                                 return (
                                                     <td 
                                                         key={w.id}
-                                                        className={`px-1 py-2 border-r border-sidebar-border/30 relative text-center ${
+                                                        className={`px-0 py-2 border-r border-sidebar-border/30 relative text-center ${
                                                             w.isCurrentWeek ? 'bg-primary/5' : ''
                                                         }`}
                                                     >
                                                         {isOverlapping && (
                                                             <div 
-                                                                className={`h-7 rounded-lg px-2 flex items-center justify-between text-[10px] font-bold text-white shadow-sm transition-all ${
+                                                                className={`h-7 flex items-center justify-between text-[10px] font-bold text-white shadow-sm transition-all relative z-10 ${roundingClass} ${
                                                                     task.status === 'DONE' ? 'bg-emerald-500' :
                                                                     task.status === 'IN_PROGRESS' ? 'bg-amber-500' :
                                                                     task.priority === 'Urgent' ? 'bg-rose-500' : 'bg-primary'
                                                                 }`}
                                                                 title={`${task.title} (${task.start_date} - ${task.due_date})`}
                                                             >
-                                                                <span className="truncate">{task.title}</span>
-                                                                <span className="text-[9px] opacity-90 font-mono shrink-0 ml-1">({task.duration_days}h)</span>
+                                                                {isStartWeek && <span className="truncate">{task.title}</span>}
+                                                                {isEndWeek && <span className="text-[9px] opacity-90 font-mono shrink-0 ml-1">({task.duration_days}h)</span>}
                                                             </div>
                                                         )}
                                                     </td>
