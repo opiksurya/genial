@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import { useGtm } from '@/hooks/use-gtm';
+import PublicHeader from '@/components/public-header';
+import PublicFooter from '@/components/public-footer';
 import { 
     CheckCircle2, 
     ArrowRight, 
@@ -226,105 +228,12 @@ export default function ActivationPage({
             </Head>
 
             {/* NAVIGATION HEADER */}
-            <header className={`sticky top-0 z-50 backdrop-blur-xl ${headerBg} transition-all duration-300 border-b`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    
-                    {/* Logo */}
-                    <a href="/" className="flex items-center gap-3 group">
-                        <img 
-                            src="/logo.png" 
-                            alt="Genial Digital Solution" 
-                            className="h-10 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-                        />
-                    </a>
-
-                    {/* Desktop Nav Items */}
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-                        <a href="/" className={navText}>Beranda</a>
-                        <a href="/our-story" className={navText}>Cerita & Filosofi</a>
-                        <a href="/how-we-work" className={navText}>Metode & Funnel</a>
-                        <a href="/activation" className="text-[#00A9E7] font-bold border-b-2 border-[#00A9E7] pb-1">Cara Aktivasi</a>
-                        <a href="/support" className={navText}>Penunjang Bisnis & ERP</a>
-                    </nav>
-
-                    {/* Action Buttons & Theme Switcher */}
-                    <div className="hidden md:flex items-center gap-3">
-                        <button
-                            onClick={toggleTheme}
-                            className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 ${
-                                isDark 
-                                    ? 'bg-[#0c1322] border-slate-800 text-[#FAD03D] hover:bg-slate-900' 
-                                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
-                            }`}
-                            title={isDark ? 'Mode Terang' : 'Mode Gelap'}
-                        >
-                            {isDark ? <Sun className="w-5 h-5 text-[#FAD03D]" /> : <Moon className="w-5 h-5 text-[#2D90CA]" />}
-                        </button>
-
-                        <a 
-                            href={waUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-sm ${
-                                isDark 
-                                    ? 'text-emerald-400 border-slate-800 bg-[#0c1322] hover:bg-slate-900' 
-                                    : 'text-emerald-600 border-slate-200 bg-white hover:bg-slate-100'
-                            }`}
-                            title="Konsultasi WhatsApp"
-                        >
-                            <MessageSquare className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
-                        </a>
-                        
-                        <a 
-                            href={waUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-5 py-2.5 rounded-xl text-xs font-extrabold text-slate-900 bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0] hover:opacity-95 transition-all shadow-md shadow-[#00A9E7]/25 hover:scale-105 active:scale-95 flex items-center gap-2"
-                        >
-                            <span>Mulai Aktivasi</span>
-                            <ArrowRight className="w-4 h-4" />
-                        </a>
-                    </div>
-
-                    {/* Mobile Menu Button */}
-                    <div className="flex md:hidden items-center gap-2">
-                        <button
-                            onClick={toggleTheme}
-                            className={`p-2 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-800 text-[#FAD03D]' : 'bg-white border-slate-200 text-slate-700'}`}
-                        >
-                            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                        </button>
-                        <button 
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className={`p-2 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}
-                        >
-                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Mobile Menu Dropdown */}
-                {mobileMenuOpen && (
-                    <div className={`md:hidden ${isDark ? 'bg-[#000000] border-slate-800' : 'bg-white border-slate-200'} border-b px-4 pt-3 pb-6 space-y-3`}>
-                        <a href="/" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Beranda</a>
-                        <a href="/our-story" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Cerita & Filosofi</a>
-                        <a href="/how-we-work" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Metode & Funnel Strategy</a>
-                        <a href="/activation" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Cara Aktivasi & Onboarding</a>
-                        <a href="/support" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Penunjang Bisnis & ERP</a>
-                        <div className="pt-2">
-                            <a 
-                                href={waUrl} 
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="w-full text-center block py-2.5 rounded-xl text-xs font-bold text-slate-900 bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0] shadow-md"
-                            >
-                                Hubungi Tim Aktivasi WhatsApp
-                            </a>
-                        </div>
-                    </div>
-                )}
-            </header>
+            <PublicHeader 
+                whatsappNumber={whatsappNumber}
+                whatsappDefaultMessage={whatsappDefaultMessage}
+                themeMode={themeMode}
+                onToggleTheme={toggleTheme}
+            />
 
             {/* HERO BANNER SECTION */}
             <section className="relative pt-12 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
@@ -655,20 +564,7 @@ export default function ActivationPage({
             </section>
 
             {/* FOOTER */}
-            <footer className={`py-12 border-t ${isDark ? 'bg-[#000000] border-slate-900' : 'bg-slate-100 border-slate-200'} text-xs text-slate-400 transition-colors`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Genial Logo" className="h-8 w-auto object-contain" />
-                        <span>© {new Date().getFullYear()} Genial Digital Solution. All rights reserved.</span>
-                    </div>
-                    <div className="flex items-center gap-6 font-semibold">
-                        <a href="/" className="hover:text-[#00A9E7]">Beranda</a>
-                        <a href="/activation" className="hover:text-[#00A9E7]">Cara Aktivasi</a>
-                        <a href="/#packages" className="hover:text-[#00A9E7]">Paket Harga</a>
-                        <a href={waUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#00A9E7]">Kontak WA</a>
-                    </div>
-                </div>
-            </footer>
+            <PublicFooter themeMode={themeMode} />
 
         </div>
     );

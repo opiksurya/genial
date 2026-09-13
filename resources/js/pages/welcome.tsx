@@ -24,6 +24,8 @@ import {
 
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import { useGtm } from '@/hooks/use-gtm';
+import PublicHeader from '@/components/public-header';
+import PublicFooter from '@/components/public-footer';
 import { SpotlightCard } from '@/components/reactbits/spotlight-card';
 import { ShinyText } from '@/components/reactbits/shiny-text';
 import { BlurText } from '@/components/reactbits/blur-text';
@@ -199,106 +201,12 @@ export default function Welcome() {
                 <div className={`absolute inset-0 ${isDark ? 'bg-[linear-gradient(to_right,#2D90CA10_1px,transparent_1px),linear-gradient(to_bottom,#2D90CA10_1px,transparent_1px)]' : 'bg-[linear-gradient(to_right,#00A9E715_1px,transparent_1px),linear-gradient(to_bottom,#00A9E715_1px,transparent_1px)]'} bg-[size:4rem_4rem] pointer-events-none -z-10`} />
 
                 {/* NAVIGATION HEADER */}
-                <header className={`sticky top-0 z-50 backdrop-blur-xl ${headerBg} transition-all duration-300`}>
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                        
-                        {/* Logo */}
-                        <a href="#" className="flex items-center gap-3 group">
-                            <img 
-                                src="/logo.png" 
-                                alt="Genial Digital Solution" 
-                                className="h-10 sm:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-                            />
-                        </a>
-
-                        {/* Desktop Nav Items */}
-                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-                            <a href="/" className="text-[#00A9E7] font-bold border-b-2 border-[#00A9E7] pb-1">Beranda</a>
-                            <a href="/our-story" className={navText}>Cerita & Filosofi</a>
-                            <a href="/how-we-work" className={navText}>Metode & Funnel</a>
-                            <a href="/activation" className={navText}>Cara Aktivasi</a>
-                            <a href="/support" className={navText}>Penunjang Bisnis & ERP</a>
-                        </nav>
-
-                        {/* Action Buttons & Theme Switcher (Icon Only) */}
-                        <div className="hidden md:flex items-center gap-3">
-                            
-                            {/* Theme Toggle Button */}
-                            <button
-                                onClick={toggleTheme}
-                                className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 ${
-                                    isDark 
-                                        ? 'bg-[#0c1322] border-slate-800 text-[#FAD03D] hover:bg-slate-900' 
-                                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
-                                }`}
-                                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                            >
-                                {isDark ? <Sun className="w-5 h-5 text-[#FAD03D]" /> : <Moon className="w-5 h-5 text-[#2D90CA]" />}
-                            </button>
-
-                            {/* WhatsApp Button */}
-                            <a 
-                                href={waUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-
-                                className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-sm ${
-                                    isDark 
-                                        ? 'text-emerald-400 border-slate-800 bg-[#0c1322] hover:bg-slate-900' 
-                                        : 'text-emerald-600 border-slate-200 bg-white hover:bg-slate-100'
-                                }`}
-                                title="Konsultasi WhatsApp"
-                            >
-                                <MessageSquare className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
-                            </a>
-                            
-                            {/* Klaim Audit Button (Brand Signature Gradient) */}
-                            <a 
-                                href="#audit" 
-                                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-900 bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0] hover:opacity-95 transition-all shadow-md shadow-[#00A9E7]/25 hover:scale-105 active:scale-95"
-                                title="Klaim Audit Gratis"
-                            >
-                                <Zap className="w-5 h-5 fill-[#FAD03D] text-[#FAD03D]" />
-                            </a>
-                        </div>
-
-                        {/* Mobile Menu & Theme Switcher Button */}
-                        <div className="flex md:hidden items-center gap-2">
-                            <button
-                                onClick={toggleTheme}
-                                className={`p-2 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-800 text-[#FAD03D]' : 'bg-white border-slate-200 text-slate-700'}`}
-                            >
-                                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                            </button>
-                            <button 
-                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className={`p-2 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}
-                            >
-                                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Mobile Menu dropdown */}
-                    {mobileMenuOpen && (
-                        <div className={`md:hidden ${isDark ? 'bg-[#000000] border-slate-800' : 'bg-white border-slate-200'} border-b px-4 pt-3 pb-6 space-y-3`}>
-                            <a href="/" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Beranda</a>
-                            <a href="/our-story" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Cerita & Filosofi</a>
-                            <a href="/how-we-work" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Metode & Funnel Strategy</a>
-                            <a href="/activation" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Cara Aktivasi & Onboarding</a>
-                            <a href="/support" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Penunjang Bisnis & ERP</a>
-                            <div className="pt-2 flex flex-col gap-2">
-                                <a 
-                                    href="#audit" 
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="w-full text-center py-2.5 rounded-xl text-sm font-semibold text-slate-900 bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0] shadow-md"
-                                >
-                                    Klaim Audit Gratis
-                                </a>
-                            </div>
-                        </div>
-                    )}
-                </header>
+                <PublicHeader 
+                    whatsappNumber={whatsappNumber}
+                    whatsappDefaultMessage={whatsappDefaultMessage}
+                    themeMode={themeMode}
+                    onToggleTheme={toggleTheme}
+                />
 
 
                 {/* SECTION 1: HERO SECTION */}
