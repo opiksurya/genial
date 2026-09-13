@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
+import { useGtm } from '@/hooks/use-gtm';
 import { 
     CheckCircle2, 
     ArrowRight, 
@@ -39,6 +40,7 @@ export default function ActivationPage({
     whatsappNumber = '6281234567890', 
     whatsappDefaultMessage = 'Halo Genial Digital Solution, saya ingin berkonsultasi mengenai alur aktivasi kerjasama digital marketing' 
 }: Props) {
+    useGtm();
     const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'steps' | 'deliverables' | 'maintenance'>('steps');
@@ -239,9 +241,10 @@ export default function ActivationPage({
                     {/* Desktop Nav Items */}
                     <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
                         <a href="/" className={navText}>Beranda</a>
-                        <a href="/#services" className={navText}>Layanan</a>
+                        <a href="/how-we-work" className={navText}>Metode & Funnel</a>
                         <a href="/activation" className="text-[#00A9E7] font-bold border-b-2 border-[#00A9E7] pb-1">Cara Aktivasi</a>
-                        <a href="/#results" className={navText}>Case Study</a>
+                        <a href="/#services" className={navText}>Layanan</a>
+                        <a href="/#audit" className={navText}>Gratis Audit</a>
                         <a href="/#packages" className={navText}>Paket Harga</a>
                     </nav>
 
@@ -305,8 +308,10 @@ export default function ActivationPage({
                 {mobileMenuOpen && (
                     <div className={`md:hidden ${isDark ? 'bg-[#000000] border-slate-800' : 'bg-white border-slate-200'} border-b px-4 pt-3 pb-6 space-y-3`}>
                         <a href="/" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Beranda</a>
+                        <a href="/how-we-work" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Metode & Funnel Strategy</a>
+                        <a href="/activation" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Cara Aktivasi & Onboarding</a>
                         <a href="/#services" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Layanan</a>
-                        <a href="/activation" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#00A9E7] font-bold">Cara Aktivasi</a>
+                        <a href="/#audit" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Gratis Audit</a>
                         <a href="/#packages" onClick={() => setMobileMenuOpen(false)} className={`block py-2 ${navText}`}>Paket Harga</a>
                         <div className="pt-2">
                             <a 
