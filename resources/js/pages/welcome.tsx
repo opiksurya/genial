@@ -5,6 +5,7 @@ import {
     Zap, 
     CheckCircle2, 
     ArrowRight, 
+    ArrowUpRight,
     Sparkles, 
     ShieldCheck, 
     MessageSquare, 
