@@ -493,55 +493,55 @@ export default function Welcome() {
                 </section>
 
                 {/* TRUSTED CLIENT SHOWCASE BANNER */}
-                <section className={`py-10 border-y ${isDark ? 'bg-[#060a12]/90 border-slate-800' : 'bg-slate-50 border-slate-200'} transition-colors`}>
+                <section className={`py-12 border-y ${isDark ? 'bg-[#060a12]/90 border-slate-800' : 'bg-slate-50 border-slate-200'} transition-colors`}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <p className={`text-center text-xs font-bold uppercase tracking-widest ${textMuted} mb-6`}>
+                        <p className={`text-center text-xs font-bold uppercase tracking-widest ${textMuted} mb-8`}>
                             Dipercaya Oleh Brand & Klien Digital Marketing Agency
                         </p>
 
-                        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8">
+                        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 lg:gap-16">
                             {clientProjects && clientProjects.length > 0 ? (
                                 clientProjects.map((p) => (
                                     <div
                                         key={p.id}
-                                        className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all hover:scale-105 ${
-                                            isDark
-                                                ? 'bg-[#0c1322] border-slate-800 text-slate-200 shadow-lg shadow-black/40'
-                                                : 'bg-white border-slate-200 text-slate-800 shadow-xs hover:shadow-md'
-                                        }`}
+                                        className="flex items-center justify-center transition-all hover:scale-105"
+                                        title={p.client}
                                     >
                                         {p.client_logo ? (
                                             <img
                                                 src={p.client_logo}
                                                 alt={p.client}
-                                                className="w-8 h-8 rounded-full object-cover border border-slate-200/50"
+                                                className="h-10 sm:h-12 w-auto max-w-[160px] object-contain filter grayscale hover:grayscale-0 opacity-80 hover:opacity-100 transition-all duration-300"
                                             />
                                         ) : (
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2D90CA] to-[#05BAF0] text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
-                                                {p.client.charAt(0)}
+                                            <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2D90CA] to-[#05BAF0] text-white font-extrabold text-base flex items-center justify-center shadow-xs">
+                                                    {p.client.charAt(0)}
+                                                </div>
+                                                <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{p.client}</span>
                                             </div>
                                         )}
-                                        <div>
-                                            <span className="font-bold text-sm block leading-tight">{p.client}</span>
-                                            <span className="text-[10px] text-[#00A9E7] font-semibold block">{p.category}</span>
-                                        </div>
                                     </div>
                                 ))
                             ) : (
                                 <>
-                                    <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border ${isDark ? 'bg-[#0c1322] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-800'}`}>
-                                        <div className="w-8 h-8 rounded-full bg-[#2D90CA] text-white font-extrabold text-xs flex items-center justify-center">B</div>
-                                        <div>
-                                            <span className="font-bold text-sm block">BatikKu Indonesia</span>
-                                            <span className="text-[10px] text-[#00A9E7] font-semibold block">Website Development</span>
+                                    <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
+                                        <div className="w-10 h-10 rounded-xl bg-[#2D90CA] text-white font-extrabold text-base flex items-center justify-center shadow-xs">
+                                            G
                                         </div>
+                                        <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Genial</span>
                                     </div>
-                                    <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border ${isDark ? 'bg-[#0c1322] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-800'}`}>
-                                        <div className="w-8 h-8 rounded-full bg-[#FAD03D] text-slate-900 font-extrabold text-xs flex items-center justify-center">S</div>
-                                        <div>
-                                            <span className="font-bold text-sm block">Skincare Glowing ID</span>
-                                            <span className="text-[10px] text-[#00A9E7] font-semibold block">SEO & Performance Ads</span>
+                                    <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
+                                        <div className="w-10 h-10 rounded-xl bg-[#2D90CA] text-white font-extrabold text-base flex items-center justify-center shadow-xs">
+                                            B
                                         </div>
+                                        <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>BatikKu Indonesia</span>
+                                    </div>
+                                    <div className="flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
+                                        <div className="w-10 h-10 rounded-xl bg-[#FAD03D] text-slate-900 font-extrabold text-base flex items-center justify-center shadow-xs">
+                                            S
+                                        </div>
+                                        <span className={`font-extrabold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Skincare Glowing ID</span>
                                     </div>
                                 </>
                             )}
