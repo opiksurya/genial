@@ -23,6 +23,12 @@ import {
 
 import { useMetaPixel } from '@/hooks/use-meta-pixel';
 import { useGtm } from '@/hooks/use-gtm';
+import { SpotlightCard } from '@/components/reactbits/spotlight-card';
+import { ShinyText } from '@/components/reactbits/shiny-text';
+import { BlurText } from '@/components/reactbits/blur-text';
+import { ParticlesBg } from '@/components/reactbits/particles-bg';
+import { CountUp } from '@/components/reactbits/count-up';
+import { TiltedCard } from '@/components/reactbits/tilted-card';
 
 interface PageProps {
     flash?: {
@@ -297,20 +303,23 @@ export default function Welcome() {
 
                 {/* SECTION 1: HERO SECTION */}
                 <section className="relative pt-12 pb-24 lg:pt-20 lg:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                    <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                    <ParticlesBg particleCount={40} particleColor={isDark ? 'rgba(5, 186, 240, 0.35)' : 'rgba(45, 144, 202, 0.25)'} speed={0.4} />
+
+                    <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
                         
                         {/* Hero Text */}
                         <div className="lg:col-span-7 space-y-8 text-left">
                             
-                            {/* Top Badge */}
+                            {/* Top Badge with ShinyText */}
                             <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${isDark ? 'bg-[#2D90CA]/15 border-[#2D90CA]/30 text-[#05BAF0]' : 'bg-[#00A9E7]/10 border-[#00A9E7]/30 text-[#2D90CA]'} border text-xs sm:text-sm font-medium`}>
                                 <Sparkles className="w-4 h-4 text-[#FAD03D] fill-[#FAD03D] animate-pulse" />
-                                <span>Premier Digital Growth & Performance Marketing Agency</span>
+                                <ShinyText text="Premier Digital Growth & Performance Marketing Agency" speed={4} className="text-xs sm:text-sm font-medium" />
                             </div>
 
-                            {/* Main Headline */}
+                            {/* Main Headline with BlurText */}
                             <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] ${textPrimary}`}>
-                                Naikkan Penjualan Online dengan Strategi <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0]">Digital Marketing Terukur</span>
+                                <BlurText text="Naikkan Penjualan Online dengan Strategi" className={`text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] ${textPrimary}`} delay={100} />{' '}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2D90CA] via-[#00A9E7] to-[#05BAF0]">Digital Marketing Terukur</span>
                             </h1>
 
                             {/* Subheadline */}
@@ -331,7 +340,6 @@ export default function Welcome() {
                                     href={waUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-
                                     className={`inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-base font-semibold border transition-all ${
                                         isDark 
                                             ? 'text-slate-200 border-slate-700 bg-[#0c1322] hover:bg-slate-800' 
@@ -343,31 +351,34 @@ export default function Welcome() {
                                 </a>
                             </div>
 
-                            {/* Social Proof Stats */}
+                            {/* Social Proof Stats with CountUp */}
                             <div className={`pt-6 border-t ${isDark ? 'border-slate-800/80' : 'border-slate-200'} grid grid-cols-2 sm:grid-cols-4 gap-6 text-left`}>
                                 <div>
-                                    <div className={`text-2xl sm:text-3xl font-extrabold ${textPrimary}`}>500+</div>
+                                    <CountUp to={500} suffix="+" className={`text-2xl sm:text-3xl font-extrabold ${textPrimary}`} />
                                     <div className={`text-xs ${textMuted} mt-1`}>Campaign Dikelola</div>
                                 </div>
                                 <div>
-                                    <div className="text-2xl sm:text-3xl font-extrabold text-[#05BAF0]">8.4x</div>
+                                    <CountUp to={8.4} suffix="x" decimals={1} className="text-2xl sm:text-3xl font-extrabold text-[#05BAF0]" />
                                     <div className={`text-xs ${textMuted} mt-1`}>Rata-rata ROAS</div>
                                 </div>
                                 <div>
-                                    <div className="text-2xl sm:text-3xl font-extrabold text-[#2D90CA]">Rp 25B+</div>
+                                    <div className="text-2xl sm:text-3xl font-extrabold text-[#2D90CA]">
+                                        Rp <CountUp to={25} suffix="B+" />
+                                    </div>
                                     <div className={`text-xs ${textMuted} mt-1`}>Revenue Client</div>
                                 </div>
                                 <div>
-                                    <div className="text-2xl sm:text-3xl font-extrabold text-[#FAD03D]">98.5%</div>
+                                    <CountUp to={98.5} suffix="%" decimals={1} className="text-2xl sm:text-3xl font-extrabold text-[#FAD03D]" />
                                     <div className={`text-xs ${textMuted} mt-1`}>Kepuasan Klien</div>
                                 </div>
                             </div>
 
                         </div>
 
-                        {/* Hero Visual Mockup */}
+                        {/* Hero Visual Mockup with TiltedCard */}
                         <div className="lg:col-span-5 relative">
-                            <div className={`relative rounded-2xl p-6 ${cardBg}`}>
+                            <TiltedCard maxDegree={6}>
+                                <div className={`relative rounded-2xl p-6 ${cardBg}`}>
                                 
                                 {/* Header Bar */}
                                 <div className={`flex items-center justify-between pb-4 mb-4 border-b ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
@@ -475,6 +486,7 @@ export default function Welcome() {
                                 </div>
 
                             </div>
+                            </TiltedCard>
                         </div>
 
                     </div>
@@ -761,13 +773,13 @@ export default function Welcome() {
                                 desc: 'Toko di Shopee/TikTok Shop sepi pengunjung karena tidak menggunakan strategi optimasi keyword dan bidding yang pas.'
                             }
                         ].map((item, idx) => (
-                            <div key={idx} className={`p-6 rounded-2xl ${cardBg} hover:border-rose-500/40 transition-all duration-300 group`}>
+                            <SpotlightCard key={idx} spotlightColor="rgba(244, 63, 94, 0.15)" className={`p-6 ${cardBg} hover:border-rose-500/40 transition-all duration-300 group`}>
                                 <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <X className="w-5 h-5" />
                                 </div>
                                 <h3 className={`text-lg font-bold ${textPrimary} mb-2`}>{item.title}</h3>
                                 <p className={`text-sm ${textMuted} leading-relaxed`}>{item.desc}</p>
-                            </div>
+                            </SpotlightCard>
                         ))}
                     </div>
                 </section>
@@ -790,7 +802,7 @@ export default function Welcome() {
                     <div className="grid lg:grid-cols-2 gap-8">
                         
                         {/* Service A: Shopee Ads */}
-                        <div className={`p-8 rounded-3xl ${cardBg} hover:border-[#00A9E7]/50 transition-all group relative overflow-hidden`}>
+                        <SpotlightCard spotlightColor="rgba(0, 169, 231, 0.2)" className={`p-8 ${cardBg} hover:border-[#00A9E7]/50 transition-all group relative overflow-hidden`}>
                             <div className="w-12 h-12 rounded-2xl bg-[#00A9E7]/10 text-[#00A9E7] flex items-center justify-center mb-6">
                                 <ShoppingBag className="w-6 h-6" />
                             </div>
@@ -808,10 +820,10 @@ export default function Welcome() {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </SpotlightCard>
 
                         {/* Service B: TikTok Ads */}
-                        <div className={`p-8 rounded-3xl ${cardBg} hover:border-[#05BAF0]/50 transition-all group relative overflow-hidden`}>
+                        <SpotlightCard spotlightColor="rgba(5, 186, 240, 0.2)" className={`p-8 ${cardBg} hover:border-[#05BAF0]/50 transition-all group relative overflow-hidden`}>
                             <div className="w-12 h-12 rounded-2xl bg-[#05BAF0]/10 text-[#05BAF0] flex items-center justify-center mb-6">
                                 <Video className="w-6 h-6" />
                             </div>
@@ -829,10 +841,10 @@ export default function Welcome() {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </SpotlightCard>
 
                         {/* Service C: Meta Ads */}
-                        <div className={`p-8 rounded-3xl ${cardBg} hover:border-[#2D90CA]/50 transition-all group relative overflow-hidden`}>
+                        <SpotlightCard spotlightColor="rgba(45, 144, 202, 0.2)" className={`p-8 ${cardBg} hover:border-[#2D90CA]/50 transition-all group relative overflow-hidden`}>
                             <div className="w-12 h-12 rounded-2xl bg-[#2D90CA]/10 text-[#2D90CA] flex items-center justify-center mb-6">
                                 <Share2 className="w-6 h-6" />
                             </div>
@@ -850,10 +862,10 @@ export default function Welcome() {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </SpotlightCard>
 
                         {/* Service D: Google Ads */}
-                        <div className={`p-8 rounded-3xl ${cardBg} hover:border-[#FAD03D]/50 transition-all group relative overflow-hidden`}>
+                        <SpotlightCard spotlightColor="rgba(250, 208, 61, 0.2)" className={`p-8 ${cardBg} hover:border-[#FAD03D]/50 transition-all group relative overflow-hidden`}>
                             <div className="w-12 h-12 rounded-2xl bg-[#FAD03D]/10 text-[#FAD03D] flex items-center justify-center mb-6">
                                 <Search className="w-6 h-6" />
                             </div>
@@ -871,7 +883,7 @@ export default function Welcome() {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </SpotlightCard>
 
                     </div>
                 </section>
