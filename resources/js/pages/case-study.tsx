@@ -340,9 +340,10 @@ export default function CaseStudyPage({
                             <h3 className={`text-2xl font-extrabold ${textPrimary} border-b border-slate-800 pb-3`}>
                                 Narasi & Eksekusi Strategi
                             </h3>
-                            <div className={`prose ${isDark ? 'prose-invert' : ''} max-w-none text-base ${textMuted} leading-relaxed whitespace-pre-line`}>
-                                {project.article_content}
-                            </div>
+                            <div 
+                                className={`prose ${isDark ? 'prose-invert' : ''} max-w-none text-base ${textMuted} leading-relaxed prose-img:rounded-2xl prose-img:border prose-img:border-slate-700/50 prose-img:shadow-lg`}
+                                dangerouslySetInnerHTML={{ __html: project.article_content }}
+                            />
                         </div>
                     )}
 

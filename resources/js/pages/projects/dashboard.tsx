@@ -16,7 +16,8 @@ import {
     ChevronRight,
     AlertTriangle,
     Eye,
-    EyeOff
+    EyeOff,
+    BookOpen
 } from 'lucide-react';
 
 interface ProjectItem {
@@ -291,15 +292,25 @@ export default function ProjectDashboard({ stats, projects, upcomingDeadlines }:
                                         </div>
                                     </div>
 
-                                    <div className="pt-3 border-t border-sidebar-border flex items-center justify-between text-xs text-muted-foreground">
+                                    <div className="pt-3 border-t border-sidebar-border flex items-center justify-between text-xs text-muted-foreground gap-2 flex-wrap">
                                         <span>PM: <strong className="text-foreground">{p.manager?.name || 'Unassigned'}</strong></span>
-                                        <Link
-                                            href={`/projects/board?project_id=${p.id}`}
-                                            className="font-bold text-primary hover:underline flex items-center gap-0.5"
-                                        >
-                                            <span>Buka Task</span>
-                                            <ArrowUpRight className="w-3.5 h-3.5" />
-                                        </Link>
+                                        <div className="flex items-center gap-2">
+                                            <Link
+                                                href={`/projects/${p.id}/article`}
+                                                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 transition-all flex items-center gap-1 shadow-2xs"
+                                                title="Tulis & Edit Artikel Case Study Brand"
+                                            >
+                                                <BookOpen className="w-3 h-3" />
+                                                <span>Artikel Case Study</span>
+                                            </Link>
+                                            <Link
+                                                href={`/projects/board?project_id=${p.id}`}
+                                                className="font-bold text-primary hover:underline flex items-center gap-0.5"
+                                            >
+                                                <span>Buka Task</span>
+                                                <ArrowUpRight className="w-3.5 h-3.5" />
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

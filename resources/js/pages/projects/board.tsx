@@ -23,7 +23,8 @@ import {
     Eye,
     EyeOff,
     Edit3,
-    UserCheck
+    UserCheck,
+    BookOpen
 } from 'lucide-react';
 import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
 
@@ -457,6 +458,14 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
 
                             {/* Tools */}
                             <div className="flex items-center gap-2 flex-wrap">
+                                <a
+                                    href={`/projects/${activeProject.id}/article`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-all shadow-xs"
+                                    title="Tulis & Kelola Artikel Case Study Client (Rich Text Editor)"
+                                >
+                                    <BookOpen className="w-3.5 h-3.5" />
+                                    <span>Tulis Artikel Case Study</span>
+                                </a>
                                 <button
                                     onClick={() => handleOpenEditProject(activeProject)}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 transition-all shadow-xs"
@@ -908,139 +917,26 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                 />
                             </div>
 
-                            {/* CASE STUDY & ARTICLE SECTION FOR PUBLIC SHOWCASE */}
-                            <div className="pt-3 border-t border-sidebar-border space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-cyan-400" />
-                                    <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Pengaturan Artikel Case Study Client</h4>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-foreground mb-1">URL Slug (Unik)</label>
-                                        <input 
-                                            type="text"
-                                            value={editProjectForm.data.slug}
-                                            onChange={(e) => editProjectForm.setData('slug', e.target.value)}
-                                            placeholder="contoh: glowing-id"
-                                            className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                        />
-                                        <span className="text-[10px] text-muted-foreground mt-0.5 block">URL: /case-study/{editProjectForm.data.slug || 'slug-client'}</span>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-foreground mb-1">Peningkatan Growth (% Badge)</label>
-                                        <input 
-                                            type="text"
-                                            value={editProjectForm.data.growth_percentage}
-                                            onChange={(e) => editProjectForm.setData('growth_percentage', e.target.value)}
-                                            placeholder="contoh: +380%"
-                                            className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                        />
-                                    </div>
-                                </div>
-
+                            {/* DEDICATED CASE STUDY ARTICLE EDITOR LINK BANNER */}
+                            <div className="pt-3 border-t border-sidebar-border flex items-center justify-between p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
                                 <div>
-                                    <label className="block text-xs font-semibold text-foreground mb-1">Judul Artikel Studi Kasus</label>
-                                    <input 
-                                        type="text"
-                                        value={editProjectForm.data.article_title}
-                                        onChange={(e) => editProjectForm.setData('article_title', e.target.value)}
-                                        placeholder="Judul utama artikel case study..."
-                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                    />
+                                    <h4 className="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
+                                        <BookOpen className="w-4 h-4" />
+                                        <span>Artikel & Case Study Client</span>
+                                    </h4>
+                                    <p className="text-[11px] text-muted-foreground mt-0.5">Kelola narasi artikel, upload foto, dan angka perbandingan omset di halaman editor khusus.</p>
                                 </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-foreground mb-1">Subtitle / Ringkasan Singkat Artikel</label>
-                                    <textarea 
-                                        rows={2}
-                                        value={editProjectForm.data.article_subtitle}
-                                        onChange={(e) => editProjectForm.setData('article_subtitle', e.target.value)}
-                                        placeholder="Ringkasan singkat cerita sukses..."
-                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4 p-3 rounded-xl bg-muted/30 border border-sidebar-border">
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1">Omset Awal (Sebelum Genial)</label>
-                                        <input 
-                                            type="text"
-                                            value={editProjectForm.data.initial_revenue}
-                                            onChange={(e) => editProjectForm.setData('initial_revenue', e.target.value)}
-                                            placeholder="contoh: Rp 25.000.000 / bln"
-                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-emerald-400 mb-1">Omset Sekarang (Post Genial)</label>
-                                        <input 
-                                            type="text"
-                                            value={editProjectForm.data.current_revenue}
-                                            onChange={(e) => editProjectForm.setData('current_revenue', e.target.value)}
-                                            placeholder="contoh: Rp 142.500.000 / bln"
-                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-bold text-emerald-400"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1">ROAS / Performa Awal</label>
-                                        <input 
-                                            type="text"
-                                            value={editProjectForm.data.initial_roas}
-                                            onChange={(e) => editProjectForm.setData('initial_roas', e.target.value)}
-                                            placeholder="contoh: 1.8x"
-                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-sky-400 mb-1">ROAS Iklan Sekarang</label>
-                                        <input 
-                                            type="text"
-                                            value={editProjectForm.data.current_roas}
-                                            onChange={(e) => editProjectForm.setData('current_roas', e.target.value)}
-                                            placeholder="contoh: 8.4x"
-                                            className="w-full px-3 py-1.5 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-bold text-sky-400"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-foreground mb-1">Perjalanan Awal Bertemu Genial (Cerita Latar Belakang)</label>
-                                    <textarea 
-                                        rows={3}
-                                        value={editProjectForm.data.collaboration_story}
-                                        onChange={(e) => editProjectForm.setData('collaboration_story', e.target.value)}
-                                        placeholder="Tuliskan bagaimana pertama kali bertemu dan kendala awal yang dihadapi..."
-                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-foreground mb-1">Narasi Utama & Eksekusi Strategi Artikel</label>
-                                    <textarea 
-                                        rows={4}
-                                        value={editProjectForm.data.article_content}
-                                        onChange={(e) => editProjectForm.setData('article_content', e.target.value)}
-                                        placeholder="Isi lengkap naskah artikel studi kasus..."
-                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-foreground mb-1">Poin Hasil / Perubahan Utama (Pisahkan dengan baris baru)</label>
-                                    <textarea 
-                                        rows={3}
-                                        value={editProjectForm.data.key_results}
-                                        onChange={(e) => editProjectForm.setData('key_results', e.target.value)}
-                                        placeholder="- Peningkatan omset 4x lipat&#10;- ROAS mencapai 8.4x&#10;- Zero selisih stok barang"
-                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-mono text-[11px]"
-                                    />
-                                </div>
+                                <a
+                                    href={`/projects/${editingProject.id}/article`}
+                                    className="px-3.5 py-2 rounded-xl bg-cyan-500 text-slate-900 text-xs font-extrabold hover:bg-cyan-400 transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                                >
+                                    <span>Buka Halaman Editor</span>
+                                </a>
                             </div>
 
                             <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">
                                 <button type="button" onClick={() => setEditingProject(null)} className="px-4 py-2 rounded-lg border border-sidebar-border text-xs font-medium text-muted-foreground hover:bg-muted">Batal</button>
-                                <button type="submit" disabled={editProjectForm.processing} className="px-4 py-2 rounded-lg bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50">Simpan Perubahan & Artikel</button>
+                                <button type="submit" disabled={editProjectForm.processing} className="px-4 py-2 rounded-lg bg-purple-600 text-white text-xs font-bold hover:bg-purple-500 disabled:opacity-50">Simpan Perubahan Project</button>
                             </div>
                         </form>
                     </div>

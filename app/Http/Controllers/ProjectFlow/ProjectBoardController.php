@@ -262,4 +262,46 @@ class ProjectBoardController extends Controller
 
         return redirect()->back()->with('success', 'Project "' . $project->name . '" berhasil diperbarui!');
     }
+
+    public function editArticle(Project $project): Response
+    {
+        return Inertia::render('projects/article-editor', [
+            'project' => $project,
+        ]);
+    }
+
+    public function updateArticle(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'slug' => 'nullable|string|max:255',
+            'article_title' => 'nullable|string|max:255',
+            'article_subtitle' => 'nullable|string',
+            'article_content' => 'nullable|string',
+            'initial_revenue' => 'nullable|string|max:255',
+            'current_revenue' => 'nullable|string|max:255',
+            'initial_roas' => 'nullable|string|max:255',
+            'current_roas' => 'nullable|string|max:255',
+            'growth_percentage' => 'nullable|string|max:255',
+            'collaboration_story' => 'nullable|string',
+            'key_results' => 'nullable|string',
+        ]);
+
+        $project->update($validated);
+
+        return redirect()->route('projects.board', ['project_id' => $project->id])
+            ->with('success', 'Artikel Case Study "' . $project->client . '" berhasil diperbarui!');
+    }
+
+    public function uploadArticleImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+        ]);
+
+        $path = $request->file('image')->store('article_images', 'public');
+
+        return response()->json([
+            'url' => '/storage/' . $path,
+        ]);
+    }
 }

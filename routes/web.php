@@ -112,6 +112,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('timeline', [ProjectTimelineController::class, 'index'])->name('timeline');
         Route::get('team', [ProjectTeamController::class, 'index'])->name('team');
         Route::get('reports', [ProjectReportController::class, 'index'])->name('reports');
+        Route::get('{project}/article', [ProjectBoardController::class, 'editArticle'])->name('article.edit');
+        Route::post('{project}/article', [ProjectBoardController::class, 'updateArticle'])->name('article.update');
+        Route::post('upload-article-image', [ProjectBoardController::class, 'uploadArticleImage'])->name('article.upload-image');
     });
 
     // Genial FinanceFlow Module Routes
