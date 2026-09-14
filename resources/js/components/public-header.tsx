@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
 import { 
     Sun, 
     Moon, 
     Menu, 
     X, 
     MessageSquare, 
-    ArrowRight 
+    ArrowRight,
+    LogIn,
+    User 
 } from 'lucide-react';
 import { useGtm } from '@/hooks/use-gtm';
 
@@ -25,6 +28,9 @@ export default function PublicHeader({
     const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [currentPath, setCurrentPath] = useState('');
+
+    const pageProps = usePage().props as any;
+    const user = pageProps?.auth?.user;
 
     // Initialize GTM tracking
     useGtm();
@@ -137,6 +143,22 @@ export default function PublicHeader({
                     </button>
 
                     <a 
+                        href={user ? '/dashboard' : '/login'}
+                        className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-sm ${
+                            isDark 
+                                ? 'text-[#00A9E7] border-slate-800 bg-[#0c1322] hover:bg-slate-900' 
+                                : 'text-[#00A9E7] border-slate-200 bg-white hover:bg-slate-100'
+                        }`}
+                        title={user ? `Dashboard (${user.name})` : 'Login Client / Portal'}
+                    >
+                        {user ? (
+                            <User className="w-5 h-5 text-[#00A9E7]" />
+                        ) : (
+                            <LogIn className="w-5 h-5 text-[#00A9E7]" />
+                        )}
+                    </a>
+
+                    <a 
                         href={waUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
@@ -168,9 +190,17 @@ export default function PublicHeader({
                     <button
                         onClick={handleToggleTheme}
                         className={`p-2 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-800 text-[#FAD03D]' : 'bg-white border-slate-200 text-slate-700'}`}
+                        title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                     >
                         {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                     </button>
+                    <a
+                        href={user ? '/dashboard' : '/login'}
+                        className={`p-2 rounded-lg border flex items-center justify-center ${isDark ? 'bg-slate-900 border-slate-800 text-[#00A9E7]' : 'bg-white border-slate-200 text-[#00A9E7]'}`}
+                        title={user ? 'Dashboard' : 'Login Client / Portal'}
+                    >
+                        {user ? <User className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+                    </a>
                     <button 
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         className={`p-2 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}
@@ -202,6 +232,18 @@ export default function PublicHeader({
                             </a>
                         );
                     })}
+
+                    <a
+                        href={user ? '/dashboard' : '/login'}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-2 py-2 text-sm font-medium ${
+                            isDark ? 'text-slate-300 hover:text-[#00A9E7]' : 'text-slate-600 hover:text-[#00A9E7]'
+                        }`}
+                    >
+                        {user ? <User className="w-4 h-4 text-[#00A9E7]" /> : <LogIn className="w-4 h-4 text-[#00A9E7]" />}
+                        <span>{user ? 'Dashboard Client' : 'Login Portal'}</span>
+                    </a>
+
                     <div className="pt-2">
                         <a 
                             href={waUrl} 
