@@ -112,6 +112,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Tasks & Checklists
         Route::post('tasks', [ProjectBoardController::class, 'storeTask'])->name('tasks.store');
+        Route::put('tasks/{task}', [ProjectBoardController::class, 'updateTask'])->name('tasks.update');
+        Route::delete('tasks/{task}', [ProjectBoardController::class, 'destroyTask'])->name('tasks.destroy');
         Route::put('tasks/{task}/status', [ProjectBoardController::class, 'updateTaskStatus'])->name('tasks.updateStatus');
         Route::post('tasks/{task}/comments', [ProjectBoardController::class, 'storeComment'])->name('tasks.comments.store');
         Route::put('checklists/{checklist}/toggle', [ProjectBoardController::class, 'toggleChecklist'])->name('checklists.toggle');

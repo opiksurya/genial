@@ -24,7 +24,9 @@ import {
     EyeOff,
     Edit3,
     UserCheck,
-    BookOpen
+    BookOpen,
+    Pencil,
+    Trash2
 } from 'lucide-react';
 import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
 
@@ -145,6 +147,7 @@ const formatDateDisplay = (dateStr?: string) => {
 export default function ProjectBoard({ projects, activeProject, tasks, users, agents = [] }: Props) {
     const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
     const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
     const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
     const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
@@ -370,6 +373,61 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         });
     };
 
+    // Edit Task Form
+    const editTaskForm = useForm({
+        title: '',
+        description: '',
+        status: 'PLANNING' as TaskItem['status'],
+        priority: 'Medium' as TaskItem['priority'],
+        label: '',
+        assignee_id: '',
+        assignee_role: ROLES[0],
+        start_date: '',
+        due_date: '',
+    });
+
+    const handleOpenEditTask = (task: TaskItem, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setEditingTask(task);
+        editTaskForm.setData({
+            title: task.title,
+            description: task.description || '',
+            status: task.status,
+            priority: task.priority,
+            label: task.label || '',
+            assignee_id: task.assignee_id ? String(task.assignee_id) : '',
+            assignee_role: task.assignee_role || ROLES[0],
+            start_date: task.start_date ? task.start_date.split('T')[0] : '',
+            due_date: task.due_date ? task.due_date.split('T')[0] : '',
+        });
+    };
+
+    const handleEditTaskSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingTask) return;
+        editTaskForm.put(`/projects/tasks/${editingTask.id}`, {
+            onSuccess: () => {
+                setEditingTask(null);
+                editTaskForm.reset();
+                if (selectedTask && selectedTask.id === editingTask.id) {
+                    setSelectedTask(null);
+                }
+            },
+        });
+    };
+
+    const handleDeleteTask = (task: TaskItem, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        if (confirm(`Apakah Anda yakin ingin menghapus task "${task.title}"?`)) {
+            router.delete(`/projects/tasks/${task.id}`, {
+                onSuccess: () => {
+                    if (selectedTask?.id === task.id) setSelectedTask(null);
+                    if (editingTask?.id === task.id) setEditingTask(null);
+                },
+            });
+        }
+    };
+
     const handleCommentSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedTask) return;
@@ -556,11 +614,32 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                                 draggedTaskId === t.id ? 'opacity-40' : ''
                                             }`}
                                         >
-                                            {t.label && (
-                                                <span className="inline-block px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-primary/10 text-primary border border-primary/20">
-                                                    {t.label}
-                                                </span>
-                                            )}
+                                            <div className="flex items-center justify-between gap-2">
+                                                {t.label ? (
+                                                    <span className="inline-block px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-primary/10 text-primary border border-primary/20">
+                                                        {t.label}
+                                                    </span>
+                                                ) : <span />}
+
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => handleOpenEditTask(t, e)}
+                                                        className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                                        title="Edit Task"
+                                                    >
+                                                        <Pencil className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => handleDeleteTask(t, e)}
+                                                        className="p-1 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                                                        title="Hapus Task"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
 
                                             <h4 className="font-bold text-xs text-foreground leading-snug">{t.title}</h4>
 
@@ -1063,21 +1142,181 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                 </div>
             )}
 
+            {/* EDIT TASK MODAL */}
+            {editingTask && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-card border border-sidebar-border rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 relative animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center justify-between border-b border-sidebar-border pb-3">
+                            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                <Pencil className="w-5 h-5 text-primary" />
+                                <span>Edit Task Pekerjaan</span>
+                            </h3>
+                            <button onClick={() => setEditingTask(null)} className="text-muted-foreground hover:text-foreground">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleEditTaskSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Judul Task</label>
+                                <input 
+                                    type="text" required
+                                    value={editTaskForm.data.title}
+                                    onChange={(e) => editTaskForm.setData('title', e.target.value)}
+                                    placeholder="Contoh: Audit Core Web Vitals Website"
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Status Column</label>
+                                    <select 
+                                        value={editTaskForm.data.status}
+                                        onChange={(e) => editTaskForm.setData('status', e.target.value as any)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    >
+                                        {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Prioritas</label>
+                                    <select 
+                                        value={editTaskForm.data.priority}
+                                        onChange={(e) => editTaskForm.setData('priority', e.target.value as any)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    >
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Assignee (Penanggung Jawab)</label>
+                                    <select 
+                                        value={editTaskForm.data.assignee_id}
+                                        onChange={(e) => editTaskForm.setData('assignee_id', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    >
+                                        <option value="">Unassigned</option>
+                                        {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Role Spesialisasi</label>
+                                    <select 
+                                        value={editTaskForm.data.assignee_role}
+                                        onChange={(e) => editTaskForm.setData('assignee_role', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    >
+                                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Start Date</label>
+                                    <input 
+                                        type="date"
+                                        value={editTaskForm.data.start_date}
+                                        onChange={(e) => editTaskForm.setData('start_date', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">Due Date</label>
+                                    <input 
+                                        type="date"
+                                        value={editTaskForm.data.due_date}
+                                        onChange={(e) => editTaskForm.setData('due_date', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Label (Tag)</label>
+                                <input 
+                                    type="text"
+                                    value={editTaskForm.data.label}
+                                    onChange={(e) => editTaskForm.setData('label', e.target.value)}
+                                    placeholder="Contoh: Backend / Design / Ads"
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Deskripsi / Catatan Task</label>
+                                <textarea
+                                    rows={3}
+                                    value={editTaskForm.data.description}
+                                    onChange={(e) => editTaskForm.setData('description', e.target.value)}
+                                    placeholder="Detail tugas atau instruksi pengerjaan..."
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                                />
+                            </div>
+
+                            <div className="pt-3 flex items-center justify-between gap-3 border-t border-sidebar-border">
+                                <button 
+                                    type="button" 
+                                    onClick={() => handleDeleteTask(editingTask)} 
+                                    className="px-3 py-2 rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-500/10 flex items-center gap-1 transition-colors"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Hapus Task</span>
+                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button type="button" onClick={() => setEditingTask(null)} className="px-4 py-2 rounded-lg border border-sidebar-border text-xs font-medium text-muted-foreground hover:bg-muted">Batal</button>
+                                    <button type="submit" disabled={editTaskForm.processing} className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 disabled:opacity-50">Perbarui Task</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
 
             {/* TASK DETAIL & COMMENT MODAL */}
             {selectedTask && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-card border border-sidebar-border rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-5 relative animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-start justify-between border-b border-sidebar-border pb-3">
+                        <div className="flex items-start justify-between border-b border-sidebar-border pb-3 gap-3">
                             <div>
                                 <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/20">
                                     {selectedTask.status}
                                 </span>
                                 <h3 className="text-lg font-bold text-foreground mt-1">{selectedTask.title}</h3>
                             </div>
-                            <button onClick={() => setSelectedTask(null)} className="text-muted-foreground hover:text-foreground">
-                                <X className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        const taskToEdit = selectedTask;
+                                        handleOpenEditTask(taskToEdit);
+                                    }}
+                                    className="p-1.5 rounded-lg border border-sidebar-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1 text-xs font-semibold"
+                                    title="Edit Task"
+                                >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                    <span>Edit</span>
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => handleDeleteTask(selectedTask)}
+                                    className="p-1.5 rounded-lg border border-sidebar-border text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors flex items-center gap-1 text-xs font-semibold"
+                                    title="Hapus Task"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => setSelectedTask(null)} className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 text-xs bg-muted/30 p-3 rounded-xl border border-sidebar-border">

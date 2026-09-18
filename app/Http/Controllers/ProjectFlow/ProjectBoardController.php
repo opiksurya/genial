@@ -193,6 +193,42 @@ class ProjectBoardController extends Controller
         return redirect()->back()->with('success', 'Task "' . $task->title . '" berhasil dibuat!');
     }
 
+    public function updateTask(Request $request, Task $task)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|string',
+            'priority' => 'required|string',
+            'label' => 'nullable|string',
+            'assignee_id' => 'nullable|exists:users,id',
+            'assignee_role' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date',
+        ]);
+
+        $task->update($validated);
+
+        if ($task->project) {
+            $task->project->recalculateProgress();
+        }
+
+        return redirect()->back()->with('success', 'Task "' . $task->title . '" berhasil diperbarui!');
+    }
+
+    public function destroyTask(Task $task)
+    {
+        $project = $task->project;
+        $title = $task->title;
+        $task->delete();
+
+        if ($project) {
+            $project->recalculateProgress();
+        }
+
+        return redirect()->back()->with('success', 'Task "' . $title . '" berhasil dihapus!');
+    }
+
     public function updateTaskStatus(Request $request, Task $task)
     {
         $validated = $request->validate([
