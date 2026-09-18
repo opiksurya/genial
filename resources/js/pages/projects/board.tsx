@@ -26,7 +26,9 @@ import {
     UserCheck,
     BookOpen,
     Pencil,
-    Trash2
+    Trash2,
+    ExternalLink,
+    Link2
 } from 'lucide-react';
 import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
 
@@ -39,6 +41,7 @@ interface TaskItem {
     status: 'BACKLOG' | 'PLANNING' | 'IN_PROGRESS' | 'REVIEW' | 'DONE';
     priority: 'Low' | 'Medium' | 'High' | 'Urgent';
     label?: string;
+    link?: string;
     assignee_id?: number;
     assignee_role?: string;
     start_date?: string;
@@ -48,6 +51,28 @@ interface TaskItem {
     comments?: { id: number; comment: string; user?: { name: string }; created_at: string }[];
     checklists?: { id: number; title: string; is_completed: boolean }[];
 }
+
+const getTaskLink = (task: TaskItem): string | null => {
+    if (task.link && task.link.trim() !== '') return task.link.trim();
+    if (task.description) {
+        const urlMatch = task.description.match(/https?:\/\/[^\s]+|www\.[^\s]+/i);
+        if (urlMatch) return urlMatch[0];
+    }
+    return null;
+};
+
+const formatUrlDisplay = (url: string): string => {
+    try {
+        const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+        const parsed = new URL(fullUrl);
+        const host = parsed.hostname.replace(/^www\./, '');
+        const path = parsed.pathname !== '/' ? parsed.pathname : '';
+        const display = host + path;
+        return display.length > 28 ? display.substring(0, 25) + '...' : display;
+    } catch {
+        return url.length > 28 ? url.substring(0, 25) + '...' : url;
+    }
+};
 
 interface AgentItem {
     id: number;
@@ -309,6 +334,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         status: 'PLANNING',
         priority: 'Medium',
         label: '',
+        link: '',
         assignee_id: users[0]?.id || '',
         assignee_role: ROLES[0],
         start_date: new Date().toISOString().split('T')[0],
@@ -380,6 +406,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
         status: 'PLANNING' as TaskItem['status'],
         priority: 'Medium' as TaskItem['priority'],
         label: '',
+        link: '',
         assignee_id: '',
         assignee_role: ROLES[0],
         start_date: '',
@@ -395,6 +422,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
             status: task.status,
             priority: task.priority,
             label: task.label || '',
+            link: task.link || '',
             assignee_id: task.assignee_id ? String(task.assignee_id) : '',
             assignee_role: task.assignee_role || ROLES[0],
             start_date: task.start_date ? task.start_date.split('T')[0] : '',
@@ -642,6 +670,25 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                             </div>
 
                                             <h4 className="font-bold text-xs text-foreground leading-snug">{t.title}</h4>
+
+                                            {(() => {
+                                                const taskLink = getTaskLink(t);
+                                                if (!taskLink) return null;
+                                                const fullUrl = taskLink.startsWith('http://') || taskLink.startsWith('https://') ? taskLink : `https://${taskLink}`;
+                                                return (
+                                                    <a
+                                                        href={fullUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/20 transition-all group/link max-w-full truncate shadow-xs"
+                                                        title={`Buka link: ${taskLink}`}
+                                                    >
+                                                        <ExternalLink className="w-3 h-3 shrink-0 text-primary group-hover/link:text-white transition-colors" />
+                                                        <span className="truncate font-mono">{formatUrlDisplay(taskLink)}</span>
+                                                    </a>
+                                                );
+                                            })()}
 
                                             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                                                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
@@ -1133,6 +1180,31 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                 />
                             </div>
 
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                                    <Link2 className="w-3.5 h-3.5 text-primary" />
+                                    <span>Link / URL Lampiran (Figma, Docs, Website, IG, dsb.)</span>
+                                </label>
+                                <input 
+                                    type="text"
+                                    value={taskForm.data.link}
+                                    onChange={(e) => taskForm.setData('link', e.target.value)}
+                                    placeholder="https://... (akan otomatis tampil di depan card)"
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1">Deskripsi / Catatan Task</label>
+                                <textarea
+                                    rows={3}
+                                    value={taskForm.data.description}
+                                    onChange={(e) => taskForm.setData('description', e.target.value)}
+                                    placeholder="Detail tugas atau instruksi pengerjaan..."
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                                />
+                            </div>
+
                             <div className="pt-3 flex items-center justify-end gap-3 border-t border-sidebar-border">
                                 <button type="button" onClick={() => setIsCreateTaskOpen(false)} className="px-4 py-2 rounded-lg border border-sidebar-border text-xs font-medium text-muted-foreground hover:bg-muted">Batal</button>
                                 <button type="submit" disabled={taskForm.processing} className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 disabled:opacity-50">Simpan Task</button>
@@ -1251,6 +1323,20 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                             </div>
 
                             <div>
+                                <label className="block text-xs font-semibold text-foreground mb-1 flex items-center gap-1.5">
+                                    <Link2 className="w-3.5 h-3.5 text-primary" />
+                                    <span>Link / URL Lampiran (Figma, Docs, Website, IG, dsb.)</span>
+                                </label>
+                                <input 
+                                    type="text"
+                                    value={editTaskForm.data.link}
+                                    onChange={(e) => editTaskForm.setData('link', e.target.value)}
+                                    placeholder="https://... (akan otomatis tampil di depan card)"
+                                    className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                                />
+                            </div>
+
+                            <div>
                                 <label className="block text-xs font-semibold text-foreground mb-1">Deskripsi / Catatan Task</label>
                                 <textarea
                                     rows={3}
@@ -1333,6 +1419,41 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                 <span className="text-muted-foreground">Due:</span> <strong className="text-foreground">{formatDateDisplay(selectedTask.due_date) || '-'}</strong> ({selectedTask.duration_days} Hari)
                             </div>
                         </div>
+
+                        {/* Link Lampiran in Detail Modal */}
+                        {(() => {
+                            const taskLink = getTaskLink(selectedTask);
+                            if (!taskLink) return null;
+                            const fullUrl = taskLink.startsWith('http://') || taskLink.startsWith('https://') ? taskLink : `https://${taskLink}`;
+                            return (
+                                <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between gap-3 text-xs">
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                        <Link2 className="w-4 h-4 text-primary shrink-0" />
+                                        <div className="overflow-hidden">
+                                            <span className="text-[10px] text-muted-foreground block font-medium">LINK LAMPIRAN</span>
+                                            <span className="font-mono text-primary font-semibold truncate block">{taskLink}</span>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={fullUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shrink-0 shadow-sm"
+                                    >
+                                        <span>Buka Link</span>
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                </div>
+                            );
+                        })()}
+
+                        {/* Description in Detail Modal */}
+                        {selectedTask.description && (
+                            <div className="p-3 rounded-xl bg-muted/20 border border-sidebar-border text-xs space-y-1">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase">Deskripsi & Catatan</span>
+                                <p className="text-foreground leading-relaxed whitespace-pre-wrap">{selectedTask.description}</p>
+                            </div>
+                        )}
 
                         {/* Comments Section */}
                         <div className="space-y-3">

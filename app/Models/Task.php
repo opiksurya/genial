@@ -15,6 +15,7 @@ class Task extends Model
         'status',
         'priority',
         'label',
+        'link',
         'assignee_id',
         'assignee_role',
         'start_date',
