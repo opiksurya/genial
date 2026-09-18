@@ -358,7 +358,10 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
 
     const handleCreateTaskSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        taskForm.setData('project_id', activeProject?.id || '');
+        taskForm.transform((data) => ({
+            ...data,
+            project_id: activeProject?.id || data.project_id,
+        }));
         taskForm.post('/projects/tasks', {
             onSuccess: () => {
                 setIsCreateTaskOpen(false);

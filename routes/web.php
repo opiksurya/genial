@@ -109,21 +109,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('dashboard', [ProjectDashboardController::class, 'index'])->name('dashboard');
         Route::get('board', [ProjectBoardController::class, 'index'])->name('board');
         Route::post('store', [ProjectBoardController::class, 'storeProject'])->name('store');
-        Route::match(['put', 'post'], '{project}', [ProjectBoardController::class, 'updateProject'])->name('update');
-        Route::put('{project}/toggle-home-visibility', [ProjectBoardController::class, 'toggleHomeVisibility'])->name('toggleHomeVisibility');
+        
+        // Tasks & Checklists
         Route::post('tasks', [ProjectBoardController::class, 'storeTask'])->name('tasks.store');
         Route::put('tasks/{task}/status', [ProjectBoardController::class, 'updateTaskStatus'])->name('tasks.updateStatus');
         Route::post('tasks/{task}/comments', [ProjectBoardController::class, 'storeComment'])->name('tasks.comments.store');
         Route::put('checklists/{checklist}/toggle', [ProjectBoardController::class, 'toggleChecklist'])->name('checklists.toggle');
-        Route::post('{project}/credentials', [ProjectCredentialController::class, 'store'])->name('credentials.store');
+        
+        // Credentials
         Route::put('credentials/{credential}', [ProjectCredentialController::class, 'update'])->name('credentials.update');
         Route::delete('credentials/{credential}', [ProjectCredentialController::class, 'destroy'])->name('credentials.destroy');
+        
+        // Navigation / Views
         Route::get('timeline', [ProjectTimelineController::class, 'index'])->name('timeline');
         Route::get('team', [ProjectTeamController::class, 'index'])->name('team');
         Route::get('reports', [ProjectReportController::class, 'index'])->name('reports');
-        Route::get('{project}/article', [ProjectBoardController::class, 'editArticle'])->name('article.edit');
-        Route::post('{project}/article', [ProjectBoardController::class, 'updateArticle'])->name('article.update');
         Route::post('upload-article-image', [ProjectBoardController::class, 'uploadArticleImage'])->name('article.upload-image');
+
+        // Parameterized Project Routes
+        Route::match(['put', 'post'], '{project}', [ProjectBoardController::class, 'updateProject'])->whereNumber('project')->name('update');
+        Route::put('{project}/toggle-home-visibility', [ProjectBoardController::class, 'toggleHomeVisibility'])->whereNumber('project')->name('toggleHomeVisibility');
+        Route::post('{project}/credentials', [ProjectCredentialController::class, 'store'])->whereNumber('project')->name('credentials.store');
+        Route::get('{project}/article', [ProjectBoardController::class, 'editArticle'])->whereNumber('project')->name('article.edit');
+        Route::post('{project}/article', [ProjectBoardController::class, 'updateArticle'])->whereNumber('project')->name('article.update');
     });
 
     // Genial FinanceFlow Module Routes
