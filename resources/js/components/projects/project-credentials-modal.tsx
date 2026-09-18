@@ -120,14 +120,14 @@ export function ProjectCredentialsModal({ project, isOpen, onClose }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (editingCred) {
-            put(route('projects.credentials.update', editingCred.id), {
+            put(`/projects/credentials/${editingCred.id}`, {
                 onSuccess: () => {
                     setShowForm(false);
                     reset();
                 },
             });
         } else {
-            post(route('projects.credentials.store', project.id), {
+            post(`/projects/${project.id}/credentials`, {
                 onSuccess: () => {
                     setShowForm(false);
                     reset();
@@ -138,7 +138,7 @@ export function ProjectCredentialsModal({ project, isOpen, onClose }: Props) {
 
     const handleDelete = (id: number) => {
         if (confirm('Apakah Anda yakin ingin menghapus akses kredensial ini?')) {
-            router.delete(route('projects.credentials.destroy', id));
+            router.delete(`/projects/credentials/${id}`);
         }
     };
 
