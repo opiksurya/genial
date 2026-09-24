@@ -29,7 +29,8 @@ import {
     Wallet,
     FolderKanban,
     AlertCircle,
-    Send
+    Send,
+    CalendarDays
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,6 +49,39 @@ interface FreelancerAssignment {
     payment_status: 'unpaid' | 'paid';
     paid_at?: string;
     notes?: string;
+    freelancer?: {
+        id: number;
+        name: string;
+        role: string;
+        phone?: string;
+        bank_name?: string;
+        bank_account_number?: string;
+        bank_account_name?: string;
+    };
+    project?: {
+        id: number;
+        name: string;
+        client?: string;
+    };
+}
+
+interface ContentPlanItem {
+    id: number;
+    title: string;
+    scheduled_date: string;
+    scheduled_time?: string;
+    platform: string;
+    format: string;
+    pillar: string;
+    status: string;
+    reference_link?: string;
+    submission_link?: string;
+    freelancer_notes?: string;
+    freelancer_id?: number | null;
+    freelancer_fee: number;
+    freelancer_status?: string;
+    payout_status: 'unpaid' | 'approved' | 'paid';
+    paid_at?: string;
     freelancer?: {
         id: number;
         name: string;
@@ -92,6 +126,7 @@ interface Freelancer {
 interface Props {
     freelancers: Freelancer[];
     assignments: FreelancerAssignment[];
+    contentPlans?: ContentPlanItem[];
     projects: { id: number; name: string; client?: string }[];
     tasks: { id: number; title: string; project_id?: number }[];
     stats: {
@@ -111,17 +146,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Freelancer Hub', href: '/freelancers' },
 ];
 
-const SKILL_ROLES = [
-    { label: 'Video Editor & Reels', icon: Video, color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200' },
-    { label: 'Graphic Designer & Canva', icon: Palette, color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40 border-purple-200' },
-    { label: 'Copywriter & Content Writer', icon: FileText, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40 border-blue-200' },
-    { label: 'Voice Over & Talent', icon: Mic, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200' },
-    { label: 'Web & Landing Page Dev', icon: Code, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200' },
-    { label: 'Social Media Specialist', icon: Share2, color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200' },
-];
-
-export default function FreelancersIndex({ freelancers = [], assignments = [], projects = [], tasks = [], stats }: Props) {
-    const [activeTab, setActiveTab] = useState<'freelancers' | 'assignments' | 'payouts'>('freelancers');
+export default function FreelancersIndex({ 
+    freelancers = [], 
+    assignments = [], 
+    contentPlans = [],
+    projects = [], 
+    tasks = [], 
+    stats 
+}: Props) {
+    const [activeTab, setActiveTab] = useState<'freelancers' | 'content_jobs' | 'assignments' | 'payouts'>('freelancers');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterRole, setFilterRole] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -234,13 +267,6 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
         });
     };
 
-    const handleRegenerateToken = (fl: Freelancer) => {
-        if (!confirm(`Buat ulang Magic Link Token untuk "${fl.name}"? Token lama tidak akan bisa diakses lagi.`)) return;
-        router.post(`/freelancers/${fl.id}/regenerate-token`, {}, {
-            onSuccess: () => toast.success('Magic Link Token baru berhasil digenerate!'),
-        });
-    };
-
     // Assignment Handlers
     const handleOpenCreateAssignment = (defaultFreelancerId?: number) => {
         setEditingAssignment(null);
@@ -311,6 +337,22 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
         });
     };
 
+    // Content Plan Handlers
+    const handleApproveContentPlan = (plan: ContentPlanItem) => {
+        router.post(`/content-calendar/${plan.id}/approve-freelancer`, {}, {
+            onSuccess: () => toast.success(`Konten "${plan.title}" berhasil di-ACC! Upah siap dicairkan.`),
+        });
+    };
+
+    const handlePayContentPlan = (plan: ContentPlanItem, newStatus: 'paid' | 'unpaid') => {
+        router.put(`/content-calendar/${plan.id}/pay-freelancer`, {
+            status: newStatus,
+            record_expense: true,
+        }, {
+            onSuccess: () => toast.success(newStatus === 'paid' ? `Upah konten "${plan.title}" dicairkan LUNAS!` : 'Status upah diubah.'),
+        });
+    };
+
     // Filters
     const filteredFreelancers = freelancers.filter(fl => {
         const matchesSearch = fl.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -319,6 +361,14 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
         const matchesRole = filterRole === 'all' || fl.role.toLowerCase().includes(filterRole.toLowerCase());
         const matchesStatus = filterStatus === 'all' || fl.status === filterStatus;
         return matchesSearch && matchesRole && matchesStatus;
+    });
+
+    const filteredContentPlans = contentPlans.filter(item => {
+        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.freelancer?.name && item.freelancer.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (item.project?.name && item.project.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            item.platform.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesSearch;
     });
 
     const filteredAssignments = assignments.filter(item => {
@@ -341,26 +391,25 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                     <div className="space-y-1.5 relative z-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-purple-200 text-xs font-semibold border border-white/10">
                             <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                            <span>Genial Talent & Freelance Network</span>
+                            <span>Terkoneksi dengan Kalender Konten & FinanceFlow</span>
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
                             <Briefcase className="w-7 h-7 text-purple-300" />
                             <span>Freelancer Hub</span>
                         </h1>
                         <p className="text-xs sm:text-sm text-purple-100/80 max-w-2xl">
-                            Kelola talent eksternal (Video Editor, Designer, Copywriter), bagikan Magic Link Portal tanpa login, kirim brief, dan kelola pembayaran honorarium otomatis.
+                            Kelola talent freelance, distribusi joblist kalender konten otomatis, review deliverable, ACC hasil kerja, dan pencairan upah ke FinanceFlow Expense.
                         </p>
                     </div>
 
                     <div className="flex items-center gap-2.5 flex-wrap relative z-10">
-                        <button
-                            type="button"
-                            onClick={() => handleOpenCreateAssignment()}
+                        <a
+                            href="/content-calendar"
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 transition-all cursor-pointer shadow-sm"
                         >
-                            <Plus className="w-4 h-4" />
-                            <span>+ Tugaskan Job</span>
-                        </button>
+                            <CalendarDays className="w-4 h-4 text-purple-300" />
+                            <span>Buka Kalender Konten</span>
+                        </a>
 
                         <button
                             type="button"
@@ -400,7 +449,7 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                             <CheckCircle2 className="w-6 h-6" />
                         </div>
                         <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Honorarium Sudah Cair</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Upah Sudah Dicairkan</div>
                             <div className="text-xl font-black text-emerald-600">{formatIDR(stats.paid_fees)}</div>
                         </div>
                     </div>
@@ -410,7 +459,7 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                             <Wallet className="w-6 h-6" />
                         </div>
                         <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Menunggu Pembayaran</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Menunggu Pencairan</div>
                             <div className="text-xl font-black text-amber-600">{formatIDR(stats.unpaid_fees)}</div>
                         </div>
                     </div>
@@ -418,7 +467,7 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
 
                 {/* Tabs & Filter Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <button
                             type="button"
                             onClick={() => setActiveTab('freelancers')}
@@ -434,6 +483,19 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
 
                         <button
                             type="button"
+                            onClick={() => setActiveTab('content_jobs')}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                                activeTab === 'content_jobs'
+                                    ? 'bg-primary text-white shadow-md shadow-primary/25'
+                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            }`}
+                        >
+                            <CalendarDays className="w-3.5 h-3.5" />
+                            <span>Job Kalender Konten ({contentPlans.length})</span>
+                        </button>
+
+                        <button
+                            type="button"
                             onClick={() => setActiveTab('assignments')}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                                 activeTab === 'assignments'
@@ -442,7 +504,7 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                             }`}
                         >
                             <FolderKanban className="w-3.5 h-3.5" />
-                            <span>Tugas & Penugasan ({assignments.length})</span>
+                            <span>Tugas Project Lain ({assignments.length})</span>
                         </button>
 
                         <button
@@ -455,7 +517,7 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                             }`}
                         >
                             <Wallet className="w-3.5 h-3.5" />
-                            <span>Honorarium & Payouts</span>
+                            <span>ACC & Pencairan Upah</span>
                         </button>
                     </div>
 
@@ -574,9 +636,6 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                                                     <span>Portfolio</span>
                                                 </a>
                                             )}
-                                            <div className="text-[11px] text-slate-500 ml-auto font-medium">
-                                                {fl.active_assignments || 0} Job Aktif • {fl.completed_assignments || 0} Selesai
-                                            </div>
                                         </div>
                                     </div>
 
@@ -616,14 +675,6 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                                             >
                                                 <ExternalLink className="w-3.5 h-3.5" />
                                             </a>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleOpenCreateAssignment(fl.id)}
-                                                className="px-2.5 py-1 text-[11px] font-bold bg-primary text-white rounded-lg hover:opacity-90 shadow-sm transition-all cursor-pointer"
-                                            >
-                                                + Job
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -632,12 +683,141 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                     </div>
                 )}
 
-                {/* TAB 2: PENUGASAN TUGAS & JOBS */}
+                {/* TAB 2: JOB KALENDER KONTEN */}
+                {activeTab === 'content_jobs' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                Pekerjaan dari Kalender Konten ({filteredContentPlans.length})
+                            </h2>
+                            <a
+                                href="/content-calendar"
+                                className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all"
+                            >
+                                + Buka Kalender Konten
+                            </a>
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs">
+                                    <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-4 py-3">Konten & Platform</th>
+                                            <th className="px-4 py-3">Freelancer</th>
+                                            <th className="px-4 py-3">Jadwal Post</th>
+                                            <th className="px-4 py-3">Upah / Fee</th>
+                                            <th className="px-4 py-3">Status Freelancer</th>
+                                            <th className="px-4 py-3">Hasil Kerja (Link)</th>
+                                            <th className="px-4 py-3 text-right">Aksi ACC / Bayar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {filteredContentPlans.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                                                    Belum ada konten yang ditugaskan ke freelancer. Buka <strong>Kalender Konten</strong> dan pilih freelancer saat membuat/mengedit konten.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredContentPlans.map((plan) => (
+                                                <tr key={plan.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-all">
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="font-bold text-slate-900 dark:text-slate-100">{plan.title}</div>
+                                                        <div className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">
+                                                            {plan.platform} • {plan.format} • {plan.pillar}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="font-semibold text-slate-800 dark:text-slate-200">{plan.freelancer?.name || '-'}</div>
+                                                        <div className="text-[11px] text-slate-500">{plan.freelancer?.role}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400 font-medium">
+                                                            <Calendar className="w-3 h-3 text-slate-400" />
+                                                            {plan.scheduled_date}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-slate-100">
+                                                        {formatIDR(Number(plan.freelancer_fee))}
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-block capitalize ${
+                                                            plan.freelancer_status === 'approved'
+                                                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200'
+                                                                : plan.freelancer_status === 'submitted'
+                                                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200'
+                                                                : plan.freelancer_status === 'revision'
+                                                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200'
+                                                                : plan.freelancer_status === 'in_progress'
+                                                                ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200'
+                                                                : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                                        }`}>
+                                                            {plan.freelancer_status || 'assigned'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5">
+                                                        {plan.submission_link ? (
+                                                            <a
+                                                                href={plan.submission_link}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 hover:bg-emerald-100"
+                                                            >
+                                                                <Check className="w-3 h-3" />
+                                                                <span>Buka Hasil</span>
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-[11px] italic">Belum submit</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            {plan.freelancer_status !== 'approved' && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleApproveContentPlan(plan)}
+                                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-xs cursor-pointer"
+                                                                >
+                                                                    <CheckCircle2 className="w-3 h-3" />
+                                                                    <span>ACC</span>
+                                                                </button>
+                                                            )}
+
+                                                            {plan.payout_status === 'approved' && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handlePayContentPlan(plan, 'paid')}
+                                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-primary to-purple-600 text-white font-bold rounded-lg shadow-xs cursor-pointer"
+                                                                >
+                                                                    <Wallet className="w-3 h-3" />
+                                                                    <span>Cairkan</span>
+                                                                </button>
+                                                            )}
+
+                                                            {plan.payout_status === 'paid' && (
+                                                                <span className="text-[11px] font-bold text-emerald-600">
+                                                                    LUNAS
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* TAB 3: TUGAS PROJECT LAIN */}
                 {activeTab === 'assignments' && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                                Daftar Tugas Kerja Freelancer ({filteredAssignments.length})
+                                Tugas Project & Custom Job ({filteredAssignments.length})
                             </h2>
                             <button
                                 type="button"
@@ -677,17 +857,6 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                                                         <div className="font-bold text-slate-900 dark:text-slate-100">{item.title}</div>
                                                         {item.description && (
                                                             <div className="text-[11px] text-slate-500 line-clamp-1">{item.description}</div>
-                                                        )}
-                                                        {item.brief_link && (
-                                                            <a
-                                                                href={item.brief_link}
-                                                                target="_blank"
-                                                                rel="noreferrer"
-                                                                className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline mt-0.5"
-                                                            >
-                                                                <ExternalLink className="w-3 h-3" />
-                                                                <span>Link Brief Task</span>
-                                                            </a>
                                                         )}
                                                     </td>
                                                     <td className="px-4 py-3.5">
@@ -745,14 +914,14 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleOpenEditAssignment(item)}
-                                                                className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                                className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                                                             >
                                                                 <Edit3 className="w-3.5 h-3.5" />
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleDeleteAssignment(item)}
-                                                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
                                                             >
                                                                 <Trash2 className="w-3.5 h-3.5" />
                                                             </button>
@@ -768,82 +937,91 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                     </div>
                 )}
 
-                {/* TAB 3: HONORARIUM & PAYOUTS */}
+                {/* TAB 4: ACC & PENCAIRAN UPAH */}
                 {activeTab === 'payouts' && (
                     <div className="space-y-4">
-                        <div className="p-4 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-200 dark:border-amber-800/60 rounded-2xl flex items-center justify-between gap-4">
+                        <div className="p-4 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-transparent border border-amber-200 dark:border-amber-800/60 rounded-2xl flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <Wallet className="w-6 h-6 text-amber-600" />
+                                <Wallet className="w-6 h-6 text-amber-600 shrink-0" />
                                 <div>
-                                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Otomatisasi FinanceFlow Expense</h3>
+                                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Alur Pencairan Upah Freelancer Terkoneksi</h3>
                                     <p className="text-[11px] text-slate-500">
-                                        Menandai honorarium sebagai "Lunas (Paid)" akan otomatis mencatat pengeluaran di modul <strong>FinanceFlow &gt; Expense</strong> kategori <em>Freelancer</em>.
+                                        1. Freelancer kirim hasil kerja &rarr; 2. Admin klik <strong>ACC (Disetujui)</strong> &rarr; 3. Admin klik <strong>Cairkan Upah</strong> &rarr; Otomatis tercatat di <strong>FinanceFlow &gt; Expense</strong>.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
+                        {/* Content Calendar Payouts */}
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                📅 Upah Pekerjaan Kalender Konten ({contentPlans.length})
+                            </h3>
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                                 <table className="w-full text-left text-xs">
-                                    <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider">
+                                    <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800">
                                         <tr>
                                             <th className="px-4 py-3">Freelancer & Rekening</th>
-                                            <th className="px-4 py-3">Tugas / Job</th>
-                                            <th className="px-4 py-3">Project</th>
-                                            <th className="px-4 py-3">Jumlah Honor</th>
+                                            <th className="px-4 py-3">Konten</th>
+                                            <th className="px-4 py-3">Upah (Fee)</th>
                                             <th className="px-4 py-3">Status Payout</th>
-                                            <th className="px-4 py-3 text-right">Aksi Pembayaran</th>
+                                            <th className="px-4 py-3 text-right">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {assignments.map((item) => (
-                                            <tr key={item.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50">
+                                        {contentPlans.map((plan) => (
+                                            <tr key={plan.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50">
                                                 <td className="px-4 py-3.5">
-                                                    <div className="font-bold text-slate-900 dark:text-slate-100">{item.freelancer?.name}</div>
+                                                    <div className="font-bold text-slate-900 dark:text-slate-100">{plan.freelancer?.name}</div>
                                                     <div className="text-[11px] text-slate-500 font-mono">
-                                                        {item.freelancer?.bank_name} - {item.freelancer?.bank_account_number} ({item.freelancer?.bank_account_name || item.freelancer?.name})
+                                                        {plan.freelancer?.bank_name} - {plan.freelancer?.bank_account_number}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3.5 font-medium text-slate-800 dark:text-slate-200">
-                                                    {item.title}
-                                                </td>
-                                                <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400">
-                                                    {item.project?.name || 'General'}
+                                                    {plan.title}
+                                                    <div className="text-[11px] text-purple-600">{plan.platform} ({plan.format})</div>
                                                 </td>
                                                 <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-slate-100">
-                                                    {formatIDR(Number(item.fee_amount))}
+                                                    {formatIDR(Number(plan.freelancer_fee))}
                                                 </td>
                                                 <td className="px-4 py-3.5">
-                                                    {item.payment_status === 'paid' ? (
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200">
+                                                    {plan.payout_status === 'paid' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                             <CheckCircle2 className="w-3 h-3" />
                                                             <span>Lunas (Paid)</span>
                                                         </span>
+                                                    ) : plan.payout_status === 'approved' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                            <Check className="w-3 h-3" />
+                                                            <span>Di-ACC (Siap Cair)</span>
+                                                        </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200">
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                                                             <Clock className="w-3 h-3" />
-                                                            <span>Belum Dibayar</span>
+                                                            <span>Belum Di-ACC</span>
                                                         </span>
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3.5 text-right">
-                                                    {item.payment_status === 'paid' ? (
+                                                    {plan.payout_status === 'paid' ? (
+                                                        <span className="text-[11px] font-bold text-emerald-600">Lunas</span>
+                                                    ) : plan.payout_status === 'approved' ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleTogglePayout(item, 'unpaid')}
-                                                            className="text-[11px] font-semibold text-slate-500 hover:text-amber-600 transition-all cursor-pointer"
+                                                            onClick={() => handlePayContentPlan(plan, 'paid')}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-primary to-purple-600 hover:opacity-95 text-white rounded-xl shadow-sm cursor-pointer"
                                                         >
-                                                            Ubah ke Unpaid
+                                                            <Wallet className="w-3.5 h-3.5" />
+                                                            <span>Cairkan Upah</span>
                                                         </button>
                                                     ) : (
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleTogglePayout(item, 'paid')}
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm transition-all cursor-pointer"
+                                                            onClick={() => handleApproveContentPlan(plan)}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm cursor-pointer"
                                                         >
-                                                            <Wallet className="w-3.5 h-3.5" />
-                                                            <span>Tandai Lunas</span>
+                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                            <span>ACC Sekarang</span>
                                                         </button>
                                                     )}
                                                 </td>
@@ -1119,17 +1297,6 @@ export default function FreelancersIndex({ freelancers = [], assignments = [], p
                                     value={assignmentForm.data.brief_link}
                                     onChange={(e) => assignmentForm.setData('brief_link', e.target.value)}
                                     placeholder="https://drive.google.com/..."
-                                    className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Link Hasil Kerja / Submission (Opsional)</label>
-                                <input
-                                    type="url"
-                                    value={assignmentForm.data.submission_link}
-                                    onChange={(e) => assignmentForm.setData('submission_link', e.target.value)}
-                                    placeholder="https://drive.google.com/file/..."
                                     className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
                                 />
                             </div>

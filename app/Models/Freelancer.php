@@ -49,6 +49,11 @@ class Freelancer extends Model
         return $this->hasMany(FreelancerAssignment::class);
     }
 
+    public function contentPlans(): HasMany
+    {
+        return $this->hasMany(ContentPlan::class);
+    }
+
     public function getPortalUrlAttribute(): string
     {
         return url("/freelancer/portal/{$this->access_token}");

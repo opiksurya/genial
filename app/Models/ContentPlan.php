@@ -20,8 +20,16 @@ class ContentPlan extends Model
         'platform',
         'format',
         'pillar',
+        'freelancer_id',
         'status',
+        'freelancer_status',
+        'payout_status',
+        'freelancer_fee',
+        'paid_at',
+        'expense_id',
         'reference_link',
+        'submission_link',
+        'freelancer_notes',
         'visual_detail',
         'wording',
         'copywriting',
@@ -32,6 +40,8 @@ class ContentPlan extends Model
 
     protected $casts = [
         'scheduled_date' => 'date:Y-m-d',
+        'freelancer_fee' => 'decimal:2',
+        'paid_at' => 'datetime',
         'meta_data' => 'array',
     ];
 
@@ -43,5 +53,15 @@ class ContentPlan extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function freelancer(): BelongsTo
+    {
+        return $this->belongsTo(Freelancer::class);
+    }
+
+    public function expense(): BelongsTo
+    {
+        return $this->belongsTo(Expense::class);
     }
 }

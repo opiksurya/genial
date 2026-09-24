@@ -36,33 +36,39 @@ class FreelancerController extends Controller
             ->latest()
             ->get();
 
-        $assignments = FreelancerAssignment::with(['freelancer', 'project', 'task'])
-            ->latest()
+        $contentPlans = \App\Models\ContentPlan::with(['freelancer', 'project'])
+            ->whereNotNull('freelancer_id')
+            ->orderBy('scheduled_date', 'desc')
             ->get();
 
-        $projects = Project::select('id', 'name', 'client', 'category', 'status')
-            ->orderBy('name')
-            ->get();
+        $assignmentFees = (float) $assignments->sum('fee_amount');
+        $contentFees = (float) $contentPlans->sum('freelancer_fee');
+        $totalFees = $assignmentFees + $contentFees;
 
-        $tasks = Task::select('id', 'title', 'project_id', 'status')
-            ->latest()
-            ->limit(100)
-            ->get();
+        $paidAssignmentFees = (float) $assignments->where('payment_status', 'paid')->sum('fee_amount');
+        $paidContentFees = (float) $contentPlans->where('payout_status', 'paid')->sum('freelancer_fee');
+        $paidFees = $paidAssignmentFees + $paidContentFees;
+
+        $unpaidFees = $totalFees - $paidFees;
+
+        $activeContentJobs = $contentPlans->whereIn('freelancer_status', ['assigned', 'in_progress', 'submitted', 'revision'])->count();
+        $completedContentJobs = $contentPlans->where('freelancer_status', 'approved')->count();
 
         $stats = [
             'total_freelancers' => $freelancers->count(),
             'active_freelancers' => $freelancers->where('status', 'active')->count(),
-            'total_jobs' => $assignments->count(),
-            'active_jobs' => $assignments->whereIn('status', ['assigned', 'in_progress', 'submitted', 'revision'])->count(),
-            'completed_jobs' => $assignments->where('status', 'completed')->count(),
-            'total_fees' => (float) $assignments->sum('fee_amount'),
-            'paid_fees' => (float) $assignments->where('payment_status', 'paid')->sum('fee_amount'),
-            'unpaid_fees' => (float) $assignments->where('payment_status', 'unpaid')->sum('fee_amount'),
+            'total_jobs' => $assignments->count() + $contentPlans->count(),
+            'active_jobs' => $assignments->whereIn('status', ['assigned', 'in_progress', 'submitted', 'revision'])->count() + $activeContentJobs,
+            'completed_jobs' => $assignments->where('status', 'completed')->count() + $completedContentJobs,
+            'total_fees' => $totalFees,
+            'paid_fees' => $paidFees,
+            'unpaid_fees' => $unpaidFees,
         ];
 
         return Inertia::render('freelancers/index', [
             'freelancers' => $freelancers,
             'assignments' => $assignments,
+            'contentPlans' => $contentPlans,
             'projects' => $projects,
             'tasks' => $tasks,
             'stats' => $stats,

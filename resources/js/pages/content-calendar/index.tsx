@@ -36,6 +36,7 @@ interface Props {
     currentStatus: string;
     currentProjectId?: string | number | null;
     projects: { id: number; name: string; client?: string }[];
+    freelancers?: { id: number; name: string; role: string; rate_per_project?: number }[];
     aiSettings: {
         default_provider: string;
         gemini_api_key_set: boolean;
@@ -96,6 +97,7 @@ export default function ContentCalendarIndex({
     currentStatus = 'all',
     currentProjectId,
     projects = [],
+    freelancers = [],
     aiSettings,
     stats,
 }: Props) {
@@ -468,6 +470,11 @@ export default function ContentCalendarIndex({
                                                         <span className={isRevisi ? 'text-amber-700 dark:text-amber-300' : isPublished ? 'text-emerald-700 dark:text-emerald-300' : isScheduled ? 'text-purple-700 dark:text-purple-300' : 'text-blue-600 dark:text-blue-400'}>
                                                             {item.format} • <strong className="capitalize">{item.status}</strong>
                                                         </span>
+                                                        {item.freelancer && (
+                                                            <span className="text-[9px] font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-1.5 py-0.5 rounded" title={`Ditugaskan ke: ${item.freelancer.name}`}>
+                                                                👤 {item.freelancer.name.split(' ')[0]}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -498,6 +505,7 @@ export default function ContentCalendarIndex({
                     setSelectedItem(null);
                 }}
                 item={selectedItem}
+                freelancers={freelancers}
                 onItemUpdated={(updated) => {
                     setSelectedItem(updated);
                 }}
@@ -528,6 +536,7 @@ export default function ContentCalendarIndex({
                 initialDate={createInitialDate}
                 initialPlatform={currentPlatform}
                 projects={projects}
+                freelancers={freelancers}
             />
         </AppLayout>
     );

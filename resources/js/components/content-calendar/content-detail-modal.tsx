@@ -12,7 +12,14 @@ import {
     Video,
     Layers,
     Image as ImageIcon,
-    Tag
+    Tag,
+    UserCheck,
+    DollarSign,
+    CheckCircle2,
+    Clock,
+    Wallet,
+    Send,
+    AlertCircle
 } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
@@ -27,6 +34,22 @@ export interface ContentItem {
     pillar: string;
     status: string;
     reference_link?: string;
+    submission_link?: string;
+    freelancer_notes?: string;
+    freelancer_id?: number | null;
+    freelancer_fee?: number;
+    freelancer_status?: 'unassigned' | 'assigned' | 'in_progress' | 'submitted' | 'revision' | 'approved';
+    payout_status?: 'unpaid' | 'approved' | 'paid';
+    paid_at?: string;
+    freelancer?: {
+        id: number;
+        name: string;
+        role: string;
+        phone?: string;
+        rate_per_project?: number;
+        bank_name?: string;
+        bank_account_number?: string;
+    };
     visual_detail?: string;
     wording?: string;
     copywriting?: string;
@@ -36,20 +59,32 @@ export interface ContentItem {
     project_id?: number | null;
 }
 
+interface FreelancerOption {
+    id: number;
+    name: string;
+    role: string;
+    rate_per_project?: number;
+    bank_name?: string;
+    bank_account_number?: string;
+}
+
 interface ContentDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     item: ContentItem | null;
+    freelancers?: FreelancerOption[];
     onItemUpdated?: (updated: ContentItem) => void;
 }
 
-export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: ContentDetailModalProps) {
+export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], onItemUpdated }: ContentDetailModalProps) {
     if (!isOpen || !item) return null;
 
     const [form, setForm] = useState<ContentItem>({ ...item });
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isRefining, setIsRefining] = useState(false);
+    const [isApproving, setIsApproving] = useState(false);
+    const [isPaying, setIsPaying] = useState(false);
     const [refineInstruction, setRefineInstruction] = useState('');
     const [copied, setCopied] = useState(false);
 
@@ -63,7 +98,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
         try {
             if (!form.scheduled_date) return '';
             const d = new Date(form.scheduled_date + 'T00:00:00');
-            return d.toLocaleDateString('en-US', {
+            return d.toLocaleDateString('id-ID', {
                 weekday: 'long',
                 day: '2-digit',
                 month: 'long',
@@ -73,6 +108,35 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
             return form.scheduled_date;
         }
     }, [form.scheduled_date]);
+
+    const formatIDR = (val: number) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(val || 0);
+    };
+
+    const handleFreelancerChange = (flIdStr: string) => {
+        if (!flIdStr) {
+            setForm({
+                ...form,
+                freelancer_id: null,
+                freelancer_fee: 0,
+                freelancer_status: 'unassigned',
+            });
+            return;
+        }
+        const flId = Number(flIdStr);
+        const fl = freelancers.find(f => f.id === flId);
+        setForm({
+            ...form,
+            freelancer_id: flId,
+            freelancer_fee: fl?.rate_per_project ? Number(fl.rate_per_project) : form.freelancer_fee || 0,
+            freelancer_status: form.freelancer_status === 'unassigned' ? 'assigned' : form.freelancer_status,
+        });
+    };
 
     const handleSave = () => {
         setIsSaving(true);
@@ -85,25 +149,57 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                     if (onItemUpdated) onItemUpdated(form);
                     onClose();
                 },
-                onError: (errors) => {
+                onError: () => {
                     setIsSaving(false);
                     toast.error('Gagal menyimpan konten. Periksa inputan.');
                 }
             });
-        } else {
-            router.post('/content-calendar', form as any, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setIsSaving(false);
-                    toast.success('Konten baru berhasil ditambahkan!');
-                    onClose();
-                },
-                onError: () => {
-                    setIsSaving(false);
-                    toast.error('Gagal menambahkan konten.');
-                }
-            });
         }
+    };
+
+    const handleApproveWork = () => {
+        if (!form.id) return;
+        setIsApproving(true);
+        router.post(`/content-calendar/${form.id}/approve-freelancer`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsApproving(false);
+                setForm({
+                    ...form,
+                    freelancer_status: 'approved',
+                    payout_status: 'approved',
+                    status: 'Scheduled',
+                });
+                toast.success('Hasil kerja freelancer di-ACC! Upah siap dicairkan.');
+            },
+            onError: () => {
+                setIsApproving(false);
+                toast.error('Gagal meng-ACC pekerjaan.');
+            }
+        });
+    };
+
+    const handlePayFee = (status: 'paid' | 'unpaid') => {
+        if (!form.id) return;
+        setIsPaying(true);
+        router.put(`/content-calendar/${form.id}/pay-freelancer`, {
+            status,
+            record_expense: true,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsPaying(false);
+                setForm({
+                    ...form,
+                    payout_status: status,
+                });
+                toast.success(status === 'paid' ? 'Upah berhasil dicairkan & masuk Expense FinanceFlow!' : 'Status upah diubah.');
+            },
+            onError: () => {
+                setIsPaying(false);
+                toast.error('Gagal memproses pembayaran.');
+            }
+        });
     };
 
     const handleDelete = () => {
@@ -128,12 +224,17 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
         });
     };
 
-    const handleAiRefine = async (customInst?: string) => {
-        const instruction = customInst || refineInstruction;
-        if (!instruction.trim()) {
-            toast.error('Masukkan arahan revisi AI terlebih dahulu');
-            return;
-        }
+    const copyCaption = () => {
+        const fullText = `${form.copywriting || ''}\n\n${form.hashtags || ''}`;
+        navigator.clipboard.writeText(fullText.trim());
+        setCopied(true);
+        toast.success('Copywriting & Hashtag disalin ke clipboard!');
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleAiRefine = async (presetInstruction?: string) => {
+        const instruction = presetInstruction || refineInstruction;
+        if (!instruction.trim()) return;
 
         setIsRefining(true);
         try {
@@ -152,49 +253,37 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                     wording: form.wording,
                     copywriting: form.copywriting,
                     hashtags: form.hashtags,
-                    instruction: instruction,
+                    instruction,
                 }),
             });
 
             const data = await res.json();
             if (data.success && data.data) {
-                setForm(prev => ({
-                    ...prev,
-                    title: data.data.title || prev.title,
-                    visual_detail: data.data.visual_detail || prev.visual_detail,
-                    wording: data.data.wording || prev.wording,
-                    copywriting: data.data.copywriting || prev.copywriting,
-                    hashtags: data.data.hashtags || prev.hashtags,
-                }));
-                toast.success('Konten berhasil di-refine dengan AI! Klik Simpan Revisi untuk menerapkan.');
+                setForm({
+                    ...form,
+                    ...data.data,
+                });
+                toast.success('Konten berhasil di-refine dengan AI! Periksa perubahan di bawah.');
                 setRefineInstruction('');
             } else {
-                toast.error('Gagal merevisi konten dengan AI.');
+                toast.error('Gagal refine konten.');
             }
-        } catch (err) {
-            toast.error('Terjadi kesalahan saat memanggil AI.');
+        } catch {
+            toast.error('Terjadi kesalahan saat memproses AI.');
         } finally {
             setIsRefining(false);
         }
     };
 
-    const copyCaption = () => {
-        const fullText = `${form.copywriting || ''}\n\n${form.hashtags || ''}`.trim();
-        navigator.clipboard.writeText(fullText);
-        setCopied(true);
-        toast.success('Copywriting & hashtags disalin ke clipboard!');
-        setTimeout(() => setCopied(false), 2000);
-    };
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                 
-                {/* Modal Header */}
+                {/* Header with Badges */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                     <div className="flex items-center gap-2 flex-wrap">
                         {/* Status Select */}
-                        <div className="relative inline-block">
+                        <div className="relative">
                             <select
                                 value={form.status}
                                 onChange={(e) => setForm({ ...form, status: e.target.value })}
@@ -231,7 +320,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                             <option value="Story">STORY</option>
                         </select>
 
-                        {/* Pillar Tag with Custom Support */}
+                        {/* Pillar Tag */}
                         <div className="flex items-center gap-1">
                             <select
                                 value={['Product Showcase', 'Edukasi', 'Behind The Scene', 'Promo', 'Testimonial', 'Tips & Trik', 'Tren'].includes(form.pillar) ? form.pillar : '__custom__'}
@@ -264,7 +353,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
 
                     <button
                         onClick={onClose}
-                        className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                        className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
                         aria-label="Tutup"
                     >
                         <X className="w-5 h-5" />
@@ -289,6 +378,126 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                                 <span>{form.platform}</span>
                             </div>
                         </div>
+                    </div>
+
+                    {/* FREELANCER ASSIGNMENT & ACC / PAYOUT SECTION */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50/80 via-indigo-50/50 to-slate-50 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-slate-900 border border-purple-200/80 dark:border-purple-800/60 space-y-3.5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                <span className="text-xs font-bold text-purple-950 dark:text-purple-200">
+                                    Penugasan Freelancer & Pencairan Upah
+                                </span>
+                            </div>
+
+                            {form.freelancer_id && (
+                                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold capitalize ${
+                                    form.freelancer_status === 'approved'
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300'
+                                        : form.freelancer_status === 'submitted'
+                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300'
+                                        : form.freelancer_status === 'revision'
+                                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300'
+                                        : form.freelancer_status === 'in_progress'
+                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-300'
+                                        : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                }`}>
+                                    Status: {form.freelancer_status || 'assigned'}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Pilih Freelancer</label>
+                                <select
+                                    value={form.freelancer_id ? String(form.freelancer_id) : ''}
+                                    onChange={(e) => handleFreelancerChange(e.target.value)}
+                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                >
+                                    <option value="">-- Tanpa Freelancer (Internal) --</option>
+                                    {freelancers.map((fl) => (
+                                        <option key={fl.id} value={fl.id}>
+                                            {fl.name} ({fl.role})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Upah / Fee per Konten (Rp)</label>
+                                <input
+                                    type="number"
+                                    value={form.freelancer_fee || ''}
+                                    onChange={(e) => setForm({ ...form, freelancer_fee: Number(e.target.value) })}
+                                    placeholder="Contoh: 150000"
+                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-bold text-purple-700 dark:text-purple-300 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Deliverable Review & Admin Action Bar */}
+                        {form.freelancer_id && (
+                            <div className="p-3 bg-white dark:bg-slate-900/80 rounded-xl border border-purple-100 dark:border-purple-900/60 space-y-2.5">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div>
+                                        <div className="text-[11px] text-slate-500">Hasil Kerja / Deliverable Freelancer:</div>
+                                        {form.submission_link ? (
+                                            <a
+                                                href={form.submission_link}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline mt-0.5"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                                <span>Buka File / Google Drive Hasil Kerja</span>
+                                            </a>
+                                        ) : (
+                                            <span className="text-xs text-slate-400 italic">Freelancer belum mengunggah link hasil kerja</span>
+                                        )}
+                                        {form.freelancer_notes && (
+                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 italic bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                                                "{form.freelancer_notes}"
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* ACC & Cairkan Upah Buttons */}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {form.freelancer_status !== 'approved' && (
+                                            <button
+                                                type="button"
+                                                onClick={handleApproveWork}
+                                                disabled={isApproving}
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                                            >
+                                                {isApproving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                                <span>ACC / Setujui Konten</span>
+                                            </button>
+                                        )}
+
+                                        {form.payout_status === 'approved' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handlePayFee('paid')}
+                                                disabled={isPaying}
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
+                                            >
+                                                {isPaying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wallet className="w-3.5 h-3.5" />}
+                                                <span>Cairkan Upah ({formatIDR(Number(form.freelancer_fee))})</span>
+                                            </button>
+                                        )}
+
+                                        {form.payout_status === 'paid' && (
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs rounded-xl border border-emerald-200">
+                                                <Check className="w-3.5 h-3.5" />
+                                                <span>Upah LUNAS (Paid)</span>
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Reference Link */}
@@ -326,7 +535,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                                 Visual Detail / Arahan
                             </label>
                             <textarea
-                                rows={5}
+                                rows={4}
                                 value={form.visual_detail || ''}
                                 onChange={(e) => setForm({ ...form, visual_detail: e.target.value })}
                                 placeholder="Detail kamera, adegan, angle shooting atau slide carousel..."
@@ -340,7 +549,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                                 Wording (Teks di Video/Gambar)
                             </label>
                             <textarea
-                                rows={5}
+                                rows={4}
                                 value={form.wording || ''}
                                 onChange={(e) => setForm({ ...form, wording: e.target.value })}
                                 placeholder="Teks hook yang dicantumkan di layar video atau gambar..."
@@ -358,14 +567,14 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                             <button
                                 type="button"
                                 onClick={copyCaption}
-                                className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-primary transition-all"
+                                className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-primary transition-all cursor-pointer"
                             >
                                 {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                                 <span>{copied ? 'Disalin!' : 'Salin Caption'}</span>
                             </button>
                         </div>
                         <textarea
-                            rows={4}
+                            rows={3}
                             value={form.copywriting || ''}
                             onChange={(e) => setForm({ ...form, copywriting: e.target.value })}
                             placeholder="Tulis caption lengkap untuk postingan..."
@@ -399,7 +608,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                                     type="button"
                                     onClick={() => handleAiRefine('Buat hook wording lebih viral dan penasaran')}
                                     disabled={isRefining}
-                                    className="px-2 py-0.5 text-[10px] font-medium bg-white dark:bg-slate-800 hover:bg-primary/10 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 transition-all disabled:opacity-50"
+                                    className="px-2 py-0.5 text-[10px] font-medium bg-white dark:bg-slate-800 hover:bg-primary/10 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                     🔥 Hook Viral
                                 </button>
@@ -407,7 +616,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                                     type="button"
                                     onClick={() => handleAiRefine('Tambahkan CTA yang lebih persuasif')}
                                     disabled={isRefining}
-                                    className="px-2 py-0.5 text-[10px] font-medium bg-white dark:bg-slate-800 hover:bg-primary/10 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 transition-all disabled:opacity-50"
+                                    className="px-2 py-0.5 text-[10px] font-medium bg-white dark:bg-slate-800 hover:bg-primary/10 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                     🚀 Kuatkan CTA
                                 </button>
@@ -444,7 +653,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                                 type="button"
                                 onClick={handleDelete}
                                 disabled={isDeleting}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all cursor-pointer"
                             >
                                 {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                                 <span>Hapus</span>
@@ -456,7 +665,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-all"
+                            className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer"
                         >
                             Tutup
                         </button>
@@ -464,7 +673,7 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                             type="button"
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-primary via-indigo-600 to-purple-600 hover:opacity-95 shadow-md shadow-primary/20 rounded-xl transition-all disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-primary via-indigo-600 to-purple-600 hover:opacity-95 shadow-md shadow-primary/20 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
                         >
                             {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                             <span>Simpan Revisi</span>

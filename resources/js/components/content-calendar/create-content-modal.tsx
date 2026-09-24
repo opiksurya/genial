@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { X, Plus, Calendar, Loader2 } from 'lucide-react';
+import { X, Plus, Calendar, Loader2, UserCheck, DollarSign, ExternalLink, Send } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { ContentItem } from './content-detail-modal';
+
+interface FreelancerOption {
+    id: number;
+    name: string;
+    role: string;
+    rate_per_project?: number;
+}
 
 interface CreateContentModalProps {
     isOpen: boolean;
@@ -10,6 +17,7 @@ interface CreateContentModalProps {
     initialDate?: string;
     initialPlatform?: string;
     projects: { id: number; name: string; client?: string }[];
+    freelancers?: FreelancerOption[];
 }
 
 export function CreateContentModal({
@@ -17,7 +25,8 @@ export function CreateContentModal({
     onClose,
     initialDate,
     initialPlatform,
-    projects,
+    projects = [],
+    freelancers = [],
 }: CreateContentModalProps) {
     if (!isOpen) return null;
 
@@ -29,6 +38,10 @@ export function CreateContentModal({
         format: 'Video',
         pillar: 'Product Showcase',
         status: 'Draft',
+        freelancer_id: null,
+        freelancer_fee: 0,
+        freelancer_status: 'unassigned',
+        payout_status: 'unpaid',
         reference_link: '',
         visual_detail: '',
         wording: '',
@@ -37,6 +50,26 @@ export function CreateContentModal({
     });
 
     const [isSaving, setIsSaving] = useState(false);
+
+    const handleFreelancerChange = (flIdStr: string) => {
+        if (!flIdStr) {
+            setForm({
+                ...form,
+                freelancer_id: null,
+                freelancer_fee: 0,
+                freelancer_status: 'unassigned',
+            });
+            return;
+        }
+        const flId = Number(flIdStr);
+        const fl = freelancers.find(f => f.id === flId);
+        setForm({
+            ...form,
+            freelancer_id: flId,
+            freelancer_fee: fl?.rate_per_project ? Number(fl.rate_per_project) : 0,
+            freelancer_status: 'assigned',
+        });
+    };
 
     const handleSave = () => {
         if (!form.title?.trim()) {
@@ -74,7 +107,7 @@ export function CreateContentModal({
                                 Tambah Rencana Konten
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                                Buat postingan baru secara manual
+                                Buat postingan baru & tugaskan ke Freelancer
                             </p>
                         </div>
                     </div>
@@ -133,6 +166,45 @@ export function CreateContentModal({
                         </div>
                     </div>
 
+                    {/* Freelancer Assignment Bar */}
+                    <div className="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 rounded-xl border border-purple-200/80 dark:border-purple-800/60 space-y-2.5">
+                        <div className="flex items-center gap-2">
+                            <UserCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                            <span className="text-xs font-bold text-purple-900 dark:text-purple-200">
+                                Penugasan Freelancer (Editor / Designer)
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Pilih Freelancer</label>
+                                <select
+                                    value={form.freelancer_id ? String(form.freelancer_id) : ''}
+                                    onChange={(e) => handleFreelancerChange(e.target.value)}
+                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                >
+                                    <option value="">-- Tanpa Freelancer (Internal) --</option>
+                                    {freelancers.map((fl) => (
+                                        <option key={fl.id} value={fl.id}>
+                                            {fl.name} ({fl.role})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Upah / Fee Konten (Rp)</label>
+                                <input
+                                    type="number"
+                                    value={form.freelancer_fee || ''}
+                                    onChange={(e) => setForm({ ...form, freelancer_fee: Number(e.target.value) })}
+                                    placeholder="Contoh: 150000"
+                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg font-bold text-purple-700 dark:text-purple-300 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -184,7 +256,7 @@ export function CreateContentModal({
 
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                Status
+                                Status Konten
                             </label>
                             <select
                                 value={form.status}

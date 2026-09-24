@@ -51,7 +51,7 @@ class ContentCalendarController extends Controller
             $query->where('project_id', $projectId);
         }
 
-        $items = $query->get();
+        $items = $query->with(['freelancer', 'project'])->get();
 
         // Check if there are no items in the database at all for this month,
         // and if it's the first time viewing (e.g. July 2026 or current month), we can seed initial realistic data or leave empty.
@@ -76,12 +76,17 @@ class ContentCalendarController extends Controller
                 ]));
             }
 
-            $items = ContentPlan::whereBetween('scheduled_date', [$startDate, $endDate])
+            $items = ContentPlan::with(['freelancer', 'project'])
+                ->whereBetween('scheduled_date', [$startDate, $endDate])
                 ->orderBy('scheduled_date')
                 ->get();
         }
 
         $projects = Project::select('id', 'name', 'client')->orderBy('name')->get();
+        $freelancers = \App\Models\Freelancer::where('status', 'active')
+            ->select('id', 'name', 'role', 'rate_per_project', 'bank_name', 'bank_account_number')
+            ->orderBy('name')
+            ->get();
 
         $aiSettings = [
             'default_provider' => Setting::get('ai_default_provider', 'gemini'),
@@ -112,6 +117,7 @@ class ContentCalendarController extends Controller
             'currentStatus' => $status,
             'currentProjectId' => $projectId,
             'projects' => $projects,
+            'freelancers' => $freelancers,
             'aiSettings' => $aiSettings,
             'stats' => $stats,
         ]);
@@ -131,6 +137,8 @@ class ContentCalendarController extends Controller
             'pillar' => 'required|string',
             'status' => 'required|string',
             'reference_link' => 'nullable|string',
+            'submission_link' => 'nullable|string',
+            'freelancer_notes' => 'nullable|string',
             'visual_detail' => 'nullable|string',
             'wording' => 'nullable|string',
             'copywriting' => 'nullable|string',
@@ -138,9 +146,21 @@ class ContentCalendarController extends Controller
             'notes' => 'nullable|string',
             'project_id' => 'nullable|exists:projects,id',
             'brand_name' => 'nullable|string|max:255',
+            'freelancer_id' => 'nullable|exists:freelancers,id',
+            'freelancer_fee' => 'nullable|numeric|min:0',
+            'freelancer_status' => 'nullable|string',
+            'payout_status' => 'nullable|string',
         ]);
 
         $validated['user_id'] = $request->user()?->id;
+
+        if (!empty($validated['freelancer_id'])) {
+            $validated['freelancer_status'] = $validated['freelancer_status'] ?? 'assigned';
+            if (empty($validated['freelancer_fee'])) {
+                $fl = \App\Models\Freelancer::find($validated['freelancer_id']);
+                $validated['freelancer_fee'] = $fl?->rate_per_project ?? 0;
+            }
+        }
 
         ContentPlan::create($validated);
 
@@ -161,6 +181,8 @@ class ContentCalendarController extends Controller
             'pillar' => 'required|string',
             'status' => 'required|string',
             'reference_link' => 'nullable|string',
+            'submission_link' => 'nullable|string',
+            'freelancer_notes' => 'nullable|string',
             'visual_detail' => 'nullable|string',
             'wording' => 'nullable|string',
             'copywriting' => 'nullable|string',
@@ -168,11 +190,67 @@ class ContentCalendarController extends Controller
             'notes' => 'nullable|string',
             'project_id' => 'nullable|exists:projects,id',
             'brand_name' => 'nullable|string|max:255',
+            'freelancer_id' => 'nullable|exists:freelancers,id',
+            'freelancer_fee' => 'nullable|numeric|min:0',
+            'freelancer_status' => 'nullable|string',
+            'payout_status' => 'nullable|string',
         ]);
+
+        if (!empty($validated['freelancer_id']) && (empty($contentPlan->freelancer_id) || $contentPlan->freelancer_status === 'unassigned')) {
+            $validated['freelancer_status'] = $validated['freelancer_status'] ?? 'assigned';
+        }
 
         $contentPlan->update($validated);
 
         return back()->with('success', 'Perubahan konten berhasil disimpan.');
+    }
+
+    /**
+     * Admin ACC / Approve freelancer work on a content plan item.
+     */
+    public function approveFreelancerWork(Request $request, ContentPlan $contentPlan): RedirectResponse
+    {
+        $contentPlan->update([
+            'freelancer_status' => 'approved',
+            'payout_status' => 'approved', // ACC by Admin, ready for payout!
+            'status' => 'Scheduled', // Move content to Scheduled
+        ]);
+
+        return back()->with('success', "Hasil kerja freelancer untuk konten \"{$contentPlan->title}\" berhasil di-ACC (Disetujui)! Upah siap dicairkan.");
+    }
+
+    /**
+     * Admin Payout / Bayar Upah Freelancer for a content plan.
+     */
+    public function payFreelancerFee(Request $request, ContentPlan $contentPlan): RedirectResponse
+    {
+        $status = $request->input('status', 'paid');
+        $recordExpense = (bool) $request->input('record_expense', true);
+
+        $contentPlan->update([
+            'payout_status' => $status,
+            'paid_at' => $status === 'paid' ? now() : null,
+        ]);
+
+        // Auto record into Expense in FinanceFlow if requested, paid, and has fee
+        if ($status === 'paid' && $recordExpense && !$contentPlan->expense_id && $contentPlan->freelancer_fee > 0) {
+            $flName = $contentPlan->freelancer?->name ?? 'Freelancer';
+            $expense = \App\Models\Expense::create([
+                'project_id' => $contentPlan->project_id,
+                'name' => "[Freelancer] Konten: {$contentPlan->title} ({$flName})",
+                'category' => 'Freelancer',
+                'amount' => $contentPlan->freelancer_fee,
+                'date' => now()->toDateString(),
+                'status' => 'Approved',
+                'description' => "Pencairan upah konten kalender \"{$contentPlan->title}\" ({$contentPlan->platform} - {$contentPlan->format}) kepada {$flName}",
+                'created_by' => auth()->id(),
+            ]);
+
+            $contentPlan->update(['expense_id' => $expense->id]);
+        }
+
+        $textStatus = $status === 'paid' ? 'LUNAS (Paid)' : 'Belum Lunas';
+        return back()->with('success', "Upah freelancer Rp " . number_format($contentPlan->freelancer_fee, 0, ',', '.') . " diubah menjadi {$textStatus}!");
     }
 
     /**

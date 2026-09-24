@@ -106,6 +106,8 @@ Route::prefix('freelancer')->name('freelancer.portal.')->group(function () {
     Route::get('/portal/{access_token}', [FreelancerPortalController::class, 'index'])->name('show');
     Route::post('/portal/{access_token}/tasks/{assignment}/submit', [FreelancerPortalController::class, 'submitWork'])->name('submit');
     Route::put('/portal/{access_token}/tasks/{assignment}/status', [FreelancerPortalController::class, 'updateStatus'])->name('updateStatus');
+    Route::post('/portal/{access_token}/contents/{contentPlan}/submit', [FreelancerPortalController::class, 'submitContentWork'])->name('submitContent');
+    Route::put('/portal/{access_token}/contents/{contentPlan}/status', [FreelancerPortalController::class, 'updateContentStatus'])->name('updateContentStatus');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -187,7 +189,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{contentPlan}', [\App\Http\Controllers\ContentCalendarController::class, 'update'])->name('update');
         Route::delete('/{contentPlan}', [\App\Http\Controllers\ContentCalendarController::class, 'destroy'])->name('destroy');
         Route::post('/generate-ai', [\App\Http\Controllers\ContentCalendarController::class, 'generateAi'])->name('generate');
+        Route::post('/refine-ai', [\App\Http\Controllers\ContentCalendarController::class, 'refineAi'])->name('refine');
         Route::post('/settings', [\App\Http\Controllers\ContentCalendarController::class, 'saveSettings'])->name('settings');
+        Route::post('/{contentPlan}/approve-freelancer', [\App\Http\Controllers\ContentCalendarController::class, 'approveFreelancerWork'])->name('approve-freelancer');
+        Route::put('/{contentPlan}/pay-freelancer', [\App\Http\Controllers\ContentCalendarController::class, 'payFreelancerFee'])->name('pay-freelancer');
         Route::post('/clear-month', [\App\Http\Controllers\ContentCalendarController::class, 'clearMonth'])->name('clear-month');
     });
 
