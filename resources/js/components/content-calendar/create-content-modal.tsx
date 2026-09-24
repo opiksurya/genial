@@ -164,7 +164,7 @@ export function CreateContentModal({
                 {/* Body */}
                 <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                     {/* Preset Komponen Digital Kreatif */}
-                    {creativeServices.length > 0 && (
+                    {creativeServices && creativeServices.length > 0 && (
                         <div className="p-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 space-y-1.5">
                             <div className="flex items-center justify-between">
                                 <label className="text-[11px] font-bold text-primary flex items-center gap-1.5">
@@ -179,9 +179,30 @@ export function CreateContentModal({
                                 className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-primary/30 rounded-lg font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
                             >
                                 <option value="">-- Pilih dari Database Komponen Kreatif --</option>
-                                {creativeServices.map((service) => (
+                                {(creativeServices || []).map((service) => (
                                     <option key={service.id} value={service.id}>
-                                        [{service.category}] {service.name} — Format: {service.format} (Harga: Rp {Number(service.client_price).toLocaleString('id-ID')} | Standar Upah: Rp {Number(service.freelancer_cost).toLocaleString('id-ID')})
+                                        [{service.category || 'Layanan'}] {service.name} — Format: {service.format || 'Video'} (Harga: Rp {Number(service.client_price || 0).toLocaleString('id-ID')} | Standar Upah: Rp {Number(service.freelancer_cost || 0).toLocaleString('id-ID')})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Project / Klien Selection */}
+                    {projects && projects.length > 0 && (
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                Project / Klien (Opsional)
+                            </label>
+                            <select
+                                value={form.project_id ? String(form.project_id) : ''}
+                                onChange={(e) => setForm({ ...form, project_id: e.target.value ? Number(e.target.value) : null })}
+                                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-2 focus:ring-primary focus:outline-none"
+                            >
+                                <option value="">-- Pilih Project / Klien --</option>
+                                {(projects || []).map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.name} {p.client ? `(${p.client})` : ''}
                                     </option>
                                 ))}
                             </select>
@@ -194,7 +215,7 @@ export function CreateContentModal({
                         </label>
                         <input
                             type="text"
-                            value={form.title}
+                            value={form.title || ''}
                             onChange={(e) => setForm({ ...form, title: e.target.value })}
                             placeholder="Contoh: Showcase Jaket Windbreaker Custom"
                             className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:outline-none"

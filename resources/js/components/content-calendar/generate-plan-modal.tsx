@@ -178,10 +178,11 @@ export function GeneratePlanModal({
     };
 
     const isApiKeyConfigured = (prov: string) => {
-        if (prov === 'gemini') return aiSettings.gemini_api_key_set;
-        if (prov === 'claude') return aiSettings.claude_api_key_set;
-        if (prov === 'openai') return aiSettings.openai_api_key_set;
-        if (prov === 'openrouter') return aiSettings.openrouter_api_key_set;
+        if (!aiSettings) return false;
+        if (prov === 'gemini') return !!aiSettings.gemini_api_key_set;
+        if (prov === 'claude') return !!aiSettings.claude_api_key_set;
+        if (prov === 'openai') return !!aiSettings.openai_api_key_set;
+        if (prov === 'openrouter') return !!aiSettings.openrouter_api_key_set;
         return false;
     };
 
