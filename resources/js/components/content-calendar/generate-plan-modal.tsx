@@ -48,14 +48,12 @@ export function GeneratePlanModal({
     onClose,
     currentMonth,
     currentYear,
-    projects,
+    projects = [],
     aiSettings,
     onOpenAiSettings
 }: GeneratePlanModalProps) {
-    if (!isOpen) return null;
-
-    const [month, setMonth] = useState<number>(currentMonth);
-    const [year, setYear] = useState<number>(currentYear);
+    const [month, setMonth] = useState<number>(Number(currentMonth) || 9);
+    const [year, setYear] = useState<number>(Number(currentYear) || 2026);
     const [brandName, setBrandName] = useState<string>('Hoof ID');
     const [niche, setNiche] = useState<string>('Pabrik Konveksi, Sablon Kaos & Apparel Garmen');
     const [selectedProjectId, setSelectedProjectId] = useState<string>('');
@@ -70,8 +68,8 @@ export function GeneratePlanModal({
         'Tren'
     ]);
     const [tone, setTone] = useState<string>('Kasual, Edukatif & Persuasif');
-    const [customPrompt, setCustomPrompt] = useState<string>('Fokus promo mega 7.7 konveksi batch Juli dan edukasi bahan kaos combed vs carded.');
-    const [provider, setProvider] = useState<string>(aiSettings.default_provider || 'gemini');
+    const [customPrompt, setCustomPrompt] = useState<string>('Fokus promo mega konveksi dan edukasi bahan kaos.');
+    const [provider, setProvider] = useState<string>(aiSettings?.default_provider || 'gemini');
     const [customApiKey, setCustomApiKey] = useState<string>('');
     const [replaceExisting, setReplaceExisting] = useState<boolean>(true);
     const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -94,6 +92,8 @@ export function GeneratePlanModal({
         'Tips & Trik',
         'Tren'
     ]);
+
+    if (!isOpen) return null;
 
     const handleAddCustomPillar = () => {
         const trimmed = customPillarInput.trim();

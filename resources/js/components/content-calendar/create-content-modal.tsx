@@ -41,8 +41,6 @@ export function CreateContentModal({
     freelancers = [],
     creativeServices = [],
 }: CreateContentModalProps) {
-    if (!isOpen) return null;
-
     const [form, setForm] = useState<Partial<ContentItem>>({
         title: '',
         scheduled_date: initialDate || new Date().toISOString().split('T')[0],
@@ -64,6 +62,18 @@ export function CreateContentModal({
 
     const [isSaving, setIsSaving] = useState(false);
     const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setForm((prev) => ({
+                ...prev,
+                scheduled_date: initialDate || prev.scheduled_date || new Date().toISOString().split('T')[0],
+                platform: initialPlatform && initialPlatform !== 'all' ? initialPlatform : (prev.platform || 'TikTok'),
+            }));
+        }
+    }, [isOpen, initialDate, initialPlatform]);
+
+    if (!isOpen) return null;
 
     const handleCreativeServiceSelect = (serviceIdStr: string) => {
         setSelectedServiceId(serviceIdStr);

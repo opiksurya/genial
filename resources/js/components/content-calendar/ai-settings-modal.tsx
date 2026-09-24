@@ -30,19 +30,19 @@ interface AiSettingsModalProps {
 }
 
 export function AiSettingsModal({ isOpen, onClose, settings }: AiSettingsModalProps) {
-    if (!isOpen) return null;
-
-    const [defaultProvider, setDefaultProvider] = useState<string>(settings.default_provider || 'gemini');
+    const [defaultProvider, setDefaultProvider] = useState<string>(settings?.default_provider || 'gemini');
     const [geminiKey, setGeminiKey] = useState<string>('');
     const [claudeKey, setClaudeKey] = useState<string>('');
     const [openaiKey, setOpenaiKey] = useState<string>('');
     const [openrouterKey, setOpenrouterKey] = useState<string>('');
     
-    const [geminiModel, setGeminiModel] = useState<string>(settings.gemini_model || 'gemini-2.0-flash');
-    const [claudeModel, setClaudeModel] = useState<string>(settings.claude_model || 'claude-3-5-sonnet-20241022');
-    const [openaiModel, setOpenaiModel] = useState<string>(settings.openai_model || 'gpt-4o-mini');
+    const [geminiModel, setGeminiModel] = useState<string>(settings?.gemini_model || 'gemini-2.0-flash');
+    const [claudeModel, setClaudeModel] = useState<string>(settings?.claude_model || 'claude-3-5-sonnet-20241022');
+    const [openaiModel, setOpenaiModel] = useState<string>(settings?.openai_model || 'gpt-4o-mini');
 
     const [isSaving, setIsSaving] = useState(false);
+
+    if (!isOpen) return null;
 
     const handleSave = () => {
         setIsSaving(true);

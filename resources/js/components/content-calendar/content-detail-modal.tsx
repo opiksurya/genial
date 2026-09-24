@@ -89,9 +89,14 @@ interface ContentDetailModalProps {
 }
 
 export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], creativeServices = [], onItemUpdated }: ContentDetailModalProps) {
-    if (!isOpen || !item) return null;
-
-    const [form, setForm] = useState<ContentItem>({ ...item });
+    const [form, setForm] = useState<ContentItem>(() => item || {
+        title: '',
+        scheduled_date: '',
+        platform: 'TikTok',
+        format: 'Video',
+        pillar: 'Product Showcase',
+        status: 'Draft',
+    });
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isRefining, setIsRefining] = useState(false);
@@ -102,13 +107,15 @@ export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], cr
 
     // Update internal state when item changes
     React.useEffect(() => {
-        setForm({ ...item });
+        if (item) {
+            setForm({ ...item });
+        }
     }, [item]);
 
     // Format date string for display (e.g. "Wednesday, 08 July 2026")
     const formattedDate = React.useMemo(() => {
         try {
-            if (!form.scheduled_date) return '';
+            if (!form?.scheduled_date) return '';
             const d = new Date(form.scheduled_date + 'T00:00:00');
             return d.toLocaleDateString('id-ID', {
                 weekday: 'long',
@@ -117,9 +124,11 @@ export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], cr
                 year: 'numeric',
             });
         } catch {
-            return form.scheduled_date;
+            return form?.scheduled_date || '';
         }
-    }, [form.scheduled_date]);
+    }, [form?.scheduled_date]);
+
+    if (!isOpen || !item) return null;
 
     const formatIDR = (val: number) => {
         return new Intl.NumberFormat('id-ID', {
