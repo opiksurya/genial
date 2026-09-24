@@ -17,7 +17,8 @@ import {
     FileSpreadsheet,
     Settings,
     CalendarDays,
-    Briefcase
+    Briefcase,
+    Palette
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -49,6 +50,11 @@ const mainNavItems: NavItem[] = [
         title: 'Freelancer Hub',
         href: '/freelancers',
         icon: Briefcase,
+    },
+    {
+        title: 'Katalog Digital Kreatif',
+        href: '/creative-services',
+        icon: Palette,
     },
     {
         title: 'ProjectFlow',

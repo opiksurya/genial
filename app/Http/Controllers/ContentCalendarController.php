@@ -88,6 +88,11 @@ class ContentCalendarController extends Controller
             ->orderBy('name')
             ->get();
 
+        $creativeServices = \App\Models\CreativeService::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
         $aiSettings = [
             'default_provider' => Setting::get('ai_default_provider', 'gemini'),
             'gemini_api_key_set' => !empty(Setting::get('gemini_api_key', env('GEMINI_API_KEY'))),
@@ -118,6 +123,7 @@ class ContentCalendarController extends Controller
             'currentProjectId' => $projectId,
             'projects' => $projects,
             'freelancers' => $freelancers,
+            'creativeServices' => $creativeServices,
             'aiSettings' => $aiSettings,
             'stats' => $stats,
         ]);

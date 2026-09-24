@@ -98,6 +98,7 @@ use App\Http\Controllers\AgentPortalController;
 use App\Http\Controllers\FinanceFlow\AgentController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\FreelancerPortalController;
+use App\Http\Controllers\CreativeServiceController;
 
 Route::get('/agent/portal/{access_token}', [AgentPortalController::class, 'index'])->name('agent.portal');
 
@@ -209,6 +210,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/assignments/{assignment}', [FreelancerController::class, 'updateAssignment'])->name('assignments.update');
         Route::put('/assignments/{assignment}/pay', [FreelancerController::class, 'payAssignment'])->name('assignments.pay');
         Route::delete('/assignments/{assignment}', [FreelancerController::class, 'destroyAssignment'])->name('assignments.destroy');
+    });
+
+    // Database Komponen Digital Kreatif & Rate Card Module Routes
+    Route::prefix('creative-services')->name('creative-services.')->group(function () {
+        Route::get('/', [CreativeServiceController::class, 'index'])->name('index');
+        Route::get('/api/list', [CreativeServiceController::class, 'apiList'])->name('api.list');
+        Route::post('/', [CreativeServiceController::class, 'store'])->name('store');
+        Route::put('/{creativeService}', [CreativeServiceController::class, 'update'])->name('update');
+        Route::post('/{creativeService}/toggle', [CreativeServiceController::class, 'toggleActive'])->name('toggle');
+        Route::delete('/{creativeService}', [CreativeServiceController::class, 'destroy'])->name('destroy');
     });
 });
 

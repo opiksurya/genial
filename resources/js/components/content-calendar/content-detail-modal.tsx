@@ -68,15 +68,27 @@ interface FreelancerOption {
     bank_account_number?: string;
 }
 
+interface CreativeServiceOption {
+    id: number;
+    name: string;
+    category: string;
+    format: string;
+    client_price: number;
+    freelancer_cost: number;
+    unit: string;
+    deliverables?: string;
+}
+
 interface ContentDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     item: ContentItem | null;
     freelancers?: FreelancerOption[];
+    creativeServices?: CreativeServiceOption[];
     onItemUpdated?: (updated: ContentItem) => void;
 }
 
-export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], onItemUpdated }: ContentDetailModalProps) {
+export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], creativeServices = [], onItemUpdated }: ContentDetailModalProps) {
     if (!isOpen || !item) return null;
 
     const [form, setForm] = useState<ContentItem>({ ...item });

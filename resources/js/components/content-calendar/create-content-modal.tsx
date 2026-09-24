@@ -11,6 +11,17 @@ interface FreelancerOption {
     rate_per_project?: number;
 }
 
+interface CreativeServiceOption {
+    id: number;
+    name: string;
+    category: string;
+    format: string;
+    client_price: number;
+    freelancer_cost: number;
+    unit: string;
+    deliverables?: string;
+}
+
 interface CreateContentModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -18,6 +29,7 @@ interface CreateContentModalProps {
     initialPlatform?: string;
     projects: { id: number; name: string; client?: string }[];
     freelancers?: FreelancerOption[];
+    creativeServices?: CreativeServiceOption[];
 }
 
 export function CreateContentModal({
@@ -27,6 +39,7 @@ export function CreateContentModal({
     initialPlatform,
     projects = [],
     freelancers = [],
+    creativeServices = [],
 }: CreateContentModalProps) {
     if (!isOpen) return null;
 
@@ -50,13 +63,31 @@ export function CreateContentModal({
     });
 
     const [isSaving, setIsSaving] = useState(false);
+    const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+
+    const handleCreativeServiceSelect = (serviceIdStr: string) => {
+        setSelectedServiceId(serviceIdStr);
+        if (!serviceIdStr) return;
+        const sId = Number(serviceIdStr);
+        const service = creativeServices.find((s) => s.id === sId);
+        if (!service) return;
+
+        setForm((prev) => ({
+            ...prev,
+            format: service.format || prev.format,
+            freelancer_fee: Number(service.freelancer_cost) || prev.freelancer_fee,
+            visual_detail: prev.visual_detail?.trim() ? prev.visual_detail : (service.deliverables || ''),
+        }));
+        toast.info(
+            `Template diterapkan: ${service.name} (Format: ${service.format}, Standar Upah: Rp ${Number(service.freelancer_cost).toLocaleString('id-ID')})`
+        );
+    };
 
     const handleFreelancerChange = (flIdStr: string) => {
         if (!flIdStr) {
             setForm({
                 ...form,
                 freelancer_id: null,
-                freelancer_fee: 0,
                 freelancer_status: 'unassigned',
             });
             return;
@@ -66,7 +97,7 @@ export function CreateContentModal({
         setForm({
             ...form,
             freelancer_id: flId,
-            freelancer_fee: fl?.rate_per_project ? Number(fl.rate_per_project) : 0,
+            freelancer_fee: form.freelancer_fee && form.freelancer_fee > 0 ? form.freelancer_fee : (fl?.rate_per_project ? Number(fl.rate_per_project) : 0),
             freelancer_status: 'assigned',
         });
     };
@@ -122,6 +153,31 @@ export function CreateContentModal({
 
                 {/* Body */}
                 <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                    {/* Preset Komponen Digital Kreatif */}
+                    {creativeServices.length > 0 && (
+                        <div className="p-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Pilih Komponen Digital Kreatif (Auto-Fill Format & Upah)
+                                </label>
+                                <span className="text-[10px] text-muted-foreground">Opsional</span>
+                            </div>
+                            <select
+                                value={selectedServiceId}
+                                onChange={(e) => handleCreativeServiceSelect(e.target.value)}
+                                className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-primary/30 rounded-lg font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
+                            >
+                                <option value="">-- Pilih dari Database Komponen Kreatif --</option>
+                                {creativeServices.map((service) => (
+                                    <option key={service.id} value={service.id}>
+                                        [{service.category}] {service.name} — Format: {service.format} (Harga: Rp {Number(service.client_price).toLocaleString('id-ID')} | Standar Upah: Rp {Number(service.freelancer_cost).toLocaleString('id-ID')})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                             Judul Konten <span className="text-rose-500">*</span>

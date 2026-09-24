@@ -37,6 +37,16 @@ interface Props {
     currentProjectId?: string | number | null;
     projects: { id: number; name: string; client?: string }[];
     freelancers?: { id: number; name: string; role: string; rate_per_project?: number }[];
+    creativeServices?: {
+        id: number;
+        name: string;
+        category: string;
+        format: string;
+        client_price: number;
+        freelancer_cost: number;
+        unit: string;
+        deliverables?: string;
+    }[];
     aiSettings: {
         default_provider: string;
         gemini_api_key_set: boolean;
@@ -506,6 +516,7 @@ export default function ContentCalendarIndex({
                 }}
                 item={selectedItem}
                 freelancers={freelancers}
+                creativeServices={creativeServices}
                 onItemUpdated={(updated) => {
                     setSelectedItem(updated);
                 }}
@@ -537,6 +548,7 @@ export default function ContentCalendarIndex({
                 initialPlatform={currentPlatform}
                 projects={projects}
                 freelancers={freelancers}
+                creativeServices={creativeServices}
             />
         </AppLayout>
     );
