@@ -15,7 +15,8 @@ import {
     Receipt,
     PieChart,
     FileSpreadsheet,
-    Settings
+    Settings,
+    CalendarDays
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -37,6 +38,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Kalender Konten (AI)',
+        href: '/content-calendar',
+        icon: CalendarDays,
     },
     {
         title: 'ProjectFlow',

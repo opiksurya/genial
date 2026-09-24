@@ -170,6 +170,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('settings', [FinanceSettingController::class, 'index'])->name('settings.index');
         Route::post('settings', [FinanceSettingController::class, 'store'])->name('settings.store');
     });
+
+    // Kalender Konten (AI) Module Routes
+    Route::prefix('content-calendar')->name('content-calendar.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ContentCalendarController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\ContentCalendarController::class, 'store'])->name('store');
+        Route::put('/{contentPlan}', [\App\Http\Controllers\ContentCalendarController::class, 'update'])->name('update');
+        Route::delete('/{contentPlan}', [\App\Http\Controllers\ContentCalendarController::class, 'destroy'])->name('destroy');
+        Route::post('/generate-ai', [\App\Http\Controllers\ContentCalendarController::class, 'generateAi'])->name('generate');
+        Route::post('/refine-ai', [\App\Http\Controllers\ContentCalendarController::class, 'refineAi'])->name('refine');
+        Route::post('/settings', [\App\Http\Controllers\ContentCalendarController::class, 'saveSettings'])->name('settings');
+        Route::post('/clear-month', [\App\Http\Controllers\ContentCalendarController::class, 'clearMonth'])->name('clear-month');
+    });
 });
 
 
