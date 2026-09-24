@@ -16,7 +16,8 @@ import {
     PieChart,
     FileSpreadsheet,
     Settings,
-    CalendarDays
+    CalendarDays,
+    Briefcase
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -43,6 +44,11 @@ const mainNavItems: NavItem[] = [
         title: 'Kalender Konten (AI)',
         href: '/content-calendar',
         icon: CalendarDays,
+    },
+    {
+        title: 'Freelancer Hub',
+        href: '/freelancers',
+        icon: Briefcase,
     },
     {
         title: 'ProjectFlow',

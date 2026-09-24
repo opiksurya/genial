@@ -466,6 +466,83 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(CaseStudySeeder::class);
+
+        // Seed Freelancers & Assignments
+        if (\App\Models\Freelancer::count() === 0) {
+            $fl1 = \App\Models\Freelancer::create([
+                'name' => 'Dimas Bagas Nugraha',
+                'role' => 'Video Editor & Reels',
+                'email' => 'dimas.editor@gmail.com',
+                'phone' => '081234567891',
+                'portfolio_link' => 'https://drive.google.com',
+                'rate_per_project' => 150000,
+                'rate_unit' => 'per_content',
+                'bank_name' => 'BCA',
+                'bank_account_number' => '8210928371',
+                'bank_account_name' => 'Dimas Bagas Nugraha',
+                'access_token' => \Illuminate\Support\Str::random(48),
+                'status' => 'active',
+                'notes' => 'Spesialis CapCut, Premiere Pro, color grading Reels & TikTok hook dinamis.',
+            ]);
+
+            $fl2 = \App\Models\Freelancer::create([
+                'name' => 'Alina Putri',
+                'role' => 'Graphic Designer & Canva',
+                'email' => 'alina.creative@gmail.com',
+                'phone' => '085712349876',
+                'portfolio_link' => 'https://behance.net',
+                'rate_per_project' => 100000,
+                'rate_unit' => 'per_content',
+                'bank_name' => 'Mandiri',
+                'bank_account_number' => '1370019283746',
+                'bank_account_name' => 'Alina Putri',
+                'access_token' => \Illuminate\Support\Str::random(48),
+                'status' => 'active',
+                'notes' => 'Desain feed carousel, banner promo, thumbnail viral.',
+            ]);
+
+            $fl3 = \App\Models\Freelancer::create([
+                'name' => 'Reza Fahmi',
+                'role' => 'Voice Over & Talent',
+                'email' => 'reza.vo@gmail.com',
+                'phone' => '081398765432',
+                'rate_per_project' => 75000,
+                'rate_unit' => 'per_content',
+                'bank_name' => 'BCA',
+                'bank_account_number' => '7120938472',
+                'bank_account_name' => 'Reza Fahmi',
+                'access_token' => \Illuminate\Support\Str::random(48),
+                'status' => 'active',
+                'notes' => 'Suara kasual, ramah, energik untuk iklan TikTok & Shopee Video.',
+            ]);
+
+            $sampleProject = \App\Models\Project::first();
+
+            \App\Models\FreelancerAssignment::create([
+                'freelancer_id' => $fl1->id,
+                'project_id' => $sampleProject?->id,
+                'title' => 'Edit 5 Video TikTok Batch Promo September',
+                'description' => 'Edit footage konveksi kaos dengan dynamic text, sound trend TikTok, dan hook 3 detik pertama.',
+                'brief_link' => 'https://drive.google.com',
+                'submission_link' => 'https://drive.google.com/file/sample',
+                'fee_amount' => 750000,
+                'deadline' => now()->addDays(3)->toDateString(),
+                'status' => 'submitted',
+                'payment_status' => 'unpaid',
+            ]);
+
+            \App\Models\FreelancerAssignment::create([
+                'freelancer_id' => $fl2->id,
+                'project_id' => $sampleProject?->id,
+                'title' => 'Desain 3 Carousel Edukasi Bahan Sablon',
+                'description' => 'Desain infografis perbandingan kain combed 24s vs 30s untuk Instagram Feed.',
+                'brief_link' => 'https://figma.com',
+                'fee_amount' => 300000,
+                'deadline' => now()->addDays(5)->toDateString(),
+                'status' => 'in_progress',
+                'payment_status' => 'unpaid',
+            ]);
+        }
     }
 }
 

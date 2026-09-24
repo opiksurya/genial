@@ -96,8 +96,17 @@ use App\Http\Controllers\FinanceFlow\FinanceSettingController;
 
 use App\Http\Controllers\AgentPortalController;
 use App\Http\Controllers\FinanceFlow\AgentController;
+use App\Http\Controllers\FreelancerController;
+use App\Http\Controllers\FreelancerPortalController;
 
 Route::get('/agent/portal/{access_token}', [AgentPortalController::class, 'index'])->name('agent.portal');
+
+// Public Freelancer Portal (Magic Access Token)
+Route::prefix('freelancer')->name('freelancer.portal.')->group(function () {
+    Route::get('/portal/{access_token}', [FreelancerPortalController::class, 'index'])->name('show');
+    Route::post('/portal/{access_token}/tasks/{assignment}/submit', [FreelancerPortalController::class, 'submitWork'])->name('submit');
+    Route::put('/portal/{access_token}/tasks/{assignment}/status', [FreelancerPortalController::class, 'updateStatus'])->name('updateStatus');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -178,9 +187,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{contentPlan}', [\App\Http\Controllers\ContentCalendarController::class, 'update'])->name('update');
         Route::delete('/{contentPlan}', [\App\Http\Controllers\ContentCalendarController::class, 'destroy'])->name('destroy');
         Route::post('/generate-ai', [\App\Http\Controllers\ContentCalendarController::class, 'generateAi'])->name('generate');
-        Route::post('/refine-ai', [\App\Http\Controllers\ContentCalendarController::class, 'refineAi'])->name('refine');
         Route::post('/settings', [\App\Http\Controllers\ContentCalendarController::class, 'saveSettings'])->name('settings');
         Route::post('/clear-month', [\App\Http\Controllers\ContentCalendarController::class, 'clearMonth'])->name('clear-month');
+    });
+
+    // Freelancer Management Module Routes
+    Route::prefix('freelancers')->name('freelancers.')->group(function () {
+        Route::get('/', [FreelancerController::class, 'index'])->name('index');
+        Route::post('/', [FreelancerController::class, 'store'])->name('store');
+        Route::put('/{freelancer}', [FreelancerController::class, 'update'])->name('update');
+        Route::delete('/{freelancer}', [FreelancerController::class, 'destroy'])->name('destroy');
+        Route::post('/{freelancer}/regenerate-token', [FreelancerController::class, 'regenerateToken'])->name('regenerateToken');
+        
+        // Job Assignments & Payouts
+        Route::post('/assignments', [FreelancerController::class, 'storeAssignment'])->name('assignments.store');
+        Route::put('/assignments/{assignment}', [FreelancerController::class, 'updateAssignment'])->name('assignments.update');
+        Route::put('/assignments/{assignment}/pay', [FreelancerController::class, 'payAssignment'])->name('assignments.pay');
+        Route::delete('/assignments/{assignment}', [FreelancerController::class, 'destroyAssignment'])->name('assignments.destroy');
     });
 });
 
