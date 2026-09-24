@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Calendar, Loader2, UserCheck, DollarSign, ExternalLink, Send } from 'lucide-react';
+import { X, Plus, Calendar, Loader2, UserCheck, DollarSign, ExternalLink, Send, Sparkles } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { ContentItem } from './content-detail-modal';
