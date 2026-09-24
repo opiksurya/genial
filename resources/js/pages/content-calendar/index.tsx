@@ -121,10 +121,13 @@ export default function ContentCalendarIndex({
     const [createInitialDate, setCreateInitialDate] = useState<string>('');
     const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
+    const safeMonth = Number(currentMonth) || (new Date().getMonth() + 1);
+    const safeYear = Number(currentYear) || new Date().getFullYear();
+
     // Month Navigation
     const handlePrevMonth = () => {
-        let prevM = currentMonth - 1;
-        let prevY = currentYear;
+        let prevM = safeMonth - 1;
+        let prevY = safeYear;
         if (prevM < 1) {
             prevM = 12;
             prevY -= 1;
@@ -132,15 +135,15 @@ export default function ContentCalendarIndex({
         router.get('/content-calendar', {
             month: prevM,
             year: prevY,
-            platform: currentPlatform,
-            status: currentStatus,
-            project_id: currentProjectId,
-        }, { preserveState: true });
+            platform: currentPlatform || 'all',
+            status: currentStatus || 'all',
+            project_id: currentProjectId || '',
+        }, { preserveScroll: true });
     };
 
     const handleNextMonth = () => {
-        let nextM = currentMonth + 1;
-        let nextY = currentYear;
+        let nextM = safeMonth + 1;
+        let nextY = safeYear;
         if (nextM > 12) {
             nextM = 1;
             nextY += 1;
@@ -148,27 +151,28 @@ export default function ContentCalendarIndex({
         router.get('/content-calendar', {
             month: nextM,
             year: nextY,
-            platform: currentPlatform,
-            status: currentStatus,
-            project_id: currentProjectId,
-        }, { preserveState: true });
+            platform: currentPlatform || 'all',
+            status: currentStatus || 'all',
+            project_id: currentProjectId || '',
+        }, { preserveScroll: true });
     };
 
     const handlePlatformChange = (platformId: string) => {
         router.get('/content-calendar', {
-            month: currentMonth,
-            year: currentYear,
+            month: safeMonth,
+            year: safeYear,
             platform: platformId,
-            status: currentStatus,
-            project_id: currentProjectId,
-        }, { preserveState: true });
+            status: currentStatus || 'all',
+            project_id: currentProjectId || '',
+        }, { preserveScroll: true });
     };
 
     const handleClearMonth = () => {
-        if (!confirm(`Hapus semua ${items.length} konten pada ${MONTH_NAMES_ID[currentMonth - 1]} ${currentYear}?`)) return;
+        const monthLabel = MONTH_NAMES_ID[safeMonth - 1] || `Bulan ${safeMonth}`;
+        if (!confirm(`Hapus semua ${items.length} konten pada ${monthLabel} ${safeYear}?`)) return;
         router.post('/content-calendar/clear-month', {
-            month: currentMonth,
-            year: currentYear,
+            month: safeMonth,
+            year: safeYear,
         }, {
             onSuccess: () => toast.success('Kalender bulan ini berhasil dibersihkan.'),
         });
@@ -176,9 +180,9 @@ export default function ContentCalendarIndex({
 
     const handleSeedDemoData = () => {
         router.get('/content-calendar', {
-            month: currentMonth,
-            year: currentYear,
-            platform: currentPlatform,
+            month: safeMonth,
+            year: safeYear,
+            platform: currentPlatform || 'all',
             seed_demo: 1,
         }, {
             onSuccess: () => toast.success('Contoh konten rencana bulan ini berhasil dimuat!'),
@@ -197,8 +201,10 @@ export default function ContentCalendarIndex({
 
     // Calculate calendar grid days
     const calendarDays = useMemo(() => {
-        const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
-        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+        const m = Number(currentMonth) || (new Date().getMonth() + 1);
+        const y = Number(currentYear) || new Date().getFullYear();
+        const firstDayOfMonth = new Date(y, m - 1, 1);
+        const daysInMonth = new Date(y, m, 0).getDate();
         
         // Day of week for 1st day (0 = Sunday, 1 = Monday, ... 6 = Saturday)
         const startDayOfWeek = firstDayOfMonth.getDay();
@@ -222,10 +228,10 @@ export default function ContentCalendarIndex({
 
         // Days in month
         for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const dayItems = items.filter((item) => {
-                // scheduled_date may be "YYYY-MM-DD" or full ISO string
-                const itemDateOnly = (item.scheduled_date || '').substring(0, 10);
+            const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const dayItems = (items || []).filter((item) => {
+                if (!item || !item.scheduled_date) return false;
+                const itemDateOnly = String(item.scheduled_date).substring(0, 10);
                 return itemDateOnly === dateStr;
             });
 
@@ -252,7 +258,7 @@ export default function ContentCalendarIndex({
     }, [items, currentMonth, currentYear]);
 
     // Format header title (e.g. "July 2026" or "Juli 2026")
-    const monthTitle = `${MONTH_NAMES_EN[currentMonth - 1]} ${currentYear}`;
+    const monthTitle = `${MONTH_NAMES_EN[safeMonth - 1] || 'Month'} ${safeYear}`;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -481,7 +487,7 @@ export default function ContentCalendarIndex({
                                                         <span className={isRevisi ? 'text-amber-700 dark:text-amber-300' : isPublished ? 'text-emerald-700 dark:text-emerald-300' : isScheduled ? 'text-purple-700 dark:text-purple-300' : 'text-blue-600 dark:text-blue-400'}>
                                                             {item.format} • <strong className="capitalize">{item.status}</strong>
                                                         </span>
-                                                        {item.freelancer && (
+                                                        {item.freelancer && item.freelancer.name && (
                                                             <span className="text-[9px] font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 px-1.5 py-0.5 rounded" title={`Ditugaskan ke: ${item.freelancer.name}`}>
                                                                 👤 {item.freelancer.name.split(' ')[0]}
                                                             </span>
