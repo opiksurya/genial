@@ -36,9 +36,22 @@ class FreelancerController extends Controller
             ->latest()
             ->get();
 
+        $assignments = FreelancerAssignment::with(['freelancer', 'project', 'task'])
+            ->latest()
+            ->get();
+
         $contentPlans = \App\Models\ContentPlan::with(['freelancer', 'project'])
             ->whereNotNull('freelancer_id')
             ->orderBy('scheduled_date', 'desc')
+            ->get();
+
+        $projects = Project::select('id', 'name', 'client', 'category', 'status')
+            ->orderBy('name')
+            ->get();
+
+        $tasks = Task::select('id', 'title', 'project_id', 'status')
+            ->latest()
+            ->limit(100)
             ->get();
 
         $assignmentFees = (float) $assignments->sum('fee_amount');
