@@ -108,6 +108,7 @@ export default function ContentCalendarIndex({
     currentProjectId,
     projects = [],
     freelancers = [],
+    creativeServices = [],
     aiSettings,
     stats,
 }: Props) {
