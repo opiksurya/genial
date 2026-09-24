@@ -12,7 +12,8 @@ import {
     HelpCircle,
     SlidersHorizontal,
     Share2,
-    Palette
+    Palette,
+    Plus
 } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
