@@ -198,10 +198,21 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                             <select
                                 value={form.status}
                                 onChange={(e) => setForm({ ...form, status: e.target.value })}
-                                className="appearance-none font-bold text-xs uppercase px-2.5 py-1 pr-6 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer transition-all"
+                                className={`appearance-none font-bold text-xs uppercase px-2.5 py-1 pr-6 rounded-md border focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer transition-all ${
+                                    form.status === 'Revisi' || form.status === 'Revision'
+                                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                                        : form.status === 'In Progress'
+                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+                                        : form.status === 'Scheduled'
+                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border-purple-300 dark:border-purple-700'
+                                        : form.status === 'Published'
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                                }`}
                             >
                                 <option value="Draft">DRAFT</option>
                                 <option value="In Progress">IN PROGRESS</option>
+                                <option value="Revisi">REVISI</option>
                                 <option value="Scheduled">SCHEDULED</option>
                                 <option value="Published">PUBLISHED</option>
                             </select>
@@ -220,20 +231,35 @@ export function ContentDetailModal({ isOpen, onClose, item, onItemUpdated }: Con
                             <option value="Story">STORY</option>
                         </select>
 
-                        {/* Pillar Tag */}
-                        <select
-                            value={form.pillar}
-                            onChange={(e) => setForm({ ...form, pillar: e.target.value })}
-                            className="font-bold text-xs uppercase px-2.5 py-1 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
-                        >
-                            <option value="Product Showcase">PRODUCT SHOWCASE</option>
-                            <option value="Edukasi">EDUKASI</option>
-                            <option value="Behind The Scene">BEHIND THE SCENE</option>
-                            <option value="Promo">PROMO</option>
-                            <option value="Testimonial">TESTIMONIAL</option>
-                            <option value="Tips & Trik">TIPS & TRIK</option>
-                            <option value="Tren">TREN</option>
-                        </select>
+                        {/* Pillar Tag with Custom Support */}
+                        <div className="flex items-center gap-1">
+                            <select
+                                value={['Product Showcase', 'Edukasi', 'Behind The Scene', 'Promo', 'Testimonial', 'Tips & Trik', 'Tren'].includes(form.pillar) ? form.pillar : '__custom__'}
+                                onChange={(e) => {
+                                    if (e.target.value === '__custom__') {
+                                        const customVal = prompt('Masukkan nama Pilar Konten / Tema custom:', form.pillar);
+                                        if (customVal && customVal.trim()) {
+                                            setForm({ ...form, pillar: customVal.trim() });
+                                        }
+                                    } else {
+                                        setForm({ ...form, pillar: e.target.value });
+                                    }
+                                }}
+                                className="font-bold text-xs uppercase px-2.5 py-1 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                            >
+                                <option value="Product Showcase">PRODUCT SHOWCASE</option>
+                                <option value="Edukasi">EDUKASI</option>
+                                <option value="Behind The Scene">BEHIND THE SCENE</option>
+                                <option value="Promo">PROMO</option>
+                                <option value="Testimonial">TESTIMONIAL</option>
+                                <option value="Tips & Trik">TIPS & TRIK</option>
+                                <option value="Tren">TREN</option>
+                                {!['Product Showcase', 'Edukasi', 'Behind The Scene', 'Promo', 'Testimonial', 'Tips & Trik', 'Tren'].includes(form.pillar) && (
+                                    <option value={form.pillar}>{form.pillar.toUpperCase()}</option>
+                                )}
+                                <option value="__custom__">+ CUSTOM PILAR...</option>
+                            </select>
+                        </div>
                     </div>
 
                     <button

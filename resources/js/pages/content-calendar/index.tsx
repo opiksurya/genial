@@ -49,6 +49,8 @@ interface Props {
     stats: {
         total: number;
         draft: number;
+        in_progress?: number;
+        revisi?: number;
         scheduled: number;
         published: number;
     };
@@ -355,20 +357,26 @@ export default function ContentCalendarIndex({
                     </div>
 
                     {/* Stats Pill & Tools */}
-                    <div className="flex items-center gap-3 flex-wrap text-xs">
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
                         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-300 font-medium">
                             <span>Total: <strong>{items.length}</strong> Konten</span>
                             <span>•</span>
-                            <span className="text-blue-600 dark:text-blue-400">Draft: {stats?.draft || 0}</span>
+                            <span className="text-slate-600 dark:text-slate-400">Draft: {stats?.draft || 0}</span>
                             <span>•</span>
-                            <span className="text-emerald-600 dark:text-emerald-400">Scheduled: {stats?.scheduled || 0}</span>
+                            <span className="text-blue-600 dark:text-blue-400">In Progress: {stats?.in_progress || 0}</span>
+                            <span>•</span>
+                            <span className="text-amber-600 dark:text-amber-400 font-semibold">Revisi: {stats?.revisi || 0}</span>
+                            <span>•</span>
+                            <span className="text-purple-600 dark:text-purple-400">Scheduled: {stats?.scheduled || 0}</span>
+                            <span>•</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">Published: {stats?.published || 0}</span>
                         </div>
 
                         {items.length > 0 && (
                             <button
                                 type="button"
                                 onClick={handleClearMonth}
-                                className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer"
+                                className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer ml-auto"
                             >
                                 <Trash2 className="w-3 h-3" />
                                 <span>Kosongkan Bulan</span>
@@ -430,23 +438,40 @@ export default function ContentCalendarIndex({
 
                                     {/* Content Items List in this day */}
                                     <div className="space-y-1.5 flex-1">
-                                        {cell.items.map((item, itemIdx) => (
-                                            <div
-                                                key={item.id || itemIdx}
-                                                onClick={() => handleOpenCard(item)}
-                                                className="group/card p-2 rounded-lg bg-blue-50/90 dark:bg-blue-950/40 hover:bg-blue-100/90 dark:hover:bg-blue-900/50 border border-blue-200/80 dark:border-blue-800/60 shadow-xs cursor-pointer transition-all transform hover:-translate-y-0.5"
-                                            >
-                                                <h4 className="text-[11px] md:text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">
-                                                    {item.title}
-                                                </h4>
-                                                
-                                                <div className="flex items-center gap-1.5 mt-1 text-[10px] text-blue-600 dark:text-blue-400 font-medium">
-                                                    <span>{item.format}</span>
-                                                    <span>•</span>
-                                                    <span className="capitalize">{item.status}</span>
+                                        {cell.items.map((item, itemIdx) => {
+                                            const isRevisi = item.status === 'Revisi' || item.status === 'Revision';
+                                            const isPublished = item.status === 'Published';
+                                            const isScheduled = item.status === 'Scheduled';
+                                            const isInProgress = item.status === 'In Progress';
+
+                                            return (
+                                                <div
+                                                    key={item.id || itemIdx}
+                                                    onClick={() => handleOpenCard(item)}
+                                                    className={`group/card p-2 rounded-lg border shadow-xs cursor-pointer transition-all transform hover:-translate-y-0.5 ${
+                                                        isRevisi
+                                                            ? 'bg-amber-50/90 dark:bg-amber-950/40 hover:bg-amber-100/90 dark:hover:bg-amber-900/50 border-amber-300/80 dark:border-amber-800/60'
+                                                            : isPublished
+                                                            ? 'bg-emerald-50/90 dark:bg-emerald-950/40 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 border-emerald-300/80 dark:border-emerald-800/60'
+                                                            : isScheduled
+                                                            ? 'bg-purple-50/90 dark:bg-purple-950/40 hover:bg-purple-100/90 dark:hover:bg-purple-900/50 border-purple-300/80 dark:border-purple-800/60'
+                                                            : isInProgress
+                                                            ? 'bg-indigo-50/90 dark:bg-indigo-950/40 hover:bg-indigo-100/90 dark:hover:bg-indigo-900/50 border-indigo-300/80 dark:border-indigo-800/60'
+                                                            : 'bg-blue-50/90 dark:bg-blue-950/40 hover:bg-blue-100/90 dark:hover:bg-blue-900/50 border-blue-200/80 dark:border-blue-800/60'
+                                                    }`}
+                                                >
+                                                    <h4 className="text-[11px] md:text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">
+                                                        {item.title}
+                                                    </h4>
+                                                    
+                                                    <div className="flex items-center justify-between gap-1 mt-1 text-[10px] font-medium">
+                                                        <span className={isRevisi ? 'text-amber-700 dark:text-amber-300' : isPublished ? 'text-emerald-700 dark:text-emerald-300' : isScheduled ? 'text-purple-700 dark:text-purple-300' : 'text-blue-600 dark:text-blue-400'}>
+                                                            {item.format} • <strong className="capitalize">{item.status}</strong>
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
 
                                         {cell.items.length === 0 && (
                                             <div

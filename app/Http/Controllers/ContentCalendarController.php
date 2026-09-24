@@ -98,6 +98,8 @@ class ContentCalendarController extends Controller
         $stats = [
             'total' => ContentPlan::whereBetween('scheduled_date', [$startDate, $endDate])->count(),
             'draft' => ContentPlan::whereBetween('scheduled_date', [$startDate, $endDate])->where('status', 'Draft')->count(),
+            'in_progress' => ContentPlan::whereBetween('scheduled_date', [$startDate, $endDate])->where('status', 'In Progress')->count(),
+            'revisi' => ContentPlan::whereBetween('scheduled_date', [$startDate, $endDate])->whereIn('status', ['Revisi', 'Revision'])->count(),
             'scheduled' => ContentPlan::whereBetween('scheduled_date', [$startDate, $endDate])->where('status', 'Scheduled')->count(),
             'published' => ContentPlan::whereBetween('scheduled_date', [$startDate, $endDate])->where('status', 'Published')->count(),
         ];

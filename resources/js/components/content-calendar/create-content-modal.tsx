@@ -155,8 +155,17 @@ export function CreateContentModal({
                                 Pilar Konten
                             </label>
                             <select
-                                value={form.pillar}
-                                onChange={(e) => setForm({ ...form, pillar: e.target.value })}
+                                value={['Product Showcase', 'Edukasi', 'Behind The Scene', 'Promo', 'Testimonial', 'Tips & Trik', 'Tren'].includes(form.pillar || '') ? form.pillar : '__custom__'}
+                                onChange={(e) => {
+                                    if (e.target.value === '__custom__') {
+                                        const custom = prompt('Masukkan nama Pilar Konten / Tema kustom:', form.pillar || '');
+                                        if (custom && custom.trim()) {
+                                            setForm({ ...form, pillar: custom.trim() });
+                                        }
+                                    } else {
+                                        setForm({ ...form, pillar: e.target.value });
+                                    }
+                                }}
                                 className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-2 focus:ring-primary"
                             >
                                 <option value="Product Showcase">Product Showcase</option>
@@ -166,6 +175,10 @@ export function CreateContentModal({
                                 <option value="Testimonial">Testimonial</option>
                                 <option value="Tips & Trik">Tips & Trik</option>
                                 <option value="Tren">Tren</option>
+                                {form.pillar && !['Product Showcase', 'Edukasi', 'Behind The Scene', 'Promo', 'Testimonial', 'Tips & Trik', 'Tren'].includes(form.pillar) && (
+                                    <option value={form.pillar}>{form.pillar}</option>
+                                )}
+                                <option value="__custom__">+ Custom Pilar...</option>
                             </select>
                         </div>
 
@@ -180,6 +193,7 @@ export function CreateContentModal({
                             >
                                 <option value="Draft">Draft</option>
                                 <option value="In Progress">In Progress</option>
+                                <option value="Revisi">Revisi</option>
                                 <option value="Scheduled">Scheduled</option>
                                 <option value="Published">Published</option>
                             </select>
