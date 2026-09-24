@@ -62,6 +62,8 @@ export function CreateContentModal({
 
     const [isSaving, setIsSaving] = useState(false);
     const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+    const [standardBaseFee, setStandardBaseFee] = useState<number>(0);
+    const [extraFee, setExtraFee] = useState<number>(0);
 
     React.useEffect(() => {
         if (isOpen) {
@@ -75,22 +77,38 @@ export function CreateContentModal({
 
     if (!isOpen) return null;
 
+    const selectedService = (creativeServices || []).find((s) => s.id === Number(selectedServiceId));
+
     const handleCreativeServiceSelect = (serviceIdStr: string) => {
         setSelectedServiceId(serviceIdStr);
-        if (!serviceIdStr) return;
+        if (!serviceIdStr) {
+            setStandardBaseFee(0);
+            return;
+        }
         const sId = Number(serviceIdStr);
-        const service = creativeServices.find((s) => s.id === sId);
+        const service = (creativeServices || []).find((s) => s.id === sId);
         if (!service) return;
+
+        const base = Number(service.freelancer_cost) || 0;
+        setStandardBaseFee(base);
 
         setForm((prev) => ({
             ...prev,
-            format: service.format || prev.format,
-            freelancer_fee: Number(service.freelancer_cost) || prev.freelancer_fee,
+            format: service.format || prev.format || 'Video',
+            freelancer_fee: base + extraFee,
             visual_detail: prev.visual_detail?.trim() ? prev.visual_detail : (service.deliverables || ''),
         }));
         toast.info(
-            `Template diterapkan: ${service.name} (Format: ${service.format}, Standar Upah: Rp ${Number(service.freelancer_cost).toLocaleString('id-ID')})`
+            `Komponen dipilih: ${service.name} (Format otomatis: ${service.format}, Upah Dasar: Rp ${base.toLocaleString('id-ID')})`
         );
+    };
+
+    const handleExtraFeeChange = (val: number) => {
+        setExtraFee(val);
+        setForm((prev) => ({
+            ...prev,
+            freelancer_fee: standardBaseFee + val,
+        }));
     };
 
     const handleFreelancerChange = (flIdStr: string) => {
@@ -103,11 +121,13 @@ export function CreateContentModal({
             return;
         }
         const flId = Number(flIdStr);
-        const fl = freelancers.find(f => f.id === flId);
+        const fl = (freelancers || []).find(f => f.id === flId);
+        const defaultRate = standardBaseFee > 0 ? (standardBaseFee + extraFee) : (fl?.rate_per_project ? Number(fl.rate_per_project) : 0);
+        
         setForm({
             ...form,
             freelancer_id: flId,
-            freelancer_fee: form.freelancer_fee && form.freelancer_fee > 0 ? form.freelancer_fee : (fl?.rate_per_project ? Number(fl.rate_per_project) : 0),
+            freelancer_fee: defaultRate,
             freelancer_status: 'assigned',
         });
     };
@@ -165,26 +185,40 @@ export function CreateContentModal({
                 <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                     {/* Preset Komponen Digital Kreatif */}
                     {creativeServices && creativeServices.length > 0 && (
-                        <div className="p-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 space-y-1.5">
+                        <div className="p-3.5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/25 space-y-2.5 shadow-xs">
                             <div className="flex items-center justify-between">
-                                <label className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                                <label className="text-xs font-bold text-primary flex items-center gap-1.5">
                                     <Sparkles className="w-3.5 h-3.5" />
-                                    Pilih Komponen Digital Kreatif (Auto-Fill Format & Upah)
+                                    Pilih Komponen Digital Kreatif (Auto Format & Standar Upah)
                                 </label>
-                                <span className="text-[10px] text-muted-foreground">Opsional</span>
+                                <span className="text-[10px] text-primary/70 font-semibold">Database Komponen</span>
                             </div>
                             <select
                                 value={selectedServiceId}
                                 onChange={(e) => handleCreativeServiceSelect(e.target.value)}
-                                className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-primary/30 rounded-lg font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
+                                className="w-full px-3.5 py-2 text-xs bg-white dark:bg-slate-900 border border-primary/30 rounded-xl font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
                             >
-                                <option value="">-- Pilih dari Database Komponen Kreatif --</option>
+                                <option value="">-- Pilih Komponen (Atau Buat Manual) --</option>
                                 {(creativeServices || []).map((service) => (
                                     <option key={service.id} value={service.id}>
-                                        [{service.category || 'Layanan'}] {service.name} — Format: {service.format || 'Video'} (Harga: Rp {Number(service.client_price || 0).toLocaleString('id-ID')} | Standar Upah: Rp {Number(service.freelancer_cost || 0).toLocaleString('id-ID')})
+                                        [{service.category || 'Layanan'}] {service.name} — Format: {service.format || 'Video'} (Upah Freelancer: Rp {Number(service.freelancer_cost || 0).toLocaleString('id-ID')})
                                     </option>
                                 ))}
                             </select>
+
+                            {selectedService && (
+                                <div className="flex items-center gap-2 flex-wrap text-[11px] pt-1">
+                                    <span className="px-2 py-0.5 rounded-md bg-primary/15 text-primary font-bold border border-primary/20">
+                                        🎬 Format Otomatis: {selectedService.format}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200">
+                                        💰 Standar Upah: Rp {Number(selectedService.freelancer_cost || 0).toLocaleString('id-ID')}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200">
+                                        🏷️ Harga Klien: Rp {Number(selectedService.client_price || 0).toLocaleString('id-ID')}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -253,25 +287,32 @@ export function CreateContentModal({
                         </div>
                     </div>
 
-                    {/* Freelancer Assignment Bar */}
-                    <div className="p-3.5 bg-purple-50/70 dark:bg-purple-950/40 rounded-xl border border-purple-200/80 dark:border-purple-800/60 space-y-2.5">
-                        <div className="flex items-center gap-2">
-                            <UserCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                            <span className="text-xs font-bold text-purple-900 dark:text-purple-200">
-                                Penugasan Freelancer (Editor / Designer)
-                            </span>
+                    {/* Freelancer Assignment & Fee Breakdown Bar */}
+                    <div className="p-4 bg-purple-50/70 dark:bg-purple-950/40 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                <span className="text-xs font-bold text-purple-950 dark:text-purple-200">
+                                    Penugasan Freelancer & Upah
+                                </span>
+                            </div>
+                            {form.freelancer_id && (
+                                <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-2 py-0.5 rounded-full">
+                                    Ditugaskan
+                                </span>
+                            )}
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-2.5">
                             <div className="space-y-1">
                                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Pilih Freelancer</label>
                                 <select
                                     value={form.freelancer_id ? String(form.freelancer_id) : ''}
                                     onChange={(e) => handleFreelancerChange(e.target.value)}
-                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                 >
-                                    <option value="">-- Tanpa Freelancer (Internal) --</option>
-                                    {freelancers.map((fl) => (
+                                    <option value="">-- Tanpa Freelancer (Dikerjakan Internal) --</option>
+                                    {(freelancers || []).map((fl) => (
                                         <option key={fl.id} value={fl.id}>
                                             {fl.name} ({fl.role})
                                         </option>
@@ -279,24 +320,53 @@ export function CreateContentModal({
                                 </select>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Upah / Fee Konten (Rp)</label>
-                                <input
-                                    type="number"
-                                    value={form.freelancer_fee || ''}
-                                    onChange={(e) => setForm({ ...form, freelancer_fee: Number(e.target.value) })}
-                                    placeholder="Contoh: 150000"
-                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg font-bold text-purple-700 dark:text-purple-300 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                />
+                            {/* Upah Breakdown */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                                        Upah Tambahan / Bonus (Rp)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={extraFee || ''}
+                                        onChange={(e) => handleExtraFeeChange(Number(e.target.value) || 0)}
+                                        placeholder="0 (Opsional bonus/transport)"
+                                        className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                    />
+                                    <p className="text-[9px] text-slate-500">Standar komponen: Rp {standardBaseFee.toLocaleString('id-ID')}</p>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-purple-900 dark:text-purple-300">
+                                        Total Upah yang Dicairkan (Rp)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={form.freelancer_fee || ''}
+                                        onChange={(e) => setForm({ ...form, freelancer_fee: Number(e.target.value) || 0 })}
+                                        placeholder="Contoh: 150000"
+                                        className="w-full px-3 py-1.5 text-xs bg-purple-100/70 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-700 rounded-xl font-bold text-purple-800 dark:text-purple-200 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                    />
+                                    <p className="text-[9px] text-purple-700 dark:text-purple-400 font-semibold">
+                                        = Standar (Rp {standardBaseFee.toLocaleString('id-ID')}) + Tambahan (Rp {extraFee.toLocaleString('id-ID')})
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                Format
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    Format Konten
+                                </label>
+                                {selectedService && (
+                                    <span className="text-[10px] text-primary font-bold">
+                                        (Otomatis: {selectedService.format})
+                                    </span>
+                                )}
+                            </div>
                             <select
                                 value={form.format}
                                 onChange={(e) => setForm({ ...form, format: e.target.value })}
@@ -306,6 +376,8 @@ export function CreateContentModal({
                                 <option value="Carousel">Carousel</option>
                                 <option value="Image">Image</option>
                                 <option value="Story">Story</option>
+                                <option value="VoiceOver">VoiceOver</option>
+                                <option value="Script">Script</option>
                             </select>
                         </div>
 

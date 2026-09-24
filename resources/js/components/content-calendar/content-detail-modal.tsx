@@ -401,6 +401,44 @@ export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], cr
                         </div>
                     </div>
 
+                    {/* Preset Komponen Digital Kreatif */}
+                    {creativeServices && creativeServices.length > 0 && (
+                        <div className="p-3.5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/25 space-y-2 shadow-xs">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-primary flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Terapkan Komponen Digital Kreatif (Auto-Format & Standar Upah)
+                                </label>
+                                <span className="text-[10px] text-primary/70 font-semibold">Database Komponen</span>
+                            </div>
+                            <select
+                                value=""
+                                onChange={(e) => {
+                                    const sId = Number(e.target.value);
+                                    if (!sId) return;
+                                    const service = (creativeServices || []).find(s => s.id === sId);
+                                    if (service) {
+                                        setForm({
+                                            ...form,
+                                            format: service.format || form.format,
+                                            freelancer_fee: Number(service.freelancer_cost) || form.freelancer_fee,
+                                            visual_detail: form.visual_detail?.trim() ? form.visual_detail : (service.deliverables || ''),
+                                        });
+                                        toast.info(`Komponen diterapkan: ${service.name} (Format: ${service.format}, Standar Upah: Rp ${Number(service.freelancer_cost).toLocaleString('id-ID')})`);
+                                    }
+                                }}
+                                className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-primary/30 rounded-xl font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
+                            >
+                                <option value="">-- Terapkan Preset Komponen Kreatif --</option>
+                                {(creativeServices || []).map((service) => (
+                                    <option key={service.id} value={service.id}>
+                                        [{service.category || 'Layanan'}] {service.name} — Format: {service.format || 'Video'} (Standar Upah: Rp {Number(service.freelancer_cost || 0).toLocaleString('id-ID')})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
                     {/* FREELANCER ASSIGNMENT & ACC / PAYOUT SECTION */}
                     <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50/80 via-indigo-50/50 to-slate-50 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-slate-900 border border-purple-200/80 dark:border-purple-800/60 space-y-3.5">
                         <div className="flex items-center justify-between">
@@ -428,16 +466,16 @@ export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], cr
                             )}
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-2.5">
                             <div className="space-y-1">
                                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Pilih Freelancer</label>
                                 <select
                                     value={form.freelancer_id ? String(form.freelancer_id) : ''}
                                     onChange={(e) => handleFreelancerChange(e.target.value)}
-                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                 >
-                                    <option value="">-- Tanpa Freelancer (Internal) --</option>
-                                    {freelancers.map((fl) => (
+                                    <option value="">-- Tanpa Freelancer (Dikerjakan Internal) --</option>
+                                    {(freelancers || []).map((fl) => (
                                         <option key={fl.id} value={fl.id}>
                                             {fl.name} ({fl.role})
                                         </option>
@@ -446,13 +484,16 @@ export function ContentDetailModal({ isOpen, onClose, item, freelancers = [], cr
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Upah / Fee per Konten (Rp)</label>
+                                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                                    Total Upah / Fee yang Dicairkan (Rp)
+                                    <span className="text-slate-400 font-normal ml-1">(Otomatis dari komponen + upah tambahan/bonus)</span>
+                                </label>
                                 <input
                                     type="number"
                                     value={form.freelancer_fee || ''}
-                                    onChange={(e) => setForm({ ...form, freelancer_fee: Number(e.target.value) })}
+                                    onChange={(e) => setForm({ ...form, freelancer_fee: Number(e.target.value) || 0 })}
                                     placeholder="Contoh: 150000"
-                                    className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-bold text-purple-700 dark:text-purple-300 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl font-bold text-purple-700 dark:text-purple-300 focus:ring-2 focus:ring-purple-500 focus:outline-none"
                                 />
                             </div>
                         </div>
