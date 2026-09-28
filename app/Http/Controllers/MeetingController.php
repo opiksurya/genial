@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Meeting;
 use App\Models\Project;
+use App\Services\GoogleCalendarService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -11,6 +12,10 @@ use Inertia\Inertia;
 
 class MeetingController extends Controller
 {
+    public function __construct(
+        protected GoogleCalendarService $googleCalendarService
+    ) {}
+
     /**
      * Display a listing of meetings and calendar views.
      */
@@ -44,6 +49,7 @@ class MeetingController extends Controller
                 'meeting_link' => $m->meeting_link,
                 'location' => $m->location,
                 'status' => $m->status,
+                'google_event_id' => $m->google_event_id,
                 'attendees' => $m->attendees ?? [],
                 'google_calendar_url' => $m->google_calendar_url,
                 'project' => $m->project ? [
@@ -76,6 +82,7 @@ class MeetingController extends Controller
                     'platform' => $m->platform,
                     'meeting_link' => $m->meeting_link,
                     'status' => $m->status,
+                    'google_event_id' => $m->google_event_id,
                     'google_calendar_url' => $m->google_calendar_url,
                     'project_name' => $m->project ? $m->project->name : null,
                 ];
@@ -85,6 +92,8 @@ class MeetingController extends Controller
             'meetings' => $meetings,
             'projects' => $projects,
             'upcomingMeetings' => $upcomingMeetings,
+            'isGoogleConnected' => $this->googleCalendarService->isConnected($request->user()),
+            'googleUserEmail' => $request->user()?->email,
             'calendarFeedUrl' => url('/meetings/feed.ics'),
             'filters' => [
                 'platform' => $request->platform ?? 'all',
@@ -95,7 +104,7 @@ class MeetingController extends Controller
     }
 
     /**
-     * Store a newly created meeting.
+     * Store a newly created meeting and automatically sync via Google Calendar API.
      */
     public function store(Request $request)
     {
@@ -115,13 +124,20 @@ class MeetingController extends Controller
         $validated['user_id'] = $request->user()?->id;
         $validated['status'] = $validated['status'] ?? 'scheduled';
 
-        Meeting::create($validated);
+        $meeting = Meeting::create($validated);
 
-        return redirect()->back()->with('success', 'Agenda meeting berhasil ditambahkan!');
+        // Auto-sync directly to Google Calendar via API
+        $gResult = $this->googleCalendarService->createEvent($meeting, $request->user());
+
+        $msg = $gResult
+            ? 'Agenda meeting berhasil disimpan dan otomatis masuk ke Google Calendar via API!'
+            : 'Agenda meeting berhasil disimpan!';
+
+        return redirect()->back()->with('success', $msg);
     }
 
     /**
-     * Update the specified meeting.
+     * Update the specified meeting and sync changes via Google Calendar API.
      */
     public function update(Request $request, Meeting $meeting)
     {
@@ -140,17 +156,23 @@ class MeetingController extends Controller
 
         $meeting->update($validated);
 
-        return redirect()->back()->with('success', 'Agenda meeting berhasil diperbarui!');
+        // Auto-sync updates to Google Calendar via API
+        $this->googleCalendarService->updateEvent($meeting, $request->user());
+
+        return redirect()->back()->with('success', 'Agenda meeting berhasil diperbarui & disinkronkan ke Google Calendar!');
     }
 
     /**
-     * Remove the specified meeting.
+     * Remove the specified meeting and delete from Google Calendar via API.
      */
-    public function destroy(Meeting $meeting)
+    public function destroy(Request $request, Meeting $meeting)
     {
+        // Auto-delete from Google Calendar via API
+        $this->googleCalendarService->deleteEvent($meeting, $request->user());
+
         $meeting->delete();
 
-        return redirect()->back()->with('success', 'Agenda meeting berhasil dihapus!');
+        return redirect()->back()->with('success', 'Agenda meeting berhasil dihapus dari sistem & Google Calendar!');
     }
 
     /**

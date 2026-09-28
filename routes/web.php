@@ -229,6 +229,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{meeting}', [\App\Http\Controllers\MeetingController::class, 'update'])->name('update');
         Route::delete('/{meeting}', [\App\Http\Controllers\MeetingController::class, 'destroy'])->name('destroy');
         Route::get('/{meeting}/download-ics', [\App\Http\Controllers\MeetingController::class, 'downloadIcs'])->name('download-ics');
+        Route::get('/google/connect', [GoogleController::class, 'connectCalendar'])->name('google.connect');
+        Route::post('/google/disconnect', [GoogleController::class, 'disconnectCalendar'])->name('google.disconnect');
     });
 });
 

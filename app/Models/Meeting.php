@@ -19,6 +19,8 @@ class Meeting extends Model
         'user_id',
         'attendees',
         'status',
+        'google_event_id',
+        'google_meet_link',
     ];
 
     protected $casts = [
