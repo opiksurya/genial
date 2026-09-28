@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 interface ParticlesBgProps {
     particleCount?: number;
     color?: string;
+    particleColor?: string;
     speed?: number;
     className?: string;
 }
@@ -10,9 +11,11 @@ interface ParticlesBgProps {
 export function ParticlesBg({
     particleCount = 60,
     color = '#00A9E7',
+    particleColor,
     speed = 0.6,
     className = '',
 }: ParticlesBgProps) {
+    const activeColor = particleColor || color;
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -54,7 +57,7 @@ export function ParticlesBg({
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = color;
+                        ctx.strokeStyle = activeColor;
                         ctx.globalAlpha = (1 - dist / 110) * 0.25;
                         ctx.lineWidth = 0.8;
                         ctx.stroke();
@@ -74,7 +77,7 @@ export function ParticlesBg({
 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = color;
+                ctx.fillStyle = activeColor;
                 ctx.globalAlpha = p.alpha;
                 ctx.fill();
             });
@@ -89,7 +92,7 @@ export function ParticlesBg({
             window.removeEventListener('resize', updateSize);
             cancelAnimationFrame(animationFrameId);
         };
-    }, [particleCount, color, speed]);
+    }, [particleCount, activeColor, speed]);
 
     return (
         <canvas

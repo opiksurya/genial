@@ -309,7 +309,7 @@ export default function RolesIndex({ roles, permissions }: Props) {
                                             <input 
                                                 type="checkbox"
                                                 checked={createForm.data.permissions.includes(p)}
-                                                onChange={() => togglePermission(p, false)}
+                                                onChange={() => handleCreatePermissionToggle(p)}
                                                 className="rounded border-sidebar-border text-primary focus:ring-primary w-4 h-4"
                                             />
                                             <span className="capitalize font-medium">{p}</span>
@@ -375,7 +375,7 @@ export default function RolesIndex({ roles, permissions }: Props) {
                                             <input 
                                                 type="checkbox"
                                                 checked={editForm.data.permissions.includes(p)}
-                                                onChange={() => togglePermission(p, true)}
+                                                onChange={() => handleEditPermissionToggle(p)}
                                                 className="rounded border-sidebar-border text-primary focus:ring-primary w-4 h-4"
                                             />
                                             <span className="capitalize font-medium">{p}</span>

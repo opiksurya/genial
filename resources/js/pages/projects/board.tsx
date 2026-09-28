@@ -96,6 +96,7 @@ interface ProjectItem {
     growth_percentage?: string;
     collaboration_story?: string;
     key_results?: string;
+    description?: string;
     category: string;
     status: string;
     priority: string;

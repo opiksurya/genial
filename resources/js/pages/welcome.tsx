@@ -43,6 +43,7 @@ interface PageProps {
         name: string;
         client: string;
         client_logo?: string;
+        slug?: string;
         category: string;
     }[];
     whatsappNumber?: string;

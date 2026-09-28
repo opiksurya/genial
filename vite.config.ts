@@ -11,7 +11,11 @@ export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
-            refresh: true,
+            refresh: [
+                'resources/views/**',
+                'routes/**',
+                'app/Http/Controllers/**',
+            ],
             fonts: [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
@@ -29,12 +33,21 @@ export default defineConfig({
         }),
     ]),
     server: {
+        cors: true,
+        host: 'localhost',
+        hmr: {
+            host: 'localhost',
+        },
         watch: {
             ignored: [
                 '**/.agents/**',
                 '**/.claude/**',
                 '**/.cursor/**',
+                '**/.git/**',
                 '**/.junie/**',
+                '**/node_modules/**',
+                '**/public/build/**',
+                '**/storage/**',
                 '**/vendor/**',
             ],
         },
