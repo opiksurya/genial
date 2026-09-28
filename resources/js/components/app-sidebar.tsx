@@ -17,6 +17,7 @@ import {
     FileSpreadsheet,
     Settings,
     CalendarDays,
+    CalendarCheck,
     Briefcase,
     Palette
 } from 'lucide-react';
@@ -40,6 +41,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Agenda Meeting',
+        href: '/meetings',
+        icon: CalendarCheck,
     },
     {
         title: 'Kalender Konten (AI)',

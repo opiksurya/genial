@@ -221,7 +221,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{creativeService}/toggle', [CreativeServiceController::class, 'toggleActive'])->name('toggle');
         Route::delete('/{creativeService}', [CreativeServiceController::class, 'destroy'])->name('destroy');
     });
+
+    // Kalender Agenda Meeting & Google Calendar Sync Module Routes
+    Route::prefix('meetings')->name('meetings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\MeetingController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\MeetingController::class, 'store'])->name('store');
+        Route::put('/{meeting}', [\App\Http\Controllers\MeetingController::class, 'update'])->name('update');
+        Route::delete('/{meeting}', [\App\Http\Controllers\MeetingController::class, 'destroy'])->name('destroy');
+        Route::get('/{meeting}/download-ics', [\App\Http\Controllers\MeetingController::class, 'downloadIcs'])->name('download-ics');
+    });
 });
+
+// Live iCalendar (.ics) Feed for Google Calendar Subscription
+Route::get('/meetings/feed.ics', [\App\Http\Controllers\MeetingController::class, 'feed'])->name('meetings.feed');
 
 
 require __DIR__.'/settings.php';
