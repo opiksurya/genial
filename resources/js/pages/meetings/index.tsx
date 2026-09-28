@@ -367,7 +367,7 @@ export default function MeetingCalendarIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Agenda Meeting & Google Calendar Sync" />
 
-            <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
+            <div className="w-full space-y-6 p-4 sm:p-6">
                 {/* HEADER SECTION */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border border-sidebar-border rounded-2xl p-5 shadow-sm">
                     <div>
