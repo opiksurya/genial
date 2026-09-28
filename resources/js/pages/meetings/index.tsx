@@ -142,6 +142,7 @@ export default function MeetingCalendarIndex({
     const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
     const [copiedFeed, setCopiedFeed] = useState(false);
     const [copiedLink, setCopiedLink] = useState(false);
+    const [autoSyncGCal, setAutoSyncGCal] = useState(true);
 
     // Form
     const createForm = useForm({
@@ -187,6 +188,40 @@ export default function MeetingCalendarIndex({
 
     const handleToday = () => {
         setCurrentDate(new Date());
+    };
+
+    // Helper: Generate Google Calendar direct event URL from form input
+    const generateGoogleCalendarUrl = (data: {
+        title: string;
+        description: string;
+        start_time: string;
+        end_time: string;
+        platform: string;
+        meeting_link: string;
+        location: string;
+        project_id: string;
+    }) => {
+        if (!data.start_time || !data.end_time) return null;
+        try {
+            const start = new Date(data.start_time).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+            const end = new Date(data.end_time).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+            const text = encodeURIComponent(data.title || 'Agenda Meeting Genial');
+
+            const detailsParts: string[] = [];
+            if (data.description) detailsParts.push(data.description);
+            if (data.meeting_link) detailsParts.push(`Link Meeting: ${data.meeting_link}`);
+            if (data.project_id) {
+                const proj = projects.find((p) => String(p.id) === String(data.project_id));
+                if (proj) detailsParts.push(`Project: ${proj.name} (${proj.client})`);
+            }
+            detailsParts.push('Dibuat otomatis via Genial Digital Solution');
+            const details = encodeURIComponent(detailsParts.join('\n\n'));
+            const loc = encodeURIComponent(data.meeting_link || data.location || 'Online');
+
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}&location=${loc}`;
+        } catch {
+            return null;
+        }
     };
 
     // Filtered meetings
@@ -306,6 +341,16 @@ export default function MeetingCalendarIndex({
     // Form handlers
     const handleCreateSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // 1. Otomatis sinkronkan & buka langsung di Google Calendar tanpa perlu klik tombol lagi
+        if (autoSyncGCal) {
+            const gCalUrl = generateGoogleCalendarUrl(createForm.data);
+            if (gCalUrl) {
+                window.open(gCalUrl, '_blank', 'noopener,noreferrer');
+            }
+        }
+
+        // 2. Simpan agenda ke database
         createForm.post('/meetings', {
             onSuccess: () => {
                 setIsCreateOpen(false);
@@ -380,19 +425,24 @@ export default function MeetingCalendarIndex({
                             </h1>
                         </div>
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            Kelola jadwal rapat, client briefing, dan sinkronkan dengan Google Calendar secara real-time.
+                            Kelola jadwal rapat dan otomatis sinkronkan ke Google Calendar saat mengisi form agenda.
                         </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2.5">
-                        {/* Google Calendar Sync Button */}
-                        <button
-                            onClick={() => setIsSyncModalOpen(true)}
-                            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-sidebar-border bg-background hover:bg-muted text-xs sm:text-sm font-medium text-foreground transition-all shadow-sm"
-                        >
-                            <CalendarDays className="w-4 h-4 text-primary" />
-                            <span>Koneksikan ke Google Calendar</span>
-                        </button>
+                        {/* Auto-Sync Status Badge */}
+                        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shadow-xs">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Auto-Sync Google Calendar: Aktif</span>
+                            <button
+                                type="button"
+                                onClick={() => setIsSyncModalOpen(true)}
+                                className="text-[11px] text-muted-foreground hover:text-foreground underline ml-1 cursor-pointer"
+                                title="Pengaturan Kalender & Feed Langganan"
+                            >
+                                (Info)
+                            </button>
+                        </div>
 
                         {/* Create Meeting Button */}
                         <button
@@ -484,7 +534,11 @@ export default function MeetingCalendarIndex({
                                                 <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">Project: {up.project_name}</p>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-sidebar-border">
+                                        <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-sidebar-border text-[11px]">
+                                            <span className="text-muted-foreground flex items-center gap-1">
+                                                <Check className="w-3 h-3 text-emerald-500" />
+                                                Otomatis Sinkron
+                                            </span>
                                             {up.meeting_link && (
                                                 <a
                                                     href={up.meeting_link}
@@ -496,16 +550,6 @@ export default function MeetingCalendarIndex({
                                                     Join
                                                 </a>
                                             )}
-                                            <a
-                                                href={up.google_calendar_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-sidebar-border hover:bg-muted text-foreground text-[11px] font-medium transition-all"
-                                                title="Tambah ke Google Calendar saya"
-                                            >
-                                                <CalendarDays className="w-3 h-3 text-primary" />
-                                                Google Cal
-                                            </a>
                                         </div>
                                     </div>
                                 );
@@ -771,18 +815,6 @@ export default function MeetingCalendarIndex({
                                                     Join Meet
                                                 </a>
                                             )}
-
-                                            <a
-                                                href={m.google_calendar_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sidebar-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-all"
-                                                title="Buka langsung di Google Calendar"
-                                            >
-                                                <CalendarDays className="w-3.5 h-3.5 text-primary" />
-                                                Google Calendar
-                                            </a>
                                         </div>
                                     </div>
                                 );
@@ -893,30 +925,33 @@ export default function MeetingCalendarIndex({
                                 )}
                             </div>
 
-                            {/* Google Calendar Action Section */}
-                            <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
+                            {/* Google Calendar Status & Link */}
+                            <div className="p-3.5 rounded-xl bg-muted/40 border border-sidebar-border space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                                        <CalendarDays className="w-4 h-4" />
+                                    <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                        <CalendarCheck className="w-4 h-4 text-emerald-500" />
                                         Sinkronisasi Google Calendar
+                                    </span>
+                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                        Auto-Sync Aktif
                                     </span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground">
-                                    Simpan meeting ini ke kalender pribadi / tim Anda hanya dengan 1-klik:
+                                    Agenda ini otomatis disinkronkan saat dibuat. Anda dapat membukanya kembali di Google Calendar atau mengunduh kalender .ICS:
                                 </p>
                                 <div className="flex items-center gap-2 pt-1">
                                     <a
                                         href={selectedMeeting.google_calendar_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="inline-flex items-center justify-center gap-2 flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold text-xs hover:bg-primary/90 transition-all shadow-xs"
+                                        className="inline-flex items-center justify-center gap-1.5 flex-1 px-3 py-1.5 rounded-lg border border-sidebar-border bg-background hover:bg-muted text-foreground font-semibold text-xs transition-all shadow-xs"
                                     >
-                                        <CalendarPlus className="w-3.5 h-3.5" />
-                                        Buka & Simpan di Google Calendar
+                                        <ExternalLink className="w-3.5 h-3.5 text-primary" />
+                                        Buka di Google Calendar
                                     </a>
                                     <a
                                         href={`/meetings/${selectedMeeting.id}/download-ics`}
-                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-sidebar-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-all"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sidebar-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-all"
                                         title="Download format .ics"
                                     >
                                         <Download className="w-3.5 h-3.5 text-primary" />
@@ -1097,6 +1132,33 @@ export default function MeetingCalendarIndex({
                                         onChange={(e) => createForm.setData('description', e.target.value)}
                                         className="w-full px-3 py-2 rounded-lg border border-sidebar-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
                                     />
+                                </div>
+
+                                {/* Auto-Sync Google Calendar Confirmation Card */}
+                                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="p-1.5 rounded-lg bg-emerald-500 text-white shrink-0">
+                                            <Check className="w-3.5 h-3.5" />
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-foreground text-xs flex items-center gap-1.5">
+                                                <span>Otomatis Masuk Google Calendar</span>
+                                                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold">Otomatis</span>
+                                            </div>
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                Saat tombol simpan ditekan, agenda otomatis langsung sinkron ke Google Calendar tanpa perlu klik tombol lagi.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={autoSyncGCal}
+                                            onChange={(e) => setAutoSyncGCal(e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
                                 </div>
 
                                 <div className="pt-2 flex items-center justify-end gap-2 border-t border-sidebar-border">
@@ -1300,16 +1362,31 @@ export default function MeetingCalendarIndex({
                                 </button>
                             </div>
 
-                            {/* Opsi 1: Otomatis Sinkronisasi Semua Agenda (iCal / Webcal) */}
-                            <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3">
+                            {/* Fitur Utama: Otomatis saat Simpan Form */}
+                            <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                                    <div className="p-1.5 rounded-lg bg-emerald-500 text-white">
+                                        <Check className="w-3.5 h-3.5" />
+                                    </div>
                                     <h4 className="text-xs sm:text-sm font-bold text-foreground">
-                                        Langganan Kalender Otomatis (Live Sync)
+                                        Auto-Sync Langsung Saat Isi Form (Aktif)
                                     </h4>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Salin URL feed kalender berikut, lalu tambahkan ke Google Calendar Anda. Semua meeting baru yang dibuat di Genial akan otomatis muncul di Google Calendar hp dan laptop Anda!
+                                    Anda tidak perlu repot menekan tombol sinkronisasi lagi. Setiap kali Anda mengisi form dan menekan tombol <b>&quot;Simpan Agenda&quot;</b>, jadwal meeting akan <b>langsung otomatis masuk ke Google Calendar</b> Anda secara instan.
+                                </p>
+                            </div>
+
+                            {/* Opsi Tambahan: Langganan Kalender Otomatis (Live Sync Background) */}
+                            <div className="p-4 rounded-xl border border-sidebar-border bg-muted/20 space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">★</span>
+                                    <h4 className="text-xs sm:text-sm font-bold text-foreground">
+                                        Opsional: Langganan Kalender Live (HP & Laptop)
+                                    </h4>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Jika Anda ingin semua meeting di Genial otomatis muncul di kalender bawaan HP atau Google Calendar secara permanen di latar belakang, cukup hubungkan link kalender berikut 1x saja:
                                 </p>
 
                                 <div className="flex items-center gap-2">
@@ -1328,42 +1405,17 @@ export default function MeetingCalendarIndex({
                                     </button>
                                 </div>
 
-                                <div className="text-[11px] text-muted-foreground bg-background/60 p-3 rounded-lg border border-sidebar-border space-y-1">
-                                    <div className="font-semibold text-foreground flex items-center gap-1">
-                                        <Info className="w-3.5 h-3.5 text-primary" />
-                                        Cara memasang di Google Calendar:
-                                    </div>
-                                    <ol className="list-decimal pl-4 space-y-0.5">
-                                        <li>Buka <a href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" target="_blank" rel="noreferrer" className="text-primary underline">Google Calendar Settings &gt; From URL</a>.</li>
-                                        <li>Tempel (Paste) URL feed yang Anda salin di atas.</li>
-                                        <li>Klik <b>Add calendar</b>. Selesai!</li>
-                                    </ol>
-                                </div>
-
                                 <div className="pt-1">
                                     <a
-                                        href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl"
+                                        href={`https://calendar.google.com/calendar/render?cid=${encodeURIComponent(calendarFeedUrl.replace(/^http:\/\//, 'webcal://').replace(/^https:\/\//, 'webcal://'))}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
                                     >
                                         <ExternalLink className="w-3.5 h-3.5" />
-                                        Buka Halaman Google Calendar Tambah dari URL
+                                        1-Klik Hubungkan Otomatis ke Google Calendar
                                     </a>
                                 </div>
-                            </div>
-
-                            {/* Opsi 2: 1-Klik per Meeting */}
-                            <div className="p-4 rounded-xl border border-sidebar-border bg-muted/20 space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-muted-foreground/30 text-foreground text-xs font-bold">2</span>
-                                    <h4 className="text-xs sm:text-sm font-bold text-foreground">
-                                        1-Klik Tambah per Meeting
-                                    </h4>
-                                </div>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
-                                    Setiap agenda meeting di Genial memiliki tombol <b>&quot;Google Calendar&quot;</b>. Ketika diklik, Google Calendar akan langsung terbuka dengan judul, waktu, link meeting, dan deskripsi yang sudah terisi otomatis.
-                                </p>
                             </div>
 
                             <div className="flex justify-end pt-2 border-t border-sidebar-border">
