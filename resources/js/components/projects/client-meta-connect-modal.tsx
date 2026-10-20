@@ -157,83 +157,78 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border border-border/80 shadow-2xl rounded-2xl">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 border border-border/80 shadow-xl rounded-xl">
                 {/* Header with Meta gradient banner */}
-                <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 p-6 text-white overflow-hidden">
-                    <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 p-4 sm:p-5 text-white overflow-hidden">
+                    <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
                     
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-white/15 backdrop-blur-md rounded-xl border border-white/20 shadow-inner">
-                                <Share2 className="w-6 h-6 text-white" />
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-white/15 backdrop-blur-md rounded-lg border border-white/20 shadow-inner">
+                                <Share2 className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
-                                    Koneksi Meta Ads & Pixel
-                                    <Badge variant="outline" className="text-xs bg-white/20 text-white border-white/30 backdrop-blur-sm">
-                                        Client: {project.client}
+                                <DialogTitle className="text-base font-bold text-white flex items-center gap-2">
+                                    <span>Meta Ads & Pixel</span>
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-white/20 text-white border-white/30 backdrop-blur-sm">
+                                        {project.client}
                                     </Badge>
                                 </DialogTitle>
-                                <DialogDescription className="text-blue-100 text-xs mt-1">
-                                    Hubungkan akun iklan Meta & Pixel client untuk integrasi data ROAS, campaign, dan otomatisasi agen AI.
+                                <DialogDescription className="text-blue-100 text-[11px] mt-0.5">
+                                    Koneksi akun iklan Meta & Pixel client untuk integrasi ROAS dan otomatisasi agen AI.
                                 </DialogDescription>
                             </div>
                         </div>
 
                         {isConnected && (
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 text-xs font-medium">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 text-[11px] font-medium shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                 Terhubung
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 sm:p-5 space-y-4">
                     {/* Active Status Card if already connected */}
                     {isConnected && existingConfig && (
-                        <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                                    <span className="font-semibold text-sm text-foreground">
+                        <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            <div className="space-y-0.5">
+                                <div className="flex items-center gap-1.5">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                    <span className="font-semibold text-foreground">
                                         {existingConfig.account_name || 'Akun Meta Terhubung'}
                                     </span>
-                                    <Badge variant="outline" className="text-[11px] font-mono bg-background">
+                                    <Badge variant="outline" className="text-[10px] h-4 px-1 font-mono bg-background">
                                         {existingConfig.currency || 'IDR'}
                                     </Badge>
                                 </div>
-                                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                                     <span>Ad Account: <strong className="font-mono">{existingConfig.ad_account_id}</strong></span>
                                     <span>•</span>
-                                    <span>Zona Waktu: {existingConfig.timezone_name || 'Asia/Jakarta'}</span>
+                                    <span>{existingConfig.timezone_name || 'Asia/Jakarta'}</span>
                                 </p>
-                                {existingConfig.last_synced_at && (
-                                    <p className="text-[11px] text-muted-foreground">
-                                        Terakhir disinkronkan: {new Date(existingConfig.last_synced_at).toLocaleString('id-ID')}
-                                    </p>
-                                )}
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 shrink-0">
                                 <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
                                     onClick={handleSyncNow}
-                                    className="gap-1.5 text-xs h-8 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                    className="gap-1 text-[11px] h-7 px-2 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                                 >
-                                    <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
-                                    Sync Data
+                                    <RefreshCw className="w-3 h-3 text-emerald-600" />
+                                    Sync
                                 </Button>
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleDisconnect}
-                                    className="text-xs h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                    className="text-[11px] h-7 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                                 >
-                                    <Unlink className="w-3.5 h-3.5" />
+                                    <Unlink className="w-3 h-3" />
                                     Putus
                                 </Button>
                             </div>
@@ -242,46 +237,46 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
 
                     {/* Error Banner if connection failed */}
                     {existingConfig?.status === 'error' && (
-                        <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-50/50 dark:bg-rose-950/20 flex items-start gap-3">
-                            <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                                <p className="text-xs font-semibold text-rose-800 dark:text-rose-200">
+                        <div className="p-3 rounded-lg border border-rose-500/30 bg-rose-50/50 dark:bg-rose-950/20 flex items-start gap-2.5 text-xs">
+                            <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                            <div className="space-y-0.5">
+                                <p className="font-semibold text-rose-800 dark:text-rose-200">
                                     Koneksi Meta Bermasalah
                                 </p>
-                                <p className="text-xs text-rose-600 dark:text-rose-300">
-                                    {existingConfig.error_message || 'Token Meta telah kadaluarsa atau Ad Account ID tidak valid.'}
+                                <p className="text-[11px] text-rose-600 dark:text-rose-300">
+                                    {existingConfig.error_message || 'Token Meta kadaluarsa atau Ad Account ID tidak valid.'}
                                 </p>
                             </div>
                         </div>
                     )}
 
                     {/* Configuration Form */}
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-1.5">
+                    <form onSubmit={handleSubmit} className="space-y-3.5">
+                        <div className="space-y-1">
                             <Label htmlFor="ad_account_id" className="text-xs font-semibold flex items-center justify-between">
                                 <span>Ad Account ID <span className="text-rose-500">*</span></span>
-                                <span className="text-[11px] text-muted-foreground font-normal">
-                                    Format: act_123456789 atau 123456789
+                                <span className="text-[10px] text-muted-foreground font-normal">
+                                    Contoh: act_123456789
                                 </span>
                             </Label>
                             <Input
                                 id="ad_account_id"
-                                placeholder="misal: act_10827364528192"
+                                placeholder="act_10827364528192"
                                 value={data.ad_account_id}
                                 onChange={(e) => setData('ad_account_id', e.target.value)}
-                                className="font-mono text-sm"
+                                className="font-mono text-xs h-8"
                                 required
                             />
                             {errors.ad_account_id && (
-                                <p className="text-xs text-rose-600">{errors.ad_account_id}</p>
+                                <p className="text-[11px] text-rose-600">{errors.ad_account_id}</p>
                             )}
                         </div>
 
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label htmlFor="pixel_id" className="text-xs font-semibold flex items-center justify-between">
-                                <span>Meta Pixel ID <span className="text-muted-foreground font-normal">(Opsional)</span></span>
-                                <span className="text-[11px] text-muted-foreground font-normal">
-                                    Untuk tracking konversi CAPI client
+                                <span>Meta Pixel ID <span className="text-muted-foreground font-normal text-[11px]">(Opsional)</span></span>
+                                <span className="text-[10px] text-muted-foreground font-normal">
+                                    Tracking CAPI client
                                 </span>
                             </Label>
                             <Input
@@ -289,25 +284,25 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
                                 placeholder="misal: 928374615283921"
                                 value={data.pixel_id}
                                 onChange={(e) => setData('pixel_id', e.target.value)}
-                                className="font-mono text-sm"
+                                className="font-mono text-xs h-8"
                             />
                             {errors.pixel_id && (
-                                <p className="text-xs text-rose-600">{errors.pixel_id}</p>
+                                <p className="text-[11px] text-rose-600">{errors.pixel_id}</p>
                             )}
                         </div>
 
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="access_token" className="text-xs font-semibold flex items-center gap-1.5">
                                     <span>System User Access Token</span>
                                     {existingConfig?.access_token && (
-                                        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
-                                            Token Tersimpan
+                                        <Badge variant="secondary" className="text-[9px] h-3.5 px-1">
+                                            Tersimpan
                                         </Badge>
                                     )}
                                 </Label>
-                                <span className="text-[11px] text-muted-foreground font-normal">
-                                    {existingConfig?.access_token ? 'Kosongkan jika tidak ingin mengubah token' : 'Wajib diisi untuk akses Graph API'}
+                                <span className="text-[10px] text-muted-foreground font-normal">
+                                    {existingConfig?.access_token ? 'Kosongkan jika tak diubah' : 'Wajib diisi'}
                                 </span>
                             </div>
                             
@@ -315,43 +310,43 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
                                 <Input
                                     id="access_token"
                                     type={showToken ? 'text' : 'password'}
-                                    placeholder={existingConfig?.access_token ? '••••••••••••••••••••••••••••••••••••••••' : 'EAABw... (Token System User / Long-Lived Token)'}
+                                    placeholder={existingConfig?.access_token ? '••••••••••••••••••••••••••••••••••••••••' : 'EAABw... (Token System User Meta)'}
                                     value={data.access_token}
                                     onChange={(e) => setData('access_token', e.target.value)}
-                                    className="font-mono text-xs pr-10"
+                                    className="font-mono text-xs h-8 pr-8"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowToken(!showToken)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                 >
-                                    {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    {showToken ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                 </button>
                             </div>
                             {errors.access_token && (
-                                <p className="text-xs text-rose-600">{errors.access_token}</p>
+                                <p className="text-[11px] text-rose-600">{errors.access_token}</p>
                             )}
                         </div>
 
                         {/* Test Connection Live Result Box */}
                         {testResult && (
-                            <div className={`p-3.5 rounded-xl text-xs border ${
+                            <div className={`p-2.5 rounded-lg text-xs border ${
                                 testResult.success 
                                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-200' 
                                     : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-200'
                             }`}>
                                 <div className="flex items-start gap-2">
                                     {testResult.success ? (
-                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                                     ) : (
-                                        <XCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                                        <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
                                     )}
-                                    <div className="space-y-1 flex-1">
-                                        <p className="font-semibold">{testResult.message}</p>
+                                    <div className="space-y-0.5 flex-1">
+                                        <p className="font-semibold text-xs">{testResult.message}</p>
                                         {testResult.data && (
-                                            <div className="text-[11px] opacity-90 font-mono space-y-0.5 pt-1">
-                                                <div>Nama Akun: <strong>{testResult.data.account_name}</strong></div>
-                                                <div>Mata Uang: <strong>{testResult.data.currency}</strong> ({testResult.data.timezone_name})</div>
+                                            <div className="text-[10px] opacity-90 font-mono space-y-0.5 pt-0.5">
+                                                <div>Akun: <strong>{testResult.data.account_name}</strong></div>
+                                                <div>Currency: <strong>{testResult.data.currency}</strong> ({testResult.data.timezone_name})</div>
                                             </div>
                                         )}
                                     </div>
@@ -360,42 +355,42 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
                         )}
 
                         {/* Security Notice */}
-                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/60 text-muted-foreground text-[11px]">
-                            <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                        <div className="flex items-center gap-1.5 p-2 rounded-md bg-muted/50 text-muted-foreground text-[10px]">
+                            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                             <span>
-                                Token Meta disimpan dalam bentuk terenkripsi (AES-256) dan hanya digunakan untuk membaca data campaign client ini.
+                                Token dienkripsi (AES-256) & hanya dipakai untuk membaca performa iklan client ini.
                             </span>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center justify-between pt-1">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={handleTestConnection}
                                 disabled={isTesting || !data.ad_account_id}
-                                className="gap-2 text-xs"
+                                className="gap-1.5 text-xs h-8 px-2.5"
                             >
-                                <Activity className={`w-3.5 h-3.5 text-blue-600 ${isTesting ? 'animate-spin' : ''}`} />
-                                {isTesting ? 'Memeriksa Meta API...' : 'Test Koneksi Meta'}
+                                <Activity className={`w-3 h-3 text-blue-600 ${isTesting ? 'animate-spin' : ''}`} />
+                                {isTesting ? 'Testing...' : 'Test Koneksi'}
                             </Button>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     onClick={onClose}
-                                    className="text-xs"
+                                    className="text-xs h-8 px-2.5"
                                 >
                                     Batal
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="gap-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                                    className="gap-1.5 text-xs h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white"
                                 >
-                                    <Share2 className="w-3.5 h-3.5" />
-                                    {processing ? 'Menyimpan...' : 'Simpan & Hubungkan'}
+                                    <Share2 className="w-3 h-3" />
+                                    {processing ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </div>
                         </div>
@@ -403,14 +398,14 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
 
                     {/* Helpful Guide Accordion / Box */}
                     <div className="pt-2 border-t border-border/60">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-2">
-                            <HelpCircle className="w-4 h-4 text-blue-500" />
-                            <span>Panduan Cepat Menghubungkan Meta Ads:</span>
+                        <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground mb-1">
+                            <HelpCircle className="w-3.5 h-3.5 text-blue-500" />
+                            <span>Panduan Cepat Meta Ads:</span>
                         </div>
-                        <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
-                            <li>Buka <strong>Meta Business Manager</strong> ➡️ <strong>Pengaturan Bisnis (Business Settings)</strong>.</li>
-                            <li>Pilih <strong>Pengguna Sistem (System Users)</strong> ➡️ Buat token dengan izin: <code className="px-1 py-0.5 rounded bg-muted font-mono">ads_read</code>, <code className="px-1 py-0.5 rounded bg-muted font-mono">read_insights</code>, dan <code className="px-1 py-0.5 rounded bg-muted font-mono">ads_management</code>.</li>
-                            <li>Salin <strong>Ad Account ID</strong> dari tab Akun Iklan (contoh: <code className="px-1 py-0.5 rounded bg-muted font-mono">act_1234567890</code>).</li>
+                        <ul className="text-[10px] text-muted-foreground space-y-0.5 list-disc list-inside leading-relaxed">
+                            <li>Buka <strong>Meta Business Settings</strong> ➡️ <strong>System Users</strong>.</li>
+                            <li>Generate token dengan izin: <code className="px-1 py-0.2 rounded bg-muted font-mono">ads_read</code>, <code className="px-1 py-0.2 rounded bg-muted font-mono">read_insights</code>.</li>
+                            <li>Masukkan <strong>Ad Account ID</strong> (contoh: <code className="px-1 py-0.2 rounded bg-muted font-mono">act_1234567890</code>).</li>
                         </ul>
                     </div>
                 </div>

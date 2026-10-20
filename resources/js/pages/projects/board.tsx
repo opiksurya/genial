@@ -551,61 +551,64 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                             </div>
 
                             {/* Tools */}
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                                 <a
                                     href={`/projects/${activeProject.id}/article`}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-all shadow-xs"
-                                    title="Tulis & Kelola Artikel Case Study Client (Rich Text Editor)"
+                                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-semibold border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 transition-all shadow-xs"
+                                    title="Tulis & Kelola Artikel Case Study Client"
                                 >
-                                    <BookOpen className="w-3.5 h-3.5" />
-                                    <span>Tulis Artikel Case Study</span>
+                                    <BookOpen className="w-3 h-3" />
+                                    <span>Case Study</span>
                                 </a>
                                 <button
                                     onClick={() => handleOpenEditProject(activeProject)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 transition-all shadow-xs"
+                                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-semibold border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 transition-all shadow-xs"
                                     title="Edit Detail Project & Agent"
                                 >
-                                    <Edit3 className="w-3.5 h-3.5" />
-                                    <span>Edit Project</span>
+                                    <Edit3 className="w-3 h-3" />
+                                    <span>Edit</span>
                                 </button>
                                 <button
                                     onClick={() => setIsCredentialsModalOpen(true)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-all shadow-xs"
+                                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-semibold border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-all shadow-xs"
+                                    title="Vault Akses & Kredensial Client"
                                 >
-                                    <ShieldCheck className="w-3.5 h-3.5" />
-                                    <span>Vault Akses ({activeProject.credentials?.length || 0})</span>
+                                    <ShieldCheck className="w-3 h-3" />
+                                    <span>Vault ({activeProject.credentials?.length || 0})</span>
                                 </button>
                                 <button
                                     onClick={() => setIsMetaConnectModalOpen(true)}
-                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-xs ${
+                                    className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-semibold border transition-all shadow-xs ${
                                         activeProject.meta_config?.status === 'connected'
                                             ? 'border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500'
                                             : 'border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 text-slate-400'
                                     }`}
                                     title="Koneksi Meta Ads & Pixel Client"
                                 >
-                                    <Share2 className="w-3.5 h-3.5 text-blue-500" />
-                                    <span>
-                                        Meta Ads {activeProject.meta_config?.status === 'connected' ? '• Terhubung' : ''}
-                                    </span>
+                                    <Share2 className="w-3 h-3 text-blue-500" />
+                                    <span>Meta Ads</span>
+                                    {activeProject.meta_config?.status === 'connected' && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" title="Terhubung" />
+                                    )}
                                 </button>
                                 <button
                                     onClick={() => handleToggleHomeVisibility(activeProject.id)}
-                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-xs ${
+                                    className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-semibold border transition-all shadow-xs ${
                                         activeProject.is_show_on_home
                                             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
                                             : 'border-slate-500/30 bg-slate-500/10 text-slate-400 hover:bg-slate-500/20'
                                     }`}
+                                    title={activeProject.is_show_on_home ? 'Tampil di Halaman Home (Klik untuk sembunyikan)' : 'Tersembunyi dari Home (Klik untuk tampilkan)'}
                                 >
                                     {activeProject.is_show_on_home ? (
                                         <>
-                                            <Eye className="w-3.5 h-3.5 text-emerald-500" />
-                                            <span>Tampil di Home: Ya</span>
+                                            <Eye className="w-3 h-3 text-emerald-500" />
+                                            <span>Home: Ya</span>
                                         </>
                                     ) : (
                                         <>
-                                            <EyeOff className="w-3.5 h-3.5 text-slate-400" />
-                                            <span>Tampil di Home: Tidak</span>
+                                            <EyeOff className="w-3 h-3 text-slate-400" />
+                                            <span>Home: Tidak</span>
                                         </>
                                     )}
                                 </button>
