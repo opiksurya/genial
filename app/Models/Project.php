@@ -102,6 +102,11 @@ class Project extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function metaConfig(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ProjectMetaConfig::class);
+    }
+
 
     /**
      * Recalculate progress % automatically based on completed tasks.

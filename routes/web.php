@@ -87,6 +87,7 @@ use App\Http\Controllers\ProjectFlow\ProjectTimelineController;
 use App\Http\Controllers\ProjectFlow\ProjectTeamController;
 use App\Http\Controllers\ProjectFlow\ProjectReportController;
 use App\Http\Controllers\ProjectFlow\ProjectCredentialController;
+use App\Http\Controllers\ProjectFlow\ProjectMetaController;
 use App\Http\Controllers\FinanceFlow\FinanceDashboardController;
 use App\Http\Controllers\FinanceFlow\IncomeController;
 use App\Http\Controllers\FinanceFlow\ExpenseController;
@@ -146,6 +147,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{project}/credentials', [ProjectCredentialController::class, 'store'])->whereNumber('project')->name('credentials.store');
         Route::get('{project}/article', [ProjectBoardController::class, 'editArticle'])->whereNumber('project')->name('article.edit');
         Route::post('{project}/article', [ProjectBoardController::class, 'updateArticle'])->whereNumber('project')->name('article.update');
+
+        // Meta Ads Integration Routes
+        Route::post('{project}/meta-config', [ProjectMetaController::class, 'update'])->whereNumber('project')->name('meta.update');
+        Route::post('{project}/meta-config/test', [ProjectMetaController::class, 'testConnection'])->whereNumber('project')->name('meta.test');
+        Route::post('{project}/meta-config/sync', [ProjectMetaController::class, 'sync'])->whereNumber('project')->name('meta.sync');
+        Route::delete('{project}/meta-config', [ProjectMetaController::class, 'destroy'])->whereNumber('project')->name('meta.destroy');
     });
 
     // Genial FinanceFlow Module Routes

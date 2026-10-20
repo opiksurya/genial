@@ -28,9 +28,11 @@ import {
     Pencil,
     Trash2,
     ExternalLink,
-    Link2
+    Link2,
+    Share2
 } from 'lucide-react';
 import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
+import { ClientMetaConnectModal } from '@/components/projects/client-meta-connect-modal';
 
 
 interface TaskItem {
@@ -108,6 +110,7 @@ interface ProjectItem {
     agent?: AgentItem;
     members?: { id: number; user: { name: string }; role: string }[];
     credentials?: any[];
+    meta_config?: any;
 }
 
 
@@ -175,6 +178,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
     const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
     const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
+    const [isMetaConnectModalOpen, setIsMetaConnectModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
     const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
 
@@ -570,6 +574,20 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                 >
                                     <ShieldCheck className="w-3.5 h-3.5" />
                                     <span>Vault Akses ({activeProject.credentials?.length || 0})</span>
+                                </button>
+                                <button
+                                    onClick={() => setIsMetaConnectModalOpen(true)}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-xs ${
+                                        activeProject.meta_config?.status === 'connected'
+                                            ? 'border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500'
+                                            : 'border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 text-slate-400'
+                                    }`}
+                                    title="Koneksi Meta Ads & Pixel Client"
+                                >
+                                    <Share2 className="w-3.5 h-3.5 text-blue-500" />
+                                    <span>
+                                        Meta Ads {activeProject.meta_config?.status === 'connected' ? '• Terhubung' : ''}
+                                    </span>
                                 </button>
                                 <button
                                     onClick={() => handleToggleHomeVisibility(activeProject.id)}
@@ -1500,6 +1518,12 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                 project={activeProject || null}
                 isOpen={isCredentialsModalOpen}
                 onClose={() => setIsCredentialsModalOpen(false)}
+            />
+
+            <ClientMetaConnectModal
+                project={activeProject || null}
+                isOpen={isMetaConnectModalOpen}
+                onClose={() => setIsMetaConnectModalOpen(false)}
             />
         </AppLayout>
     );

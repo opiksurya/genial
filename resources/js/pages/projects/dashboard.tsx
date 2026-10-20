@@ -17,7 +17,8 @@ import {
     AlertTriangle,
     Eye,
     EyeOff,
-    BookOpen
+    BookOpen,
+    Share2
 } from 'lucide-react';
 
 interface ProjectItem {
@@ -25,6 +26,7 @@ interface ProjectItem {
     name: string;
     client: string;
     client_logo?: string;
+    meta_config?: any;
     category: string;
     status: string;
     priority: string;
@@ -270,7 +272,15 @@ export default function ProjectDashboard({ stats, projects, upcomingDeadlines }:
                                                     {p.client.charAt(0)}
                                                 </div>
                                             )}
-                                            <p className="text-xs font-medium text-muted-foreground">Client: <span className="font-semibold text-foreground">{p.client}</span></p>
+                                            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                                                <span>Client: <span className="font-semibold text-foreground">{p.client}</span></span>
+                                                {p.meta_config?.status === 'connected' && (
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20" title={`Meta Ads Terhubung: ${p.meta_config.ad_account_id}`}>
+                                                        <Share2 className="w-2.5 h-2.5" />
+                                                        <span>Meta Ads</span>
+                                                    </span>
+                                                )}
+                                            </p>
                                         </div>
                                     </div>
 

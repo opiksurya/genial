@@ -21,7 +21,7 @@ class ProjectBoardController extends Controller
         $user = auth()->user();
         $selectedProjectId = $request->query('project_id');
 
-        $projectsQuery = Project::with(['manager', 'members.user', 'credentials', 'agent']);
+        $projectsQuery = Project::with(['manager', 'members.user', 'credentials', 'agent', 'metaConfig']);
 
         if ($user && $user->hasRole('Client')) {
             $userProjectIds = ProjectMember::where('user_id', $user->id)->pluck('project_id');
@@ -39,7 +39,7 @@ class ProjectBoardController extends Controller
         }
 
         $activeProject = $selectedProjectId
-            ? Project::with(['manager', 'members.user', 'milestones', 'credentials', 'agent'])->find($selectedProjectId)
+            ? Project::with(['manager', 'members.user', 'milestones', 'credentials', 'agent', 'metaConfig'])->find($selectedProjectId)
             : null;
 
 
