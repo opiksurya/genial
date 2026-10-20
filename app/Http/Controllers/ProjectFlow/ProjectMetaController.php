@@ -98,4 +98,30 @@ class ProjectMetaController extends Controller
 
         return back()->with('success', 'Koneksi Meta Ads untuk client ini berhasil diputus.');
     }
+
+    /**
+     * Get list of live campaigns for this client from Meta API.
+     */
+    public function getCampaigns(Project $project)
+    {
+        $config = $project->metaConfig;
+
+        if (!$config || !$config->isConnected()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Meta belum terhubung untuk client ini.',
+                'campaigns' => [],
+            ]);
+        }
+
+        $campaigns = MetaClientService::getCampaigns($config);
+
+        return response()->json([
+            'success' => true,
+            'campaigns' => $campaigns,
+            'account_name' => $config->account_name,
+            'currency' => $config->currency,
+            'ad_account_id' => $config->ad_account_id,
+        ]);
+    }
 }

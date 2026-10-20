@@ -152,6 +152,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{project}/meta-config', [ProjectMetaController::class, 'update'])->whereNumber('project')->name('meta.update');
         Route::post('{project}/meta-config/test', [ProjectMetaController::class, 'testConnection'])->whereNumber('project')->name('meta.test');
         Route::post('{project}/meta-config/sync', [ProjectMetaController::class, 'sync'])->whereNumber('project')->name('meta.sync');
+        Route::get('{project}/meta-campaigns', [ProjectMetaController::class, 'getCampaigns'])->whereNumber('project')->name('meta.campaigns');
         Route::delete('{project}/meta-config', [ProjectMetaController::class, 'destroy'])->whereNumber('project')->name('meta.destroy');
     });
 

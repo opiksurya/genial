@@ -143,6 +143,9 @@ class MetaClientService
     /**
      * Fetch active campaigns for this client.
      */
+    /**
+     * Fetch all campaigns for this client with live insights.
+     */
     public static function getCampaigns(ProjectMetaConfig $config): array
     {
         if (!$config->isConnected() || empty($config->access_token)) {
@@ -152,17 +155,86 @@ class MetaClientService
         $formattedId = self::formatAdAccountId($config->ad_account_id);
 
         try {
-            $response = Http::timeout(15)->get(self::BASE_URL . "/{$formattedId}/campaigns", [
-                'fields' => 'id,name,status,objective,daily_budget,lifetime_budget,updated_time',
-                'limit' => 20,
+            $response = Http::timeout(20)->get(self::BASE_URL . "/{$formattedId}/campaigns", [
+                'fields' => 'id,name,status,objective,daily_budget,lifetime_budget,updated_time,insights.date_preset(last_30d){spend,impressions,clicks,cpc,ctr,actions,purchase_roas}',
+                'limit' => 50,
                 'access_token' => $config->access_token,
             ]);
 
-            if ($response->successful()) {
-                return $response->json('data') ?? [];
+            if (!$response->successful()) {
+                Log::warning('Meta getCampaigns failed: ' . $response->body());
+                return [];
             }
 
-            return [];
+            $rawCampaigns = $response->json('data') ?? [];
+            $campaigns = [];
+
+            foreach ($rawCampaigns as $c) {
+                $insight = $c['insights']['data'][0] ?? null;
+
+                $spend = isset($insight['spend']) ? (float) $insight['spend'] : 0;
+                $impressions = isset($insight['impressions']) ? (int) $insight['impressions'] : 0;
+                $clicks = isset($insight['clicks']) ? (int) $insight['clicks'] : 0;
+                $cpc = isset($insight['cpc']) ? (float) $insight['cpc'] : 0;
+                $ctr = isset($insight['ctr']) ? (float) $insight['ctr'] : 0;
+
+                // Extract ROAS
+                $roas = 0;
+                if (!empty($insight['purchase_roas'])) {
+                    $roas = (float) ($insight['purchase_roas'][0]['value'] ?? 0);
+                }
+
+                // Extract Purchases / Orders & Leads & ATC
+                $purchases = 0;
+                $leads = 0;
+                $atc = 0;
+
+                if (!empty($insight['actions'])) {
+                    foreach ($insight['actions'] as $act) {
+                        $type = $act['action_type'] ?? '';
+                        $val = (int) ($act['value'] ?? 0);
+
+                        if (in_array($type, ['omni_purchase', 'purchase', 'catalog_sales'])) {
+                            $purchases += $val;
+                        } elseif (in_array($type, ['lead', 'contact_total'])) {
+                            $leads += $val;
+                        } elseif (in_array($type, ['omni_add_to_cart', 'add_to_cart'])) {
+                            $atc += $val;
+                        }
+                    }
+                }
+
+                $budget = null;
+                $budgetType = 'daily';
+                if (!empty($c['daily_budget'])) {
+                    $budget = (float) $c['daily_budget'];
+                    $budgetType = 'daily';
+                } elseif (!empty($c['lifetime_budget'])) {
+                    $budget = (float) $c['lifetime_budget'];
+                    $budgetType = 'lifetime';
+                }
+
+                $campaigns[] = [
+                    'id' => $c['id'],
+                    'name' => $c['name'],
+                    'status' => $c['status'],
+                    'objective' => $c['objective'] ?? 'UNKNOWN',
+                    'budget' => $budget,
+                    'budget_type' => $budgetType,
+                    'updated_time' => $c['updated_time'] ?? null,
+                    'spend' => $spend,
+                    'impressions' => $impressions,
+                    'clicks' => $clicks,
+                    'cpc' => $cpc,
+                    'ctr' => $ctr,
+                    'roas' => round($roas, 2),
+                    'purchases' => $purchases,
+                    'leads' => $leads,
+                    'atc' => $atc,
+                ];
+            }
+
+            return $campaigns;
         } catch (\Exception $e) {
             Log::error('Meta getCampaigns error: ' . $e->getMessage());
             return [];
