@@ -18,7 +18,11 @@ class PurgeDummyData extends Command
         $this->info('Memulai pembersihan data dummy BatikKu dan GlowingID...');
 
         try {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = OFF;');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            }
         } catch (\Exception $e) {}
 
         // 1. Projects
@@ -76,7 +80,11 @@ class PurgeDummyData extends Command
         }
 
         try {
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = ON;');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            }
         } catch (\Exception $e) {}
 
         $this->info('Sukses! Semua data dummy BatikKu dan GlowingID berhasil dihapus.');

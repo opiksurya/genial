@@ -11,7 +11,11 @@ return new class extends Migration
     public function up(): void
     {
         try {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = OFF;');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            }
         } catch (\Exception $e) {}
 
         // 1. Find all project IDs matching dummy names
@@ -71,7 +75,11 @@ return new class extends Migration
         }
 
         try {
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = ON;');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            }
         } catch (\Exception $e) {}
     }
 
