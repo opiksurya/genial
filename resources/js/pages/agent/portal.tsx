@@ -13,7 +13,16 @@ import {
     Check,
     Calendar,
     ArrowUpRight,
-    Award
+    Award,
+    Share2,
+    ExternalLink,
+    HelpCircle,
+    ChevronRight,
+    Landmark,
+    MessageCircle,
+    Receipt,
+    Percent,
+    AlertCircle
 } from 'lucide-react';
 
 interface Agent {
@@ -65,6 +74,7 @@ interface Props {
     commissions: Commission[];
     clients: ClientSummary[];
     projects: ProjectSummary[];
+    whatsapp_number?: string;
     stats: {
         total_client_income: number;
         total_commission: number;
@@ -73,9 +83,18 @@ interface Props {
     };
 }
 
-export default function AgentPortal({ agent, commissions, clients, projects, stats }: Props) {
-    const [copied, setCopied] = useState(false);
-    const [activeTab, setActiveTab] = useState<'commissions' | 'clients'>('commissions');
+export default function AgentPortal({
+    agent,
+    commissions,
+    clients,
+    projects,
+    whatsapp_number = '6281234567890',
+    stats
+}: Props) {
+    const [copiedLink, setCopiedLink] = useState(false);
+    const [copiedBank, setCopiedBank] = useState(false);
+    const [activeTab, setActiveTab] = useState<'commissions' | 'clients' | 'info'>('commissions');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
 
     const formatIDR = (val: number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -86,7 +105,7 @@ export default function AgentPortal({ agent, commissions, clients, projects, sta
     };
 
     const formatDateDisplay = (dateStr?: string) => {
-        if (!dateStr) return '';
+        if (!dateStr) return '-';
         const cleanDate = dateStr.split('T')[0];
         try {
             const [y, m, d] = cleanDate.split('-');
@@ -100,276 +119,396 @@ export default function AgentPortal({ agent, commissions, clients, projects, sta
     };
 
     const copyCurrentUrl = () => {
-        navigator.clipboard.writeText(window.location.href);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2500);
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(window.location.href);
+            setCopiedLink(true);
+            setTimeout(() => setCopiedLink(false), 2500);
+        }
     };
 
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Portal Agent - ${agent.name}`,
+                    text: `Portal Transparansi Fee Komisi Agent ${agent.name} di Genial Digital Solution`,
+                    url: window.location.href
+                });
+            } catch (err) {
+                copyCurrentUrl();
+            }
+        } else {
+            copyCurrentUrl();
+        }
+    };
+
+    const copyBankNumber = () => {
+        if (agent.bank_account_number && navigator.clipboard) {
+            navigator.clipboard.writeText(agent.bank_account_number);
+            setCopiedBank(true);
+            setTimeout(() => setCopiedBank(false), 2500);
+        }
+    };
+
+    const filteredCommissions = commissions.filter(comm => {
+        if (statusFilter === 'paid') return comm.payment_status === 'paid';
+        if (statusFilter === 'unpaid') return comm.payment_status === 'unpaid';
+        return true;
+    });
+
+    const waHelpMessage = encodeURIComponent(
+        `Halo Admin Genial, saya ${agent.name} (Agent Partner). Saya ingin menanyakan perihal update fee komisi agent saya.`
+    );
+    const waUrl = `https://wa.me/${whatsapp_number.replace(/[^0-9]/g, '')}?text=${waHelpMessage}`;
+
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-purple-500 selection:text-white">
-            <Head title={`Portal Agent - ${agent.name} | Genial Digital Solution`} />
+        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-purple-500 selection:text-white flex justify-center">
+            <Head title={`Portal Komisi - ${agent.name} | Genial Partner`} />
 
-            {/* Background Glow */}
-            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-purple-900/20 via-indigo-900/10 to-transparent blur-3xl pointer-events-none -z-10" />
+            {/* Ambient Background Glow for Desktop Viewers */}
+            <div className="fixed inset-0 pointer-events-none flex justify-center overflow-hidden">
+                <div className="w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] -top-24 absolute" />
+                <div className="w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] top-1/2 absolute" />
+            </div>
 
-            {/* Header / Navbar */}
-            <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            {/* Mobile App Container (Optimized for Mobile Phone HP & Centered on Desktop) */}
+            <div className="w-full max-w-md min-h-screen bg-slate-900/95 border-x border-slate-800/80 shadow-2xl relative flex flex-col z-10 pb-28">
+
+                {/* Top App Bar Header */}
+                <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
                             <Award className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <div className="font-black text-white text-base tracking-tight flex items-center gap-2">
-                                GENIAL AGENT PORTAL
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                    Official Partner
+                            <div className="flex items-center gap-1.5">
+                                <span className="font-black text-sm tracking-tight text-white">GENIAL AGENT</span>
+                                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                    Official
                                 </span>
                             </div>
-                            <div className="text-xs text-slate-400">Portal Transparansi Fee Komisi Agent</div>
+                            <div className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">
+                                Portal Transparansi Komisi
+                            </div>
                         </div>
                     </div>
 
-                    <button
-                        onClick={copyCurrentUrl}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-all"
-                    >
-                        {copied ? (
-                            <>
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>Link Portal Tersalin!</span>
-                            </>
-                        ) : (
-                            <>
-                                <Copy className="w-3.5 h-3.5 text-purple-400" />
-                                <span>Simpan Link Portal Ini</span>
-                            </>
-                        )}
-                    </button>
-                </div>
-            </header>
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            onClick={handleShare}
+                            title="Bagikan / Simpan Link"
+                            className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/80 transition-all active:scale-95 flex items-center gap-1 text-xs"
+                        >
+                            {copiedLink ? (
+                                <>
+                                    <Check className="w-4 h-4 text-emerald-400" />
+                                    <span className="text-[11px] text-emerald-400 font-bold">Tersalin</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Share2 className="w-4 h-4 text-purple-400" />
+                                    <span className="text-[11px] font-semibold">Simpan</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-                {/* Welcome Card */}
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-900/40 via-indigo-950/60 to-slate-900 border border-purple-500/30 p-6 sm:p-8 shadow-2xl">
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-2">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold">
-                                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                                <span>Selamat Datang, Partner Genial!</span>
-                            </div>
-                            <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-                                Halo, {agent.name} 👋
+                {/* Main Scrollable Content */}
+                <main className="p-4 space-y-4 flex-1">
+
+                    {/* Agent Greeting & Partner Tag */}
+                    <div className="flex items-center justify-between pt-1">
+                        <div>
+                            <div className="text-xs text-slate-400">Selamat datang,</div>
+                            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-1.5">
+                                {agent.name}
+                                <span className="inline-block animate-pulse">👋</span>
                             </h1>
-                            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                                Halaman ini khusus disiapkan untuk Anda memantau seluruh histori transaksi client yang Anda bawakan, beserta hak fee komisi <strong className="text-purple-300 font-bold">{agent.commission_rate}%</strong> setiap bulannya secara nyata & transparan.
-                            </p>
                         </div>
-
-                        {/* Rate Badge Card */}
-                        <div className="bg-slate-900/80 backdrop-blur-md border border-purple-500/30 p-5 rounded-2xl shrink-0 flex items-center gap-4">
-                            <div className="text-center">
-                                <div className="text-[10px] text-slate-400 uppercase font-semibold">Rate Komisi Agent</div>
-                                <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">
-                                    {agent.commission_rate}%
-                                </div>
-                                <div className="text-[10px] text-emerald-400 font-medium">Tiap Pembayaran Client</div>
+                        <div className="text-right">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                                Partner Aktif
+                            </span>
+                            <div className="text-[10px] text-purple-300 font-semibold mt-0.5">
+                                Rate Komisi: {agent.commission_rate}%
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Summary Metric Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <div className="rounded-2xl bg-slate-900/70 border border-slate-800 p-5 shadow-lg relative overflow-hidden">
-                        <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-                            <span>TOTAL OMZET CLIENT</span>
-                            <Building2 className="w-4 h-4 text-purple-400" />
+                    {/* Digital Wallet Card (Fintech Style Card) */}
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-800 via-indigo-900 to-slate-950 border border-purple-500/30 p-5 shadow-xl shadow-purple-950/40 text-white">
+                        {/* Shimmer Pattern Backdrop */}
+                        <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl pointer-events-none" />
+
+                        {/* Card Top Label */}
+                        <div className="flex items-center justify-between relative z-10">
+                            <div className="flex items-center gap-1.5 text-xs text-purple-200/90 font-bold tracking-wider uppercase">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                                <span>Total Hak Komisi</span>
+                            </div>
+                            <div className="px-2 py-0.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/15 text-[10px] font-black text-white">
+                                {agent.commission_rate}% FEE
+                            </div>
                         </div>
-                        <div className="text-2xl font-black text-white mt-2">
-                            {formatIDR(stats.total_client_income)}
+
+                        {/* Main Balance */}
+                        <div className="mt-3 relative z-10">
+                            <div className="text-3xl font-black tracking-tight text-white drop-shadow-sm font-mono">
+                                {formatIDR(stats.total_commission)}
+                            </div>
+                            <div className="text-[11px] text-purple-200/75 mt-0.5">
+                                Akumulasi total komisi dari seluruh pembayaran client
+                            </div>
                         </div>
-                        <p className="text-[11px] text-slate-400 mt-1">Akumulasi pembayaran dari client Anda</p>
+
+                        {/* Card Sub-stats Split */}
+                        <div className="grid grid-cols-2 gap-2 mt-4 pt-3.5 border-t border-white/10 relative z-10">
+                            <div className="bg-slate-950/40 backdrop-blur-md rounded-xl p-2.5 border border-white/5">
+                                <div className="flex items-center gap-1 text-[10px] text-emerald-300 font-semibold uppercase">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                                    <span>Sudah Cair</span>
+                                </div>
+                                <div className="text-sm font-black text-emerald-400 font-mono mt-0.5 truncate">
+                                    {formatIDR(stats.paid_commission)}
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-950/40 backdrop-blur-md rounded-xl p-2.5 border border-white/5">
+                                <div className="flex items-center gap-1 text-[10px] text-amber-300 font-semibold uppercase">
+                                    <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                                    <span>Pending (Akan Cair)</span>
+                                </div>
+                                <div className="text-sm font-black text-amber-400 font-mono mt-0.5 truncate">
+                                    {formatIDR(stats.unpaid_commission)}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="rounded-2xl bg-slate-900/70 border border-purple-500/30 p-5 shadow-lg relative overflow-hidden">
-                        <div className="flex items-center justify-between text-purple-300 text-xs font-semibold">
-                            <span>TOTAL HAK KOMISI ({agent.commission_rate}%)</span>
-                            <Wallet className="w-4 h-4 text-purple-400" />
-                        </div>
-                        <div className="text-2xl font-black text-purple-300 mt-2">
-                            {formatIDR(stats.total_commission)}
-                        </div>
-                        <p className="text-[11px] text-purple-400/80 mt-1">Total komisi yang berhak Anda terima</p>
-                    </div>
-
-                    <div className="rounded-2xl bg-slate-900/70 border border-emerald-500/30 p-5 shadow-lg relative overflow-hidden">
-                        <div className="flex items-center justify-between text-emerald-400 text-xs font-semibold">
-                            <span>KOMISI SUDAH DICAIRKAN</span>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <div className="text-2xl font-bold text-emerald-400 mt-2">
-                            {formatIDR(stats.paid_commission)}
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-1">Telah ditransfer ke rekening Anda</p>
-                    </div>
-
-                    <div className="rounded-2xl bg-slate-900/70 border border-amber-500/30 p-5 shadow-lg relative overflow-hidden">
-                        <div className="flex items-center justify-between text-amber-400 text-xs font-semibold">
-                            <span>KOMISI PENDING (AKAN CAIR)</span>
-                            <Clock className="w-4 h-4 text-amber-400" />
-                        </div>
-                        <div className="text-2xl font-bold text-amber-400 mt-2">
-                            {formatIDR(stats.unpaid_commission)}
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-1">Menunggu jadwal pencairan bulan ini</p>
-                    </div>
-                </div>
-
-                {/* Bank Details & Information */}
-                {agent.bank_name && (
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    {/* Secondary Stat: Total Omzet Client */}
+                    <div className="rounded-2xl bg-slate-900 border border-slate-800 p-3.5 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                <Wallet className="w-5 h-5" />
+                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                                <Building2 className="w-5 h-5" />
                             </div>
                             <div>
-                                <div className="text-xs text-slate-400 font-semibold uppercase">Rekening Tujuan Pencairan Komisi</div>
-                                <div className="text-sm font-bold text-white font-mono mt-0.5">
-                                    {agent.bank_name} - {agent.bank_account_number} ({agent.bank_account_name})
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Total Omzet Client
+                                </div>
+                                <div className="text-base font-black text-white font-mono mt-0.5">
+                                    {formatIDR(stats.total_client_income)}
                                 </div>
                             </div>
                         </div>
-                        <div className="text-[11px] text-slate-400">
-                            *Jika ada perubahan rekening, harap hubungi Admin Genial Digital Solution.
-                        </div>
-                    </div>
-                )}
-
-                {/* Main Content Tabs & Table */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => setActiveTab('commissions')}
-                                className={`text-sm font-bold pb-3 -mb-3 transition-all ${
-                                    activeTab === 'commissions'
-                                        ? 'text-purple-400 border-b-2 border-purple-500'
-                                        : 'text-slate-400 hover:text-slate-200'
-                                }`}
-                            >
-                                Histori Transaksi Komisi ({commissions.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('clients')}
-                                className={`text-sm font-bold pb-3 -mb-3 transition-all ${
-                                    activeTab === 'clients'
-                                        ? 'text-purple-400 border-b-2 border-purple-500'
-                                        : 'text-slate-400 hover:text-slate-200'
-                                }`}
-                            >
-                                Daftar Client ({clients.length})
-                            </button>
+                        <div className="text-right">
+                            <div className="text-[10px] text-purple-400 font-semibold">
+                                {clients.length} Client Aktif
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                                {commissions.length} Transaksi
+                            </div>
                         </div>
                     </div>
 
-                    {/* Tab 1: Histori Transaksi Komisi */}
-                    {activeTab === 'commissions' && (
-                        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden shadow-xl">
-                            <div className="overflow-x-auto w-full">
-                                <table className="w-full text-left text-xs min-w-[850px]">
-                                    <thead className="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
-                                        <tr>
-                                            <th className="p-4">Tanggal & Invoice</th>
-                                            <th className="p-4">Nama Client</th>
-                                            <th className="p-4">Deskripsi Pembayaran</th>
-                                            <th className="p-4">Pembayaran Client</th>
-                                            <th className="p-4">Fee Rate</th>
-                                            <th className="p-4">Hak Komisi Anda</th>
-                                            <th className="p-4">Status Pencairan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-800/80">
-                                        {commissions.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={7} className="p-8 text-center text-slate-500">
-                                                    Belum ada transaksi komisi yang tercatat.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            commissions.map((comm) => (
-                                                <tr key={comm.id} className="hover:bg-slate-800/40 transition-colors">
-                                                    <td className="p-4 font-mono text-slate-400 whitespace-nowrap">
-                                                        <div>{formatDateDisplay(comm.income?.date)}</div>
-                                                        <div className="text-[10px] text-purple-400 font-semibold">{comm.income?.invoice_number || '-'}</div>
-                                                    </td>
-                                                    <td className="p-4 font-bold text-white text-sm">
-                                                        {comm.client_name || '-'}
-                                                    </td>
-                                                    <td className="p-4 text-slate-300">
-                                                        <div>{comm.income ? comm.income.name : 'Pembayaran Client'}</div>
-                                                        {comm.project && (
-                                                            <div className="text-[10px] text-indigo-400 mt-0.5">Project: {comm.project.name}</div>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-4 font-mono font-medium text-slate-200">
-                                                        {formatIDR(comm.income_amount)}
-                                                    </td>
-                                                    <td className="p-4 font-bold text-purple-400">
-                                                        {comm.commission_rate}%
-                                                    </td>
-                                                    <td className="p-4 font-mono font-black text-purple-300 text-sm">
-                                                        {formatIDR(comm.commission_amount)}
-                                                    </td>
-                                                    <td className="p-4">
-                                                        {comm.payment_status === 'paid' ? (
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                                                <CheckCircle2 className="w-3 h-3" />
-                                                                Dicairkan (Paid)
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                                                <Clock className="w-3 h-3" />
-                                                                Proses Pending
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
+                    {/* Bank Account Info Card (with One-Tap Copy) */}
+                    {agent.bank_name && (
+                        <div className="rounded-2xl bg-slate-900 border border-slate-800/90 p-3.5 relative overflow-hidden">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
+                                    <Landmark className="w-4 h-4 text-purple-400" />
+                                    <span>Rekening Pencairan Komisi</span>
+                                </div>
+                                <button
+                                    onClick={copyBankNumber}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[10px] font-semibold transition-all active:scale-95"
+                                >
+                                    {copiedBank ? (
+                                        <>
+                                            <Check className="w-3 h-3 text-emerald-400" />
+                                            <span className="text-emerald-400 font-bold">Tersalin!</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-3 h-3 text-purple-400" />
+                                            <span>Salin No. Rek</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 flex items-center justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-black text-xs">
+                                            {agent.bank_name}
+                                        </span>
+                                        <span className="font-mono text-sm font-black text-white tracking-wide">
+                                            {agent.bank_account_number}
+                                        </span>
+                                    </div>
+                                    <div className="text-xs text-slate-400 font-medium mt-1">
+                                        a.n. <strong className="text-slate-200">{agent.bank_account_name || agent.name}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>Pencairan komisi otomatis ditransfer langsung ke rekening ini.</span>
                             </div>
                         </div>
                     )}
 
-                    {/* Tab 2: Daftar Client */}
-                    {activeTab === 'clients' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {clients.length === 0 ? (
-                                <div className="col-span-full p-8 text-center bg-slate-900/60 border border-slate-800 rounded-2xl text-slate-500">
-                                    Belum ada client yang terhubung dengan akun Agent Anda.
+                    {/* Segmented Tab Bar (Phone Navigation) */}
+                    <div className="bg-slate-950 p-1 rounded-2xl border border-slate-800 flex items-center">
+                        <button
+                            onClick={() => setActiveTab('commissions')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all text-center flex items-center justify-center gap-1.5 ${
+                                activeTab === 'commissions'
+                                    ? 'bg-purple-600 text-white shadow-md shadow-purple-900/40'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                        >
+                            <Receipt className="w-3.5 h-3.5" />
+                            <span>Transaksi ({commissions.length})</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('clients')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all text-center flex items-center justify-center gap-1.5 ${
+                                activeTab === 'clients'
+                                    ? 'bg-purple-600 text-white shadow-md shadow-purple-900/40'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                        >
+                            <Users className="w-3.5 h-3.5" />
+                            <span>Client ({clients.length})</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('info')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all text-center flex items-center justify-center gap-1.5 ${
+                                activeTab === 'info'
+                                    ? 'bg-purple-600 text-white shadow-md shadow-purple-900/40'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                        >
+                            <HelpCircle className="w-3.5 h-3.5" />
+                            <span>Info</span>
+                        </button>
+                    </div>
+
+                    {/* TAB 1: Transaksi Komisi (Mobile Card Feed) */}
+                    {activeTab === 'commissions' && (
+                        <div className="space-y-3">
+                            {/* Filter Pills */}
+                            {commissions.length > 0 && (
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                                    <button
+                                        onClick={() => setStatusFilter('all')}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                                            statusFilter === 'all'
+                                                ? 'bg-slate-700 text-white'
+                                                : 'bg-slate-900 text-slate-400 border border-slate-800'
+                                        }`}
+                                    >
+                                        Semua ({commissions.length})
+                                    </button>
+                                    <button
+                                        onClick={() => setStatusFilter('paid')}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
+                                            statusFilter === 'paid'
+                                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                                : 'bg-slate-900 text-slate-400 border border-slate-800'
+                                        }`}
+                                    >
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                        <span>Sudah Cair</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setStatusFilter('unpaid')}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
+                                            statusFilter === 'unpaid'
+                                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                                : 'bg-slate-900 text-slate-400 border border-slate-800'
+                                        }`}
+                                    >
+                                        <Clock className="w-3 h-3 text-amber-400" />
+                                        <span>Pending</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {filteredCommissions.length === 0 ? (
+                                <div className="text-center py-12 px-4 rounded-3xl bg-slate-900/60 border border-slate-800">
+                                    <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto mb-3">
+                                        <Receipt className="w-6 h-6" />
+                                    </div>
+                                    <div className="font-bold text-white text-sm">Belum Ada Transaksi</div>
+                                    <div className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                                        Transaksi pembayaran client yang Anda referensikan akan muncul otomatis di sini secara realtime.
+                                    </div>
                                 </div>
                             ) : (
-                                clients.map((cl, idx) => (
-                                    <div key={idx} className="rounded-2xl bg-slate-900/60 border border-slate-800 p-5 space-y-3">
+                                filteredCommissions.map(comm => (
+                                    <div
+                                        key={comm.id}
+                                        className="rounded-2xl bg-slate-900/90 border border-slate-800/90 p-4 space-y-3 hover:border-purple-500/40 transition-all shadow-md"
+                                    >
+                                        {/* Card Header: Date & Status */}
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
-                                                    <Building2 className="w-4 h-4" />
-                                                </div>
-                                                <h4 className="font-extrabold text-white text-base">{cl.client_name}</h4>
+                                            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+                                                <Calendar className="w-3.5 h-3.5 text-purple-400" />
+                                                <span>{formatDateDisplay(comm.income?.date)}</span>
+                                                {comm.income?.invoice_number && (
+                                                    <span className="text-purple-400 font-semibold">• {comm.income.invoice_number}</span>
+                                                )}
                                             </div>
+
+                                            {comm.payment_status === 'paid' ? (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                                    <CheckCircle2 className="w-3 h-3" />
+                                                    Dicairkan
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                                    <Clock className="w-3 h-3" />
+                                                    Pending
+                                                </span>
+                                            )}
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
-                                            <div>
-                                                <div className="text-[10px] text-slate-400">Total Transaksi</div>
-                                                <div className="font-bold text-slate-200 mt-0.5">{cl.total_invoices} Invoices</div>
+                                        {/* Client & Description */}
+                                        <div>
+                                            <div className="font-bold text-white text-base">
+                                                {comm.client_name || 'Client Genial'}
                                             </div>
+                                            <div className="text-xs text-slate-300 mt-0.5">
+                                                {comm.income?.name || 'Pembayaran Layanan / Project'}
+                                            </div>
+                                            {comm.project && (
+                                                <div className="text-[10px] text-indigo-400 font-medium mt-0.5">
+                                                    Project: {comm.project.name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Financial Receipt Strip */}
+                                        <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800/80 flex items-center justify-between">
                                             <div>
-                                                <div className="text-[10px] text-slate-400">Total Omzet Client</div>
-                                                <div className="font-bold text-purple-400 mt-0.5">{formatIDR(cl.total_paid_amount)}</div>
+                                                <div className="text-[10px] text-slate-400 font-medium">Pembayaran Client</div>
+                                                <div className="text-xs font-mono font-bold text-slate-200 mt-0.5">
+                                                    {formatIDR(comm.income_amount)}
+                                                </div>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <div className="text-[10px] text-purple-300 font-semibold flex items-center justify-end gap-1">
+                                                    <span>Hak Komisi ({comm.commission_rate}%)</span>
+                                                </div>
+                                                <div className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-emerald-400 font-mono mt-0.5">
+                                                    + {formatIDR(comm.commission_amount)}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -377,14 +516,139 @@ export default function AgentPortal({ agent, commissions, clients, projects, sta
                             )}
                         </div>
                     )}
-                </div>
-            </main>
 
-            <footer className="border-t border-slate-900 py-8 text-center text-xs text-slate-500">
-                <div className="max-w-7xl mx-auto px-4">
-                    Genial Digital Solution &copy; 2026. All rights reserved. Agent Portal System.
+                    {/* TAB 2: Daftar Client (Mobile Card Feed) */}
+                    {activeTab === 'clients' && (
+                        <div className="space-y-3">
+                            {clients.length === 0 ? (
+                                <div className="text-center py-12 px-4 rounded-3xl bg-slate-900/60 border border-slate-800">
+                                    <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto mb-3">
+                                        <Building2 className="w-6 h-6" />
+                                    </div>
+                                    <div className="font-bold text-white text-sm">Belum Ada Client Terhubung</div>
+                                    <div className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                                        Ketika client yang Anda bawa melakukan transaksi, data client otomatis tercatat di sini.
+                                    </div>
+                                </div>
+                            ) : (
+                                clients.map((cl, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="rounded-2xl bg-slate-900/90 border border-slate-800/90 p-4 space-y-3 hover:border-purple-500/40 transition-all"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-purple-600/15 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm shrink-0">
+                                                {cl.client_name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-bold text-white text-sm truncate">
+                                                    {cl.client_name}
+                                                </div>
+                                                <div className="text-[10px] text-emerald-400 font-medium">
+                                                    {cl.total_invoices} Transaksi Terverifikasi
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-xs">
+                                            <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/60">
+                                                <div className="text-[10px] text-slate-400 font-medium">Total Omzet Client</div>
+                                                <div className="font-bold text-slate-200 font-mono mt-0.5 truncate">
+                                                    {formatIDR(cl.total_paid_amount)}
+                                                </div>
+                                            </div>
+                                            <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/60">
+                                                <div className="text-[10px] text-purple-300 font-medium">Est. Komisi ({agent.commission_rate}%)</div>
+                                                <div className="font-bold text-purple-400 font-mono mt-0.5 truncate">
+                                                    {formatIDR(cl.total_paid_amount * (agent.commission_rate / 100))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+
+                    {/* TAB 3: Info & Panduan Pencairan */}
+                    {activeTab === 'info' && (
+                        <div className="space-y-3 text-xs">
+                            <div className="rounded-2xl bg-slate-900/90 border border-slate-800/90 p-4 space-y-3">
+                                <div className="flex items-center gap-2 text-sm font-bold text-white">
+                                    <Sparkles className="w-4 h-4 text-purple-400" />
+                                    <span>Ketentuan & Jadwal Pencairan</span>
+                                </div>
+                                <ul className="space-y-2 text-slate-300 text-[11px] leading-relaxed">
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
+                                        <span>
+                                            Komisi Anda dihitung otomatis <strong className="text-white">{agent.commission_rate}%</strong> dari setiap pembayaran invoice client yang berhasil masuk.
+                                        </span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
+                                        <span>
+                                            Pencairan dilakukan secara berkala ke rekening terdaftar Anda di atas.
+                                        </span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
+                                        <span>
+                                            Jika ingin merubah nomor rekening atau butuh konfirmasi transfer, silakan hubungi Admin Genial melalui tombol WhatsApp di bawah.
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="rounded-2xl bg-gradient-to-br from-indigo-950/40 to-purple-950/40 border border-purple-500/20 p-4 text-center space-y-2">
+                                <Award className="w-7 h-7 text-purple-400 mx-auto" />
+                                <div className="font-bold text-white text-sm">Genial Agent Partnership</div>
+                                <p className="text-[11px] text-slate-400 leading-relaxed">
+                                    Terima kasih atas kemitraan dan kepercayaan Anda bersama Genial Digital Solution. Kami berkomitmen menjaga transparansi penuh untuk setiap hasil kolaborasi kita.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </main>
+
+                {/* Sticky Mobile Bottom Bar (Help & Actions) */}
+                <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none p-3">
+                    <div className="w-full max-w-md bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl p-2.5 shadow-2xl pointer-events-auto flex items-center gap-2">
+                        <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/30 transition-all active:scale-95"
+                        >
+                            <MessageCircle className="w-4 h-4 shrink-0" />
+                            <span>Hubungi Admin via WA</span>
+                        </a>
+
+                        <button
+                            onClick={copyCurrentUrl}
+                            className="py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs flex items-center gap-1 transition-all active:scale-95 shrink-0"
+                            title="Salin Link Halaman Portal Ini"
+                        >
+                            {copiedLink ? (
+                                <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span className="text-[11px] text-emerald-400 font-bold">Tersimpan</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Copy className="w-3.5 h-3.5 text-purple-400" />
+                                    <span className="text-[11px]">Salin Link</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
-            </footer>
+
+                {/* Footer Minimalist */}
+                <footer className="mt-auto px-4 py-6 text-center text-[10px] text-slate-500 border-t border-slate-800/60">
+                    Genial Digital Solution &copy; 2026. Official Agent Portal.
+                </footer>
+            </div>
         </div>
     );
 }

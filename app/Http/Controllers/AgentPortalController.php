@@ -42,6 +42,7 @@ class AgentPortalController extends Controller
             'commissions' => $commissions,
             'clients' => $clients,
             'projects' => $projects,
+            'whatsapp_number' => \App\Models\Setting::get('whatsapp_number', '6281234567890'),
             'stats' => [
                 'total_client_income' => $totalClientIncome,
                 'total_commission' => $totalCommission,
