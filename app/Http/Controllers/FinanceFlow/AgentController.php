@@ -119,13 +119,21 @@ class AgentController extends Controller
             $projectName = $commission->project ? $commission->project->name : ($commission->income ? $commission->income->name : 'Project');
             $date = now()->toDateString();
 
+            // Find matching sub-allocation for agent commission
+            $subAlloc = \App\Models\SubAllocation::where('name', 'like', '%Komisi Agent%')
+                ->orWhere('name', 'like', '%Agent%')
+                ->orWhere('name', 'Freelancer')
+                ->first();
+
             // Create or update Expense linked directly to this income
             $expense = Expense::updateOrCreate(
                 ['id' => $commission->expense_id],
                 [
                     'income_id' => $commission->income_id,
                     'project_id' => $commission->project_id,
-                    'category' => 'Freelancer',
+                    'allocation_id' => $subAlloc ? $subAlloc->allocation_id : null,
+                    'sub_allocation_id' => $subAlloc ? $subAlloc->id : null,
+                    'category' => $subAlloc ? $subAlloc->name : 'Freelancer',
                     'name' => 'Komisi Agent: ' . $agentName,
                     'description' => 'Pencairan komisi referral ' . $agentName . ' (' . (float)$commission->commission_rate . '%) dari pemasukan ' . ($commission->income->name ?? $projectName),
                     'amount' => $commission->commission_amount,

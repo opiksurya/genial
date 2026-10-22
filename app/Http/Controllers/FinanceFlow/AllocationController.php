@@ -54,7 +54,13 @@ class AllocationController extends Controller
                         $spent = (float)Expense::where(function ($q) use ($sub) {
                             $q->where('sub_allocation_id', $sub->id)
                               ->orWhere(function ($sq) use ($sub) {
-                                  $sq->whereNull('sub_allocation_id')->where('category', $sub->name);
+                                  $sq->whereNull('sub_allocation_id')->where(function ($inner) use ($sub) {
+                                      $inner->where('category', $sub->name);
+                                      if (stripos($sub->name, 'agent') !== false || stripos($sub->name, 'komisi') !== false) {
+                                          $inner->orWhere('category', 'Freelancer')
+                                                ->orWhere('name', 'like', 'Komisi Agent%');
+                                      }
+                                  });
                               });
                         })->sum('amount');
 
