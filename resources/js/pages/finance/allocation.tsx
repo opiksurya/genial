@@ -57,6 +57,8 @@ interface Allocation {
 
 interface Props {
     allocations: Allocation[];
+    totalIncome?: number;
+    totalExpense?: number;
     realMoneyAvailable: number;
     totalPercentage: number;
     isPercentage100: boolean;
@@ -72,6 +74,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function AllocationManagement({ 
     allocations, 
+    totalIncome = 0,
+    totalExpense = 0,
     realMoneyAvailable, 
     totalPercentage, 
     isPercentage100,
@@ -187,7 +191,7 @@ export default function AllocationManagement({
     const subExcessPercentage = Math.round((currentSubTotalPercentage - 100) * 100) / 100;
     const isSubModal100 = Math.abs(currentSubTotalPercentage - 100) < 0.01;
     const isSubModalOver = currentSubTotalPercentage > 100;
-    const parentBudget = selectedParentAlloc ? (selectedParentAlloc.calculated_amount || ((selectedParentAlloc.percentage / 100) * realMoneyAvailable)) : 0;
+    const parentBudget = selectedParentAlloc ? (selectedParentAlloc.calculated_amount || ((selectedParentAlloc.percentage / 100) * (totalIncome || realMoneyAvailable))) : 0;
     const excessBudget = isSubModalOver ? ((subExcessPercentage / 100) * parentBudget) : 0;
 
     // Distribute remaining evenly or to new item
@@ -223,7 +227,7 @@ export default function AllocationManagement({
     // Main allocations excess stats
     const isMainOver = totalPercentage > 100;
     const mainExcessPct = Math.round((totalPercentage - 100) * 100) / 100;
-    const mainExcessAmount = isMainOver ? ((mainExcessPct / 100) * realMoneyAvailable) : 0;
+    const mainExcessAmount = isMainOver ? ((mainExcessPct / 100) * (totalIncome || realMoneyAvailable)) : 0;
 
     // Theme color palettes for cards
     const cardPalettes = [
@@ -331,15 +335,17 @@ export default function AllocationManagement({
                                         Net Real Money Tersedia
                                     </span>
                                     <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                        Siap Dibagi
+                                        Sisa Kas Fisik
                                     </span>
                                 </div>
                                 <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight mt-1 font-mono">
                                     {formatIDR(realMoneyAvailable)}
                                 </div>
-                                <p className="text-xs text-slate-400 mt-1">
-                                    Hasil dari Total Pemasukan dikurangi seluruh Pengeluaran riil & Fee Marketing.
-                                </p>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-1.5">
+                                    <span>Basis Omzet: <strong className="text-white font-mono">{formatIDR(totalIncome)}</strong></span>
+                                    <span>•</span>
+                                    <span>Total Belanja: <strong className="text-rose-300 font-mono">{formatIDR(totalSpentAll)}</strong></span>
+                                </div>
                             </div>
                         </div>
 

@@ -16,9 +16,15 @@ class AllocationController extends Controller
 {
     public function index()
     {
-        $totalIncome = Income::sum('amount');
-        $totalExpense = Expense::sum('amount');
+        $totalIncome = (float) Income::sum('amount');
+        $totalExpense = (float) Expense::sum('amount');
         $realMoneyAvailable = max(0, $totalIncome - $totalExpense);
+
+        // Basis Plafon Anggaran:
+        // Plafon anggaran dihitung dari Total Pemasukan / Omzet Masuk ($totalIncome).
+        // Ini memastikan plafon mencerminkan porsi riil pendapatan bisnis dan mencegah
+        // paradoks sirkular di mana plafon terus menyusut saat ada pengeluaran.
+        $budgetPool = $totalIncome;
 
         $totalOverBudgetNominal = 0;
         $totalOverBudgetCount = 0;
@@ -29,9 +35,9 @@ class AllocationController extends Controller
             ->with(['subAllocations', 'children.subAllocations', 'income', 'project'])
             ->orderBy('sort_order')
             ->get()
-            ->map(function ($alloc) use ($realMoneyAvailable, &$totalOverBudgetNominal, &$totalOverBudgetCount, &$totalSpentAll) {
-                // calculate nominal based on percentage if amount not fixed
-                $calculatedAmount = (float)(($alloc->percentage / 100) * $realMoneyAvailable);
+            ->map(function ($alloc) use ($budgetPool, &$totalOverBudgetNominal, &$totalOverBudgetCount, &$totalSpentAll) {
+                // calculate nominal based on percentage of total budget pool (income)
+                $calculatedAmount = (float)(($alloc->percentage / 100) * $budgetPool);
                 $alloc->calculated_amount = $calculatedAmount;
                 
                 $allocSpent = 0;
@@ -120,6 +126,8 @@ class AllocationController extends Controller
 
         return Inertia::render('finance/allocation', [
             'allocations' => $allocations,
+            'totalIncome' => (float)$totalIncome,
+            'totalExpense' => (float)$totalExpense,
             'realMoneyAvailable' => (float)$realMoneyAvailable,
             'totalPercentage' => (float)$totalPercentage,
             'isPercentage100' => $isPercentage100,
@@ -143,11 +151,9 @@ class AllocationController extends Controller
 
         $validated['created_by'] = auth()->id();
 
-        // Calculate amount from global Real Money
-        $totalIncome = Income::sum('amount');
-        $totalExpense = Expense::sum('amount');
-        $realMoney = max(0, $totalIncome - $totalExpense);
-        $validated['amount'] = ($validated['percentage'] / 100) * $realMoney;
+        // Calculate amount from total Income (Budget Pool)
+        $totalIncome = (float) Income::sum('amount');
+        $validated['amount'] = ($validated['percentage'] / 100) * $totalIncome;
 
         $allocation = Allocation::create($validated);
 
@@ -171,10 +177,8 @@ class AllocationController extends Controller
             'percentage' => 'required|numeric|min:0|max:100',
         ]);
 
-        $totalIncome = Income::sum('amount');
-        $totalExpense = Expense::sum('amount');
-        $realMoney = max(0, $totalIncome - $totalExpense);
-        $validated['amount'] = ($validated['percentage'] / 100) * $realMoney;
+        $totalIncome = (float) Income::sum('amount');
+        $validated['amount'] = ($validated['percentage'] / 100) * $totalIncome;
 
         $allocation->update($validated);
 
@@ -190,11 +194,9 @@ class AllocationController extends Controller
             'sub_allocations.*.percentage' => 'required|numeric|min:0|max:100',
         ]);
 
-        // Calculate parent nominal
-        $totalIncome = Income::sum('amount');
-        $totalExpense = Expense::sum('amount');
-        $realMoney = max(0, $totalIncome - $totalExpense);
-        $parentAmount = ($allocation->percentage / 100) * $realMoney;
+        // Calculate parent nominal based on total Income
+        $totalIncome = (float) Income::sum('amount');
+        $parentAmount = ($allocation->percentage / 100) * $totalIncome;
 
         // Delete removed ones
         $existingIds = collect($validated['sub_allocations'])->pluck('id')->filter();
