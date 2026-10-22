@@ -483,7 +483,7 @@ export default function AllocationManagement({
                                         {/* Main Percentage & Nominal */}
                                         <div className={`rounded-2xl p-4 border transition-colors mb-4 ${
                                             alloc.is_over_budget 
-                                                ? 'bg-rose-500/[0.03] dark:bg-rose-950/20 border-rose-500/25' 
+                                                ? 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50' 
                                                 : 'bg-muted/30 border-border/70'
                                         }`}>
                                             <div className="flex items-start justify-between gap-2">
@@ -506,7 +506,7 @@ export default function AllocationManagement({
                                             </div>
 
                                             {/* Micro progress bar */}
-                                            <div className="h-1.5 w-full bg-muted/70 rounded-full overflow-hidden mt-3">
+                                            <div className="h-1.5 w-full bg-muted/70 rounded-full overflow-hidden mt-3 mb-2.5">
                                                 <div
                                                     className={`h-full rounded-full transition-all duration-500 ${
                                                         alloc.is_over_budget ? 'bg-rose-500' : palette.progressBar
@@ -515,28 +515,37 @@ export default function AllocationManagement({
                                                 />
                                             </div>
 
-                                            {/* Executive Status Row */}
-                                            <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between text-xs">
-                                                <div className="flex items-center gap-1 text-[11px]">
-                                                    <span className="text-muted-foreground text-[10px]">Realisasi:</span>
-                                                    <strong className={`font-mono font-bold ${alloc.is_over_budget ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
+                                            {/* Executive Status Grid: 2 Columns (Zero overflow!) */}
+                                            <div className="pt-2 border-t border-border/50 grid grid-cols-2 gap-2 text-xs">
+                                                <div>
+                                                    <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                                                        Total Realisasi
+                                                    </span>
+                                                    <span className={`font-mono font-bold text-sm block truncate mt-0.5 ${
+                                                        alloc.is_over_budget ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
+                                                    }`}>
                                                         {formatIDR(alloc.total_spent || 0)}
-                                                    </strong>
+                                                    </span>
                                                 </div>
 
-                                                <div>
+                                                <div className="text-right">
                                                     {alloc.is_over_budget ? (
-                                                        <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-rose-600 dark:text-rose-400">
-                                                            <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                                                            <span>Over: +{formatIDR(alloc.over_budget_amount || 0)}</span>
-                                                            <span className="text-[10px] font-semibold bg-rose-500/15 px-1.5 py-0.2 rounded ml-0.5">
-                                                                (+{(alloc.over_budget_percentage || 0).toFixed(1)}%)
+                                                        <div>
+                                                            <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase block truncate">
+                                                                ⚠️ Over (+{(alloc.over_budget_percentage || 0).toFixed(1)}%)
+                                                            </span>
+                                                            <span className="font-mono font-bold text-sm text-rose-600 dark:text-rose-400 block truncate mt-0.5">
+                                                                +{formatIDR(alloc.over_budget_amount || 0)}
                                                             </span>
                                                         </div>
                                                     ) : (
-                                                        <div className="flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
-                                                            <span className="text-muted-foreground text-[10px] font-normal">Sisa:</span>
-                                                            <span>{formatIDR(alloc.remaining_budget || 0)}</span>
+                                                        <div>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                                                                Sisa Anggaran
+                                                            </span>
+                                                            <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 block truncate mt-0.5">
+                                                                {formatIDR(alloc.remaining_budget || 0)}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -589,7 +598,7 @@ export default function AllocationManagement({
 
                                             {/* Sub Allocations List */}
                                             {subs.length > 0 ? (
-                                                <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                                                <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
                                                     {subs.map((sub, sIdx) => {
                                                         const subCalc = sub.calculated_amount || ((sub.percentage / 100) * calculatedAmount);
                                                         // Effective percentage from net real money
@@ -604,38 +613,38 @@ export default function AllocationManagement({
                                                         return (
                                                             <div 
                                                                 key={sIdx} 
-                                                                className={`p-2.5 rounded-xl border transition-all duration-200 ${
+                                                                className={`p-3 rounded-xl border transition-all duration-200 ${
                                                                     isOver 
-                                                                        ? 'bg-rose-500/[0.03] dark:bg-rose-950/20 border-rose-500/30 dark:border-rose-900/50' 
+                                                                        ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 shadow-2xs' 
                                                                         : 'bg-card border-border/80 hover:bg-muted/40'
                                                                 }`}
                                                             >
                                                                 {/* Row 1: Sub Name + Over Tag & Budget Allocation */}
-                                                                <div className="flex items-center justify-between gap-2">
+                                                                <div className="flex items-center justify-between gap-1.5 mb-1.5">
                                                                     <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-1">
-                                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOver ? 'bg-rose-500 animate-pulse' : palette.progressBar}`} />
+                                                                        <span className={`w-2 h-2 rounded-full shrink-0 ${isOver ? 'bg-rose-500' : 'bg-emerald-500'}`} />
                                                                         <span className="font-semibold text-foreground text-xs truncate" title={sub.name}>
                                                                             {sub.name}
                                                                         </span>
                                                                         {isOver && (
-                                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.2 rounded border border-rose-500/20 shrink-0">
+                                                                            <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/25 shrink-0">
                                                                                 Over
                                                                             </span>
                                                                         )}
                                                                     </div>
 
-                                                                    <div className="flex items-center gap-1.5 shrink-0 text-right">
+                                                                    <div className="flex items-center gap-1 shrink-0 text-right">
                                                                         <span className="font-mono text-foreground font-bold text-xs tabular-nums">
                                                                             {formatIDR(subCalc)}
                                                                         </span>
-                                                                        <span className={`px-1.5 py-0.5 rounded-md font-mono font-bold text-[10px] ${palette.subPill}`}>
+                                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${palette.subPill}`}>
                                                                             {sub.percentage}%
                                                                         </span>
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Row 2: Micro Progress Bar */}
-                                                                <div className="w-full bg-muted/60 rounded-full h-1 my-1.5 overflow-hidden">
+                                                                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden mb-2">
                                                                     <div 
                                                                         className={`h-full rounded-full transition-all duration-500 ${
                                                                             isOver ? 'bg-rose-500' : 'bg-emerald-500'
@@ -644,29 +653,38 @@ export default function AllocationManagement({
                                                                     />
                                                                 </div>
 
-                                                                {/* Row 3: Realisasi vs Sisa / Over Detail on single baseline */}
-                                                                <div className="flex items-center justify-between text-[10px] font-mono leading-none">
-                                                                    <div className="flex items-center gap-1 text-muted-foreground">
-                                                                        <span>Terpakai:</span>
-                                                                        <strong className={`font-semibold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
+                                                                {/* Row 3: 2-Column Grid for Metrics (Guaranteed to NEVER overflow!) */}
+                                                                <div className="grid grid-cols-2 gap-2 text-[10px] font-mono leading-tight pt-0.5">
+                                                                    <div>
+                                                                        <span className="text-muted-foreground block text-[9px] uppercase font-semibold">
+                                                                            Terpakai
+                                                                        </span>
+                                                                        <span className={`font-bold text-[11px] block truncate mt-0.5 ${
+                                                                            isOver ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
+                                                                        }`}>
                                                                             {formatIDR(spent)}
-                                                                        </strong>
-                                                                        <span className="opacity-70">({utilRate.toFixed(0)}%)</span>
+                                                                        </span>
                                                                     </div>
 
-                                                                    <div>
+                                                                    <div className="text-right">
                                                                         {isOver ? (
-                                                                            <span className="inline-flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400 text-[11px]">
-                                                                                <span>+{formatIDR(overNominal)}</span>
-                                                                                <span className="text-[9px] font-semibold bg-rose-500/10 px-1 py-0.2 rounded">
-                                                                                    (+{overPct.toFixed(1)}%)
+                                                                            <>
+                                                                                <span className="text-rose-600 dark:text-rose-400 font-bold block text-[9px] uppercase truncate">
+                                                                                    Over (+{overPct > 999 ? '>999%' : `${overPct.toFixed(0)}%`})
                                                                                 </span>
-                                                                            </span>
+                                                                                <span className="font-bold text-[11px] text-rose-600 dark:text-rose-400 block truncate mt-0.5">
+                                                                                    +{formatIDR(overNominal)}
+                                                                                </span>
+                                                                            </>
                                                                         ) : (
-                                                                            <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[11px]">
-                                                                                <span className="text-muted-foreground text-[10px] mr-1">Sisa:</span>
-                                                                                {formatIDR(remaining)}
-                                                                            </span>
+                                                                            <>
+                                                                                <span className="text-muted-foreground block text-[9px] uppercase font-semibold">
+                                                                                    Sisa Kuota
+                                                                                </span>
+                                                                                <span className="font-semibold text-[11px] text-emerald-600 dark:text-emerald-400 block truncate mt-0.5">
+                                                                                    {formatIDR(remaining)}
+                                                                                </span>
+                                                                            </>
                                                                         )}
                                                                     </div>
                                                                 </div>
