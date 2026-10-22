@@ -161,13 +161,26 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
     // Sub modal live stats
     const currentSubTotalPercentage = subItems.reduce((acc, curr) => acc + (Number(curr.percentage) || 0), 0);
     const subRemainingPercentage = Math.round((100 - currentSubTotalPercentage) * 100) / 100;
+    const subExcessPercentage = Math.round((currentSubTotalPercentage - 100) * 100) / 100;
     const isSubModal100 = Math.abs(currentSubTotalPercentage - 100) < 0.01;
+    const isSubModalOver = currentSubTotalPercentage > 100;
     const parentBudget = selectedParentAlloc ? (selectedParentAlloc.calculated_amount || ((selectedParentAlloc.percentage / 100) * realMoneyAvailable)) : 0;
+    const excessBudget = isSubModalOver ? ((subExcessPercentage / 100) * parentBudget) : 0;
 
     // Distribute remaining evenly or to new item
     const handleDistributeRemaining = () => {
         if (subRemainingPercentage <= 0) return;
         setSubItems([...subItems, { name: 'Alokasi Lain-lain', percentage: subRemainingPercentage }]);
+    };
+
+    const handleTrimExcess = () => {
+        if (currentSubTotalPercentage <= 100 || subItems.length === 0) return;
+        const diff = currentSubTotalPercentage - 100;
+        const lastItem = subItems[subItems.length - 1];
+        const newPct = Math.max(0, Math.round((lastItem.percentage - diff) * 100) / 100);
+        const updated = [...subItems];
+        updated[updated.length - 1] = { ...lastItem, percentage: newPct };
+        setSubItems(updated);
     };
 
     const handleSplitEvenly = () => {
@@ -183,6 +196,11 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
         });
         setSubItems(updated);
     };
+
+    // Main allocations excess stats
+    const isMainOver = totalPercentage > 100;
+    const mainExcessPct = Math.round((totalPercentage - 100) * 100) / 100;
+    const mainExcessAmount = isMainOver ? ((mainExcessPct / 100) * realMoneyAvailable) : 0;
 
     // Theme color palettes for cards
     const cardPalettes = [
@@ -253,12 +271,22 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
 
                 {/* 100% Validation Alert Banner */}
                 {!isPercentage100 && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 flex items-start gap-3.5 shadow-sm">
-                        <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                    <div className={`p-4 sm:p-5 rounded-2xl flex items-start gap-3.5 shadow-sm ${
+                        isMainOver 
+                            ? 'bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400' 
+                            : 'bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400'
+                    }`}>
+                        <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${isMainOver ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`} />
                         <div className="space-y-1">
-                            <h4 className="font-bold text-sm">Perhatian: Total Akumulasi Alokasi Utama Belum 100%!</h4>
-                            <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
-                                Total persentase saat ini adalah <strong>{totalPercentage}%</strong> (Sisa <strong>{Math.round((100 - totalPercentage) * 100) / 100}%</strong> belum dialokasikan). Harap sesuaikan persentase alokasi utama agar tepat <strong>100%</strong> untuk akurasi pelaporan laba/dana.
+                            <h4 className="font-bold text-sm">
+                                {isMainOver 
+                                    ? `Perhatian: Total Akumulasi Alokasi Melebihi 100% (Kelebihan +${mainExcessPct}% / +${formatIDR(mainExcessAmount)})!` 
+                                    : `Perhatian: Total Akumulasi Alokasi Utama Belum 100%!`}
+                            </h4>
+                            <p className="text-xs leading-relaxed opacity-90">
+                                {isMainOver 
+                                    ? `Total persentase alokasi saat ini adalah ${totalPercentage}%. Terdapat kelebihan kuota alokasi sebesar +${mainExcessPct}% (+${formatIDR(mainExcessAmount)}). Harap kurangi persentase alokasi agar pas 100%.`
+                                    : `Total persentase saat ini adalah ${totalPercentage}% (Sisa ${(100 - totalPercentage).toFixed(2)}% belum dialokasikan). Harap sesuaikan persentase alokasi utama agar tepat 100% untuk akurasi pelaporan laba/dana.`}
                             </p>
                         </div>
                     </div>
@@ -297,17 +325,21 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                             <div className="bg-slate-800/50 backdrop-blur-sm p-4 rounded-xl border border-slate-700/60">
                                 <span className="text-xs text-slate-400 font-medium">Akumulasi Alokasi Utama</span>
                                 <div className="text-2xl font-black flex items-center gap-2 mt-1">
-                                    <span className={isPercentage100 ? 'text-emerald-400 font-mono' : 'text-amber-400 font-mono'}>
+                                    <span className={isPercentage100 ? 'text-emerald-400 font-mono' : isMainOver ? 'text-rose-400 font-mono' : 'text-amber-400 font-mono'}>
                                         {totalPercentage}%
                                     </span>
                                     {isPercentage100 ? (
                                         <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                                     ) : (
-                                        <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                                        <ShieldAlert className={`w-5 h-5 shrink-0 ${isMainOver ? 'text-rose-400' : 'text-amber-400'}`} />
                                     )}
                                 </div>
-                                <p className="text-[11px] text-slate-400 mt-0.5">
-                                    {isPercentage100 ? 'Alokasi utama 100% lengkap' : `Kurang ${(100 - totalPercentage).toFixed(1)}% lagi`}
+                                <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                                    {isPercentage100 
+                                        ? 'Alokasi utama 100% lengkap' 
+                                        : isMainOver 
+                                        ? `⚠️ Melebihi alokasi (+${mainExcessPct}%)` 
+                                        : `Kurang ${(100 - totalPercentage).toFixed(1)}% lagi`}
                                 </p>
                             </div>
 
@@ -354,8 +386,10 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                             const isSubZero = roundedSubTotalPct === 0;
                             const isSubOver = roundedSubTotalPct > 100;
                             const subRemainingPct = Math.round((100 - roundedSubTotalPct) * 100) / 100;
+                            const subExcessPct = Math.round((roundedSubTotalPct - 100) * 100) / 100;
                             const subAllocatedAmount = (roundedSubTotalPct / 100) * calculatedAmount;
                             const subRemainingAmount = Math.max(0, calculatedAmount - subAllocatedAmount);
+                            const subExcessAmount = Math.max(0, subAllocatedAmount - calculatedAmount);
 
                             return (
                                 <div
@@ -363,7 +397,7 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                     className={`rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all duration-300 ${palette.borderHover} hover:shadow-lg group relative overflow-hidden`}
                                 >
                                     {/* Top Accent Gradient Bar */}
-                                    <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${palette.accent}`} />
+                                    <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${isSubOver ? 'from-rose-500 to-red-600' : palette.accent}`} />
 
                                     <div>
                                         {/* Header Row */}
@@ -434,7 +468,7 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                                     </span>
                                                 </div>
 
-                                                {/* THE CORE REQUEST: Keterangan total persentase sub-alokasi */}
+                                                {/* THE CORE REQUEST: Keterangan total persentase sub-alokasi & kelebihan jika > 100% */}
                                                 <div>
                                                     {isSubCompleted ? (
                                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-xs">
@@ -446,14 +480,14 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                                             <span>Total Sub: <strong>0%</strong> (Kosong)</span>
                                                         </span>
                                                     ) : isSubOver ? (
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/70 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
-                                                            <AlertTriangle className="w-3 h-3 text-rose-600" />
-                                                            <span>Total: <strong>{roundedSubTotalPct}%</strong> (+{roundedSubTotalPct - 100}%)</span>
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/70 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shadow-xs animate-pulse">
+                                                            <AlertTriangle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                                                            <span>Total Sub: <strong>{roundedSubTotalPct}%</strong> (Lebih +{subExcessPct}%)</span>
                                                         </span>
                                                     ) : (
                                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
                                                             <AlertTriangle className="w-3 h-3 text-amber-600" />
-                                                            <span>Total: <strong>{roundedSubTotalPct}%</strong> (Sisa {subRemainingPct}%)</span>
+                                                            <span>Total Sub: <strong>{roundedSubTotalPct}%</strong> (Sisa {subRemainingPct}%)</span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -512,8 +546,12 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                                 </div>
                                             )}
 
-                                            {/* Sub Allocation Breakdown Summary Bar */}
-                                            <div className="p-2.5 rounded-xl bg-muted/40 border border-border/80 flex items-center justify-between text-[11px]">
+                                            {/* Sub Allocation Breakdown Summary Bar (Mencantumkan lebihnya secara jelas!) */}
+                                            <div className={`p-2.5 rounded-xl border flex items-center justify-between text-[11px] ${
+                                                isSubOver 
+                                                    ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50' 
+                                                    : 'bg-muted/40 border-border/80'
+                                            }`}>
                                                 <div>
                                                     <span className="text-muted-foreground block">Teralokasi:</span>
                                                     <span className="font-mono font-bold text-foreground">
@@ -521,11 +559,21 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                                     </span>
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="text-muted-foreground block">
-                                                        {isSubOver ? 'Kelebihan:' : 'Sisa Belum Dibagi:'}
+                                                    <span className={`block font-medium ${isSubOver ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-muted-foreground'}`}>
+                                                        {isSubOver ? '⚠️ Kelebihan (Over):' : 'Sisa Belum Dibagi:'}
                                                     </span>
-                                                    <span className={`font-mono font-bold ${isSubCompleted ? 'text-emerald-600 dark:text-emerald-400' : isSubOver ? 'text-rose-500' : 'text-amber-600 dark:text-amber-400'}`}>
-                                                        {isSubCompleted ? 'Rp 0 (0%)' : `${formatIDR(subRemainingAmount)} (${subRemainingPct}%)`}
+                                                    <span className={`font-mono font-bold ${
+                                                        isSubCompleted 
+                                                            ? 'text-emerald-600 dark:text-emerald-400' 
+                                                            : isSubOver 
+                                                            ? 'text-rose-600 dark:text-rose-400 text-xs' 
+                                                            : 'text-amber-600 dark:text-amber-400'
+                                                    }`}>
+                                                        {isSubCompleted 
+                                                            ? 'Rp 0 (0%)' 
+                                                            : isSubOver 
+                                                            ? `+${formatIDR(subExcessAmount)} (+${subExcessPct}%)` 
+                                                            : `${formatIDR(subRemainingAmount)} (${subRemainingPct}%)`}
                                                     </span>
                                                 </div>
                                             </div>
@@ -587,7 +635,7 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                         <div className="pl-4 sm:pl-6 border-l-2 border-indigo-500/30 space-y-4">
                             <div className="flex items-center gap-2">
                                 <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
-                                    Level 2: Pos Alokasi Bisnis Utama ({totalPercentage}%)
+                                    Level 2: Pos Alokasi Bisnis Utama ({totalPercentage}%) {isMainOver ? `(⚠️ Kelebihan +${mainExcessPct}%)` : ''}
                                 </span>
                             </div>
 
@@ -596,6 +644,8 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                     const calculatedAmount = alloc.calculated_amount || ((alloc.percentage / 100) * realMoneyAvailable);
                                     const subs = alloc.sub_allocations || [];
                                     const subTotalPct = subs.reduce((acc, curr) => acc + (Number(curr.percentage) || 0), 0);
+                                    const roundedSubTreePct = Math.round(subTotalPct * 100) / 100;
+                                    const isSubTreeOver = roundedSubTreePct > 100;
 
                                     return (
                                         <div key={idx} className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
@@ -615,8 +665,14 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                             <div className="pt-2.5 border-t border-slate-800 space-y-2">
                                                 <div className="flex items-center justify-between text-[11px]">
                                                     <span className="text-slate-400 uppercase font-semibold">Sub-Kategori ({subs.length})</span>
-                                                    <span className={`font-mono font-bold ${Math.abs(subTotalPct - 100) < 0.01 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                                        Total Sub: {subTotalPct}%
+                                                    <span className={`font-mono font-bold ${
+                                                        Math.abs(roundedSubTreePct - 100) < 0.01 
+                                                            ? 'text-emerald-400' 
+                                                            : isSubTreeOver 
+                                                            ? 'text-rose-400' 
+                                                            : 'text-amber-400'
+                                                    }`}>
+                                                        Total Sub: {roundedSubTreePct}% {isSubTreeOver ? `(Lebih +${(roundedSubTreePct - 100).toFixed(1)}%)` : ''}
                                                     </span>
                                                 </div>
 
@@ -820,11 +876,11 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                             </button>
                         </div>
 
-                        {/* LIVE SUB TOTAL PERCENTAGE STATUS CARD */}
+                        {/* LIVE SUB TOTAL PERCENTAGE STATUS CARD (Mencantumkan lebihnya secara jelas!) */}
                         <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                             isSubModal100 
                                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400' 
-                                : currentSubTotalPercentage > 100 
+                                : isSubModalOver 
                                 ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'
                                 : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
                         }`}>
@@ -833,17 +889,22 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                     {isSubModal100 ? (
                                         <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                     ) : (
-                                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                        <AlertTriangle className={`w-4 h-4 shrink-0 ${isSubModalOver ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`} />
                                     )}
                                     <span className="font-bold text-xs">
-                                        Total Akumulasi Sub-Persentase: <span className="font-mono text-sm">{currentSubTotalPercentage.toFixed(2)}%</span> / 100%
+                                        Total Sub: <span className="font-mono text-sm">{currentSubTotalPercentage.toFixed(2)}%</span> / 100%
+                                        {isSubModalOver && (
+                                            <span className="ml-1 text-rose-600 dark:text-rose-400 font-bold">
+                                                (Kelebihan +{subExcessPercentage.toFixed(2)}%)
+                                            </span>
+                                        )}
                                     </span>
                                 </div>
                                 <p className="text-[11px] opacity-80 mt-0.5">
                                     {isSubModal100 
                                         ? 'Sempurna! Seluruh 100% dana telah dialokasikan secara proporsional.' 
-                                        : currentSubTotalPercentage > 100
-                                        ? `Kelebihan ${(currentSubTotalPercentage - 100).toFixed(2)}%! Kurangi persentase baris.`
+                                        : isSubModalOver
+                                        ? `⚠️ Melebihi kuota dana sebesar +${subExcessPercentage.toFixed(2)}% (+${formatIDR(excessBudget)}) dari anggaran induk.`
                                         : `Sisa ${subRemainingPercentage.toFixed(2)}% (${formatIDR((subRemainingPercentage / 100) * parentBudget)}) belum dialokasikan.`}
                                 </p>
                             </div>
@@ -858,6 +919,16 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                         title="Buat baris baru untuk sisa persentase"
                                     >
                                         + Sisa {subRemainingPercentage.toFixed(1)}%
+                                    </button>
+                                )}
+                                {isSubModalOver && (
+                                    <button
+                                        type="button"
+                                        onClick={handleTrimExcess}
+                                        className="px-2.5 py-1 text-[11px] font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-800 dark:text-rose-300 rounded-lg transition-colors cursor-pointer"
+                                        title="Pangkas kelebihan baris terakhir agar pas 100%"
+                                    >
+                                        Pangkas Lebih (-{subExcessPercentage.toFixed(1)}%)
                                     </button>
                                 )}
                                 <button
@@ -943,7 +1014,12 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
 
                             <div className="flex items-center justify-between pt-4 border-t border-border">
                                 <span className="text-[11px] text-muted-foreground">
-                                    Total Sub: <strong className={isSubModal100 ? 'text-emerald-600' : 'text-amber-600'}>{currentSubTotalPercentage.toFixed(1)}%</strong>
+                                    Total Sub: <strong className={isSubModal100 ? 'text-emerald-600' : isSubModalOver ? 'text-rose-600' : 'text-amber-600'}>{currentSubTotalPercentage.toFixed(1)}%</strong>
+                                    {isSubModalOver && (
+                                        <span className="text-rose-600 font-bold ml-1">
+                                            (Lebih +{subExcessPercentage.toFixed(1)}%)
+                                        </span>
+                                    )}
                                 </span>
                                 <div className="flex gap-2">
                                     <button
