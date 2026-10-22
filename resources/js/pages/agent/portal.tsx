@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import {
     ShieldCheck,
@@ -22,7 +22,13 @@ import {
     MessageCircle,
     Receipt,
     Percent,
-    AlertCircle
+    AlertCircle,
+    Download,
+    Smartphone,
+    X,
+    PlusSquare,
+    Compass,
+    MoreVertical
 } from 'lucide-react';
 
 interface Agent {
@@ -95,6 +101,62 @@ export default function AgentPortal({
     const [copiedBank, setCopiedBank] = useState(false);
     const [activeTab, setActiveTab] = useState<'commissions' | 'clients' | 'info'>('commissions');
     const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+
+    // PWA Install States
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isInstalled, setIsInstalled] = useState(false);
+    const [isIOS, setIsIOS] = useState(false);
+    const [showInstallModal, setShowInstallModal] = useState(false);
+    const [installTab, setInstallTab] = useState<'ios' | 'android'>('android');
+    const [bannerDismissed, setBannerDismissed] = useState(false);
+
+    useEffect(() => {
+        // Detect Standalone PWA mode
+        const isStandalone = 
+            window.matchMedia('(display-mode: standalone)').matches || 
+            (window.navigator as any).standalone === true;
+        setIsInstalled(isStandalone);
+
+        // Detect iOS
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+        setIsIOS(isIosDevice);
+        if (isIosDevice) {
+            setInstallTab('ios');
+        }
+
+        // Listen for beforeinstallprompt event (Android / Chromium)
+        const handleBeforeInstallPrompt = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        window.addEventListener('appinstalled', () => {
+            setIsInstalled(true);
+            setDeferredPrompt(null);
+            setShowInstallModal(false);
+        });
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                setIsInstalled(true);
+                setDeferredPrompt(null);
+            }
+        } else {
+            // Show custom guided modal for iOS or browsers without direct prompt
+            setShowInstallModal(true);
+        }
+    };
 
     const formatIDR = (val: number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -194,6 +256,18 @@ export default function AgentPortal({
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                        {/* Install PWA Button (Header) */}
+                        {!isInstalled && (
+                            <button
+                                onClick={handleInstallClick}
+                                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-purple-900/40 border border-purple-400/30 transition-all active:scale-95 animate-pulse"
+                                title="Pasang Aplikasi ke Layar Utama HP"
+                            >
+                                <Download className="w-3.5 h-3.5 text-amber-300" />
+                                <span className="text-[11px]">Install</span>
+                            </button>
+                        )}
+
                         <button
                             onClick={handleShare}
                             title="Bagikan / Simpan Link"
@@ -236,6 +310,44 @@ export default function AgentPortal({
                             </div>
                         </div>
                     </div>
+
+                    {/* PWA Install Banner Card */}
+                    {!isInstalled && !bannerDismissed && (
+                        <div className="rounded-2xl bg-gradient-to-r from-purple-950/80 via-indigo-950/70 to-slate-900 border border-purple-500/40 p-3.5 shadow-lg relative overflow-hidden flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-purple-500/30">
+                                    <Smartphone className="w-5 h-5 text-amber-300" />
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="font-bold text-white text-xs">Pasang di Layar HP</span>
+                                        <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                            Aplikasi
+                                        </span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-300 truncate mt-0.5">
+                                        Akses cepat & otomatis tanpa buka browser
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    onClick={handleInstallClick}
+                                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-purple-900/50 transition-all active:scale-95"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>Install</span>
+                                </button>
+                                <button
+                                    onClick={() => setBannerDismissed(true)}
+                                    className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                                    title="Sembunyikan"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Digital Wallet Card (Fintech Style Card) */}
                     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-800 via-indigo-900 to-slate-950 border border-purple-500/30 p-5 shadow-xl shadow-purple-950/40 text-white">
@@ -649,6 +761,146 @@ export default function AgentPortal({
                     Genial Digital Solution &copy; 2026. Official Agent Portal.
                 </footer>
             </div>
+
+            {/* PWA Installation Modal Guide */}
+            {showInstallModal && (
+                <div 
+                    className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
+                    onClick={() => setShowInstallModal(false)}
+                >
+                    <div 
+                        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center p-1.5 shadow-lg shadow-purple-500/30 shrink-0">
+                                    <img src="/pwa-192x192.png" alt="Genial Agent" className="w-full h-full rounded-xl object-cover" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-white text-base">Install Genial Agent</h3>
+                                    <p className="text-xs text-purple-300">Pasang di Layar Utama HP</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowInstallModal(false)}
+                                className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Platform Selector Tabs */}
+                        <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center text-xs font-bold">
+                            <button
+                                onClick={() => setInstallTab('android')}
+                                className={`flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 ${
+                                    installTab === 'android'
+                                        ? 'bg-purple-600 text-white shadow-md'
+                                        : 'text-slate-400 hover:text-slate-200'
+                                }`}
+                            >
+                                <span>🤖 Android / Chrome</span>
+                            </button>
+                            <button
+                                onClick={() => setInstallTab('ios')}
+                                className={`flex-1 py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 ${
+                                    installTab === 'ios'
+                                        ? 'bg-purple-600 text-white shadow-md'
+                                        : 'text-slate-400 hover:text-slate-200'
+                                }`}
+                            >
+                                <span>🍏 iPhone (Safari)</span>
+                            </button>
+                        </div>
+
+                        {/* Android Instructions */}
+                        {installTab === 'android' && (
+                            <div className="space-y-3 text-xs">
+                                {deferredPrompt ? (
+                                    <div className="text-center py-2 space-y-3">
+                                        <p className="text-slate-300 text-xs">
+                                            HP Android Anda mendukung pemasangan otomatis langsung dalam 1 klik:
+                                        </p>
+                                        <button
+                                            onClick={handleInstallClick}
+                                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-500 hover:to-emerald-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl shadow-purple-900/40 active:scale-95 transition-all"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            <span>Pasang Sekarang ke Layar Utama</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2.5 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800">
+                                        <div className="font-semibold text-slate-200 text-xs flex items-center gap-1.5">
+                                            <Compass className="w-4 h-4 text-purple-400" />
+                                            <span>Langkah Pasang di Google Chrome / Android:</span>
+                                        </div>
+                                        <div className="space-y-2 text-slate-300 text-[11px]">
+                                            <div className="flex items-start gap-2.5">
+                                                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 font-bold flex items-center justify-center shrink-0 text-[10px]">1</span>
+                                                <span>Ketuk ikon menu titik tiga <strong className="text-white">⋮ (Menu)</strong> di sudut kanan atas browser Chrome.</span>
+                                            </div>
+                                            <div className="flex items-start gap-2.5">
+                                                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 font-bold flex items-center justify-center shrink-0 text-[10px]">2</span>
+                                                <span>Pilih opsi <strong className="text-emerald-400">"Install aplikasi"</strong> atau <strong className="text-emerald-400">"Tambahkan ke Layar Utama"</strong>.</span>
+                                            </div>
+                                            <div className="flex items-start gap-2.5">
+                                                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 font-bold flex items-center justify-center shrink-0 text-[10px]">3</span>
+                                                <span>Ketuk <strong className="text-white">"Install"</strong>. Ikon aplikasi Genial Agent akan langsung muncul di homescreen HP Anda!</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* iOS (iPhone / iPad) Instructions */}
+                        {installTab === 'ios' && (
+                            <div className="space-y-2.5 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800 text-xs">
+                                <div className="font-semibold text-slate-200 text-xs flex items-center gap-1.5">
+                                    <Share2 className="w-4 h-4 text-sky-400" />
+                                    <span>Cara Pasang di iPhone (Safari):</span>
+                                </div>
+                                <div className="space-y-2.5 text-slate-300 text-[11px]">
+                                    <div className="flex items-start gap-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center shrink-0 text-[10px]">1</span>
+                                        <span>Buka halaman ini di browser <strong className="text-white">Safari</strong>, lalu ketuk tombol <strong className="text-sky-400">Bagikan (Share)</strong> ikon kotak dengan panah ke atas di bilah bawah.</span>
+                                    </div>
+                                    <div className="flex items-start gap-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center shrink-0 text-[10px]">2</span>
+                                        <span>Gulir menu ke bawah lalu pilih <strong className="text-purple-300">"Tambah ke Layar Utama" (Add to Home Screen 📲)</strong>.</span>
+                                    </div>
+                                    <div className="flex items-start gap-2.5">
+                                        <span className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center shrink-0 text-[10px]">3</span>
+                                        <span>Ketuk tombol <strong className="text-emerald-400">"Tambah" (Add)</strong> di pojok kanan atas layar. Selesai!</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Feature Perks of PWA */}
+                        <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 pt-1">
+                            <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800/60">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                <span>Tanpa buka browser</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-800/60">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                <span>Hemat kuota & cepat</span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowInstallModal(false)}
+                            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors"
+                        >
+                            Tutup Panduan
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
