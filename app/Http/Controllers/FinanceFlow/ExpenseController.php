@@ -37,7 +37,7 @@ class ExpenseController extends Controller
         $allocationCategories = [];
 
         foreach ($allocations as $alloc) {
-            $allocBudget = (float)(($alloc->percentage / 100) * $realMoneyAvailable);
+            $allocBudget = (float)(($alloc->percentage / 100) * $totalIncome);
 
             if ($alloc->subAllocations && $alloc->subAllocations->count() > 0) {
                 foreach ($alloc->subAllocations as $sub) {

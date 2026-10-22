@@ -80,6 +80,7 @@ interface Props {
     totalCrossSubsidyCount?: number;
     totalCrossSubsidyNominal?: number;
     totalSpentAll?: number;
+    unallocatedExpense?: number;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -98,7 +99,8 @@ export default function AllocationManagement({
     totalOverBudgetCount = 0,
     totalCrossSubsidyCount = 0,
     totalCrossSubsidyNominal = 0,
-    totalSpentAll = 0
+    totalSpentAll = 0,
+    unallocatedExpense = 0
 }: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -338,6 +340,19 @@ export default function AllocationManagement({
                     </div>
                 )}
 
+                {/* Unallocated Expense Notice */}
+                {unallocatedExpense > 0 && (
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-start gap-3 text-xs shadow-xs">
+                        <Info className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                        <div className="space-y-0.5">
+                            <span className="font-bold">Info Selisih Kas Fisik vs Sisa Kuota Alokasi:</span>
+                            <p className="leading-relaxed opacity-90">
+                                Total akumulasi sisa kuota seluruh alokasi adalah <strong className="font-mono font-bold">{formatIDR(totalIncome - totalSpentAll)}</strong>, sedangkan sisa kas fisik di bank adalah <strong className="font-mono font-bold">{formatIDR(realMoneyAvailable)}</strong>. Terdapat selisih pengeluaran sebesar <strong className="font-mono font-bold text-amber-600 dark:text-amber-300">{formatIDR(unallocatedExpense)}</strong> yang belum dimasukkan ke pos alokasi mana pun.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Top Executive Summary Banner */}
                 <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 p-6 sm:p-7 border border-indigo-500/20 text-white shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
@@ -363,7 +378,15 @@ export default function AllocationManagement({
                                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-1.5">
                                     <span>Basis Omzet: <strong className="text-white font-mono">{formatIDR(totalIncome)}</strong></span>
                                     <span>•</span>
-                                    <span>Total Belanja: <strong className="text-rose-300 font-mono">{formatIDR(totalSpentAll)}</strong></span>
+                                    <span>Belanja Terposkan: <strong className="text-rose-300 font-mono">{formatIDR(totalSpentAll)}</strong></span>
+                                    {unallocatedExpense > 0 && (
+                                        <>
+                                            <span>•</span>
+                                            <span className="text-amber-300 font-medium" title="Pengeluaran riil di luar 3 alokasi ini yang tetap memotong saldo kas bank">
+                                                Tanpa Pos: <strong className="font-mono text-amber-200">{formatIDR(unallocatedExpense)}</strong>
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>

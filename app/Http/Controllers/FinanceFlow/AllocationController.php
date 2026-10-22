@@ -163,6 +163,8 @@ class AllocationController extends Controller
         $incomes = Income::select('id', 'name', 'amount')->get();
         $projects = Project::select('id', 'name', 'client')->get();
 
+        $unallocatedExpense = max(0, $totalExpense - $totalSpentAll);
+
         return Inertia::render('finance/allocation', [
             'allocations' => $allocations,
             'totalIncome' => (float)$totalIncome,
@@ -175,6 +177,7 @@ class AllocationController extends Controller
             'totalCrossSubsidyCount' => $totalCrossSubsidyCount,
             'totalCrossSubsidyNominal' => (float)$totalCrossSubsidyNominal,
             'totalSpentAll' => (float)$totalSpentAll,
+            'unallocatedExpense' => (float)$unallocatedExpense,
             'incomes' => $incomes,
             'projects' => $projects,
         ]);
