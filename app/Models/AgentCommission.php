@@ -20,6 +20,7 @@ class AgentCommission extends Model
         'payment_status',
         'paid_at',
         'notes',
+        'expense_id',
     ];
 
     protected $casts = [
@@ -42,5 +43,10 @@ class AgentCommission extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function expense()
+    {
+        return $this->belongsTo(Expense::class);
     }
 }

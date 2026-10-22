@@ -5,6 +5,8 @@ namespace App\Http\Controllers\FinanceFlow;
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\AgentCommission;
+use App\Models\Expense;
+use App\Models\FinancialTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -84,6 +86,15 @@ class AgentController extends Controller
     public function destroy(Agent $agent)
     {
         $name = $agent->name;
+        // Clean up expenses from paid commissions
+        foreach ($agent->commissions as $comm) {
+            if ($comm->expense_id) {
+                FinancialTransaction::where('reference_type', Expense::class)
+                    ->where('reference_id', $comm->expense_id)
+                    ->delete();
+                Expense::where('id', $comm->expense_id)->delete();
+            }
+        }
         $agent->delete();
 
         return redirect()->back()->with('success', 'Agent "' . $name . '" berhasil dihapus.');
@@ -101,13 +112,70 @@ class AgentController extends Controller
     public function payCommission(Request $request, AgentCommission $commission)
     {
         $status = $request->input('status', 'paid');
+        $commission->load(['agent', 'income', 'project']);
 
-        $commission->update([
-            'payment_status' => $status,
-            'paid_at' => $status === 'paid' ? now() : null,
-        ]);
+        if ($status === 'paid') {
+            $agentName = $commission->agent ? $commission->agent->name : 'Agent';
+            $projectName = $commission->project ? $commission->project->name : ($commission->income ? $commission->income->name : 'Project');
+            $date = now()->toDateString();
 
-        $textStatus = $status === 'paid' ? 'Lunas (Paid)' : 'Belum Lunas (Unpaid)';
-        return redirect()->back()->with('success', 'Status pencairan komisi Rp ' . number_format($commission->commission_amount, 0, ',', '.') . ' diubah menjadi ' . $textStatus . '!');
+            // Create or update Expense linked directly to this income
+            $expense = Expense::updateOrCreate(
+                ['id' => $commission->expense_id],
+                [
+                    'income_id' => $commission->income_id,
+                    'project_id' => $commission->project_id,
+                    'category' => 'Freelancer',
+                    'name' => 'Komisi Agent: ' . $agentName,
+                    'description' => 'Pencairan komisi referral ' . $agentName . ' (' . (float)$commission->commission_rate . '%) dari pemasukan ' . ($commission->income->name ?? $projectName),
+                    'amount' => $commission->commission_amount,
+                    'date' => $date,
+                    'approval_status' => 'approved',
+                    'approved_by' => auth()->id(),
+                    'created_by' => auth()->id(),
+                ]
+            );
+
+            // Record Financial Transaction
+            FinancialTransaction::updateOrCreate(
+                [
+                    'reference_type' => Expense::class,
+                    'reference_id' => $expense->id,
+                ],
+                [
+                    'type' => 'expense',
+                    'activity_name' => 'Pencairan Komisi Agent: ' . $agentName,
+                    'user_id' => auth()->id(),
+                    'amount' => $expense->amount,
+                    'status' => 'completed',
+                ]
+            );
+
+            $commission->update([
+                'payment_status' => 'paid',
+                'paid_at' => now(),
+                'expense_id' => $expense->id,
+            ]);
+
+            $msg = 'Status komisi Rp ' . number_format($commission->commission_amount, 0, ',', '.') . ' diubah menjadi Lunas (Paid) dan otomatis tercatat di Pengeluaran (Expense)!';
+        } else {
+            // Revert / Batalkan Paid: delete associated Expense & FinancialTransaction
+            if ($commission->expense_id) {
+                FinancialTransaction::where('reference_type', Expense::class)
+                    ->where('reference_id', $commission->expense_id)
+                    ->delete();
+                Expense::where('id', $commission->expense_id)->delete();
+            }
+
+            $commission->update([
+                'payment_status' => 'unpaid',
+                'paid_at' => null,
+                'expense_id' => null,
+            ]);
+
+            $msg = 'Status komisi diubah menjadi Belum Cair (Unpaid) dan catatan pengeluaran terkait telah dihapus.';
+        }
+
+        return redirect()->back()->with('success', $msg);
     }
 }

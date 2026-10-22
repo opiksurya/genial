@@ -32,6 +32,7 @@ interface Commission {
     commission_amount: number;
     payment_status: 'unpaid' | 'paid';
     paid_at?: string;
+    expense_id?: number;
     income?: {
         name: string;
         date: string;
@@ -443,10 +444,16 @@ export default function AgentManagement({ agents, commissions, stats }: Props) {
                                                 </td>
                                                 <td className="p-4">
                                                     {comm.payment_status === 'paid' ? (
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                                            <CheckCircle2 className="w-3 h-3" />
-                                                            Lunas (Paid)
-                                                        </span>
+                                                        <div className="space-y-1">
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                                                <CheckCircle2 className="w-3 h-3" />
+                                                                Lunas (Paid)
+                                                            </span>
+                                                            <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                                                                Tercatat di Pengeluaran
+                                                            </div>
+                                                        </div>
                                                     ) : (
                                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
                                                             <Clock className="w-3 h-3" />

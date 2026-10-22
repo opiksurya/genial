@@ -47,4 +47,9 @@ class Expense extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function agentCommission()
+    {
+        return $this->hasOne(AgentCommission::class);
+    }
 }

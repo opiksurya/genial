@@ -5,6 +5,7 @@ namespace App\Http\Controllers\FinanceFlow;
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\AgentCommission;
+use App\Models\Expense;
 use App\Models\FinancialTransaction;
 use App\Models\Income;
 use App\Models\Project;
@@ -124,7 +125,7 @@ class IncomeController extends Controller
             $agent = Agent::find($income->agent_id);
             if ($agent) {
                 $rate = $agent->commission_rate ?? 5.00;
-                AgentCommission::updateOrCreate(
+                $comm = AgentCommission::updateOrCreate(
                     ['income_id' => $income->id],
                     [
                         'agent_id' => $agent->id,
@@ -135,9 +136,30 @@ class IncomeController extends Controller
                         'commission_amount' => ($income->amount * $rate) / 100,
                     ]
                 );
+
+                // If already paid, sync the associated expense amount as well
+                if ($comm->payment_status === 'paid' && $comm->expense_id) {
+                    Expense::where('id', $comm->expense_id)->update([
+                        'amount' => $comm->commission_amount,
+                        'description' => 'Pencairan komisi referral ' . $agent->name . ' (' . (float)$comm->commission_rate . '%) dari pemasukan ' . $income->name,
+                    ]);
+                    FinancialTransaction::where('reference_type', Expense::class)
+                        ->where('reference_id', $comm->expense_id)
+                        ->update(['amount' => $comm->commission_amount]);
+                }
             }
         } else {
-            AgentCommission::where('income_id', $income->id)->delete();
+            // Agent removed from income: cleanup commission & its expense if any
+            $existingComm = AgentCommission::where('income_id', $income->id)->first();
+            if ($existingComm) {
+                if ($existingComm->expense_id) {
+                    FinancialTransaction::where('reference_type', Expense::class)
+                        ->where('reference_id', $existingComm->expense_id)
+                        ->delete();
+                    Expense::where('id', $existingComm->expense_id)->delete();
+                }
+                $existingComm->delete();
+            }
         }
 
         FinancialTransaction::create([
@@ -155,7 +177,17 @@ class IncomeController extends Controller
 
     public function destroy(Income $income)
     {
-        AgentCommission::where('income_id', $income->id)->delete();
+        $existingComm = AgentCommission::where('income_id', $income->id)->first();
+        if ($existingComm) {
+            if ($existingComm->expense_id) {
+                FinancialTransaction::where('reference_type', Expense::class)
+                    ->where('reference_id', $existingComm->expense_id)
+                    ->delete();
+                Expense::where('id', $existingComm->expense_id)->delete();
+            }
+            $existingComm->delete();
+        }
+
         $income->delete();
         return redirect()->back()->with('success', 'Income berhasil dihapus!');
     }
