@@ -12,6 +12,8 @@ class Expense extends Model
     protected $fillable = [
         'income_id',
         'project_id',
+        'allocation_id',
+        'sub_allocation_id',
         'category',
         'name',
         'description',
@@ -36,6 +38,16 @@ class Expense extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function allocation()
+    {
+        return $this->belongsTo(Allocation::class);
+    }
+
+    public function subAllocation()
+    {
+        return $this->belongsTo(SubAllocation::class);
     }
 
     public function creator()
