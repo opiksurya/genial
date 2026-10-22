@@ -421,11 +421,15 @@ export default function Welcome() {
                                         }`}
                                         title={`Lihat Artikel & Studi Kasus ${p.client}`}
                                     >
-                                        <img
-                                            src={p.client_logo || `/images/brands/${p.id % 3 === 0 ? 'genial.svg' : p.id % 2 === 0 ? 'batikku.svg' : 'skincare.svg'}`}
-                                            alt={p.client}
-                                            className="h-8 sm:h-10 w-auto max-w-[140px] object-contain transition-all duration-300"
-                                        />
+                                        {p.client_logo ? (
+                                            <img
+                                                src={p.client_logo}
+                                                alt={p.client}
+                                                className="h-8 sm:h-10 w-auto max-w-[140px] object-contain transition-all duration-300"
+                                            />
+                                        ) : (
+                                            <span className="font-bold text-xs sm:text-sm text-foreground">{p.client}</span>
+                                        )}
                                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00A9E7] bg-[#00A9E7]/10 px-2 py-0.5 rounded-full border border-[#00A9E7]/20 group-hover:bg-[#00A9E7] group-hover:text-slate-900 transition-all">
                                             <span>Lihat Story</span>
                                             <ArrowUpRight className="w-3 h-3" />
@@ -433,16 +437,7 @@ export default function Welcome() {
                                     </a>
                                 ))
                             ) : (
-                                <>
-                                    <a href="/case-study/batikku-indonesia" className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border bg-white border-slate-200 hover:scale-105 transition-all">
-                                        <img src="/images/brands/batikku.svg" alt="BatikKu" className="h-9 w-auto object-contain" />
-                                        <span className="text-[11px] font-bold text-[#00A9E7]">Lihat Story →</span>
-                                    </a>
-                                    <a href="/case-study/glowing-id" className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border bg-white border-slate-200 hover:scale-105 transition-all">
-                                        <img src="/images/brands/skincare.svg" alt="GlowingID" className="h-9 w-auto object-contain" />
-                                        <span className="text-[11px] font-bold text-[#00A9E7]">Lihat Story →</span>
-                                    </a>
-                                </>
+                                <p className="text-xs text-muted-foreground/80 italic">Portfolio & Case Studies akan tampil otomatis saat project client ditandai tampil di Home.</p>
                             )}
                         </div>
                     </div>
