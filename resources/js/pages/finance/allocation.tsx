@@ -21,7 +21,8 @@ import {
     ArrowUpRight,
     TrendingUp,
     Scale,
-    Sparkles
+    Sparkles,
+    RefreshCw
 } from 'lucide-react';
 
 interface SubAllocation {
@@ -37,6 +38,9 @@ interface SubAllocation {
     over_budget_amount?: number;
     over_budget_percentage?: number;
     utilization_rate?: number;
+    is_covered_by_subsidy?: boolean;
+    covered_by_allocation_name?: string;
+    deficit_type?: 'cross_subsidy' | 'real_deficit' | 'safe';
 }
 
 interface Allocation {
@@ -64,6 +68,8 @@ interface Props {
     isPercentage100: boolean;
     totalOverBudgetNominal?: number;
     totalOverBudgetCount?: number;
+    totalCrossSubsidyCount?: number;
+    totalCrossSubsidyNominal?: number;
     totalSpentAll?: number;
 }
 
@@ -81,6 +87,8 @@ export default function AllocationManagement({
     isPercentage100,
     totalOverBudgetNominal = 0,
     totalOverBudgetCount = 0,
+    totalCrossSubsidyCount = 0,
+    totalCrossSubsidyNominal = 0,
     totalSpentAll = 0
 }: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -386,28 +394,30 @@ export default function AllocationManagement({
                             </div>
 
                             <div className="bg-slate-800/50 backdrop-blur-sm p-3.5 rounded-xl border border-slate-700/60">
-                                <span className="text-[11px] text-slate-400 font-medium">Status Over Budget</span>
+                                <span className="text-[11px] text-slate-400 font-medium">Status Anggaran</span>
                                 <div className="text-xl font-black flex items-center gap-1.5 mt-1">
                                     {totalOverBudgetCount > 0 ? (
                                         <>
                                             <span className="text-rose-400 font-mono text-base font-bold">
-                                                {totalOverBudgetCount} Pos Over
+                                                {totalOverBudgetCount} Pos Defisit Riil
                                             </span>
                                             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                                         </>
                                     ) : (
                                         <>
                                             <span className="text-emerald-400 font-mono text-base font-bold">
-                                                Aman
+                                                Semua Pos Aman
                                             </span>
                                             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                                         </>
                                     )}
                                 </div>
-                                <p className="text-[10px] text-slate-400 mt-0.5 truncate font-mono">
+                                <p className="text-[10px] text-slate-400 mt-0.5 truncate font-medium">
                                     {totalOverBudgetCount > 0 
-                                        ? `+${formatIDR(totalOverBudgetNominal)}` 
-                                        : 'Semua dalam kuota'}
+                                        ? `Defisit riil +${formatIDR(totalOverBudgetNominal)}` 
+                                        : totalCrossSubsidyCount > 0
+                                        ? `🔄 ${totalCrossSubsidyCount} sub-pos subsidi silang internal`
+                                        : 'Semua belanja dalam kuota'}
                                 </p>
                             </div>
                         </div>
@@ -610,6 +620,7 @@ export default function AllocationManagement({
                                                         // Effective percentage from net real money
                                                         const effectivePct = ((sub.percentage / 100) * (alloc.percentage / 100)) * 100;
                                                         const isOver = Boolean(sub.is_over_budget);
+                                                        const isCovered = Boolean(sub.is_covered_by_subsidy);
                                                         const spent = sub.total_spent || 0;
                                                         const overNominal = sub.over_budget_amount || 0;
                                                         const overPct = sub.over_budget_percentage || 0;
@@ -621,21 +632,35 @@ export default function AllocationManagement({
                                                                 key={sIdx} 
                                                                 className={`p-3 rounded-xl border transition-all duration-200 ${
                                                                     isOver 
-                                                                        ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 shadow-2xs' 
+                                                                        ? isCovered
+                                                                            ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900/50 shadow-2xs'
+                                                                            : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 shadow-2xs' 
                                                                         : 'bg-card border-border/80 hover:bg-muted/40'
                                                                 }`}
                                                             >
                                                                 {/* Row 1: Sub Name + Over Tag & Budget Allocation */}
                                                                 <div className="flex items-center justify-between gap-1.5 mb-1.5">
                                                                     <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-1">
-                                                                        <span className={`w-2 h-2 rounded-full shrink-0 ${isOver ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                                                                        <span className={`w-2 h-2 rounded-full shrink-0 ${
+                                                                            isOver ? (isCovered ? 'bg-amber-500' : 'bg-rose-500') : 'bg-emerald-500'
+                                                                        }`} />
                                                                         <span className="font-semibold text-foreground text-xs truncate" title={sub.name}>
                                                                             {sub.name}
                                                                         </span>
                                                                         {isOver && (
-                                                                            <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/25 shrink-0">
-                                                                                Over
-                                                                            </span>
+                                                                            isCovered ? (
+                                                                                <span 
+                                                                                    className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0 flex items-center gap-1"
+                                                                                    title={`Kelebihan ${formatIDR(overNominal)} tertutup aman oleh sisa kuota pos tetangga di ${alloc.name}`}
+                                                                                >
+                                                                                    <RefreshCw className="w-2.5 h-2.5" />
+                                                                                    Subsidi Silang
+                                                                                </span>
+                                                                            ) : (
+                                                                                <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/25 shrink-0">
+                                                                                    Defisit Riil
+                                                                                </span>
+                                                                            )
                                                                         )}
                                                                     </div>
 
@@ -653,7 +678,9 @@ export default function AllocationManagement({
                                                                 <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden mb-2">
                                                                     <div 
                                                                         className={`h-full rounded-full transition-all duration-500 ${
-                                                                            isOver ? 'bg-rose-500' : 'bg-emerald-500'
+                                                                            isOver 
+                                                                                ? (isCovered ? 'bg-amber-500' : 'bg-rose-500') 
+                                                                                : 'bg-emerald-500'
                                                                         }`}
                                                                         style={{ width: `${Math.min(100, isOver ? 100 : utilRate)}%` }}
                                                                     />
@@ -666,7 +693,9 @@ export default function AllocationManagement({
                                                                             Terpakai
                                                                         </span>
                                                                         <span className={`font-bold text-[11px] block truncate mt-0.5 ${
-                                                                            isOver ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
+                                                                            isOver 
+                                                                                ? (isCovered ? 'text-amber-700 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400') 
+                                                                                : 'text-foreground'
                                                                         }`}>
                                                                             {formatIDR(spent)}
                                                                         </span>
@@ -674,14 +703,31 @@ export default function AllocationManagement({
 
                                                                     <div className="text-right">
                                                                         {isOver ? (
-                                                                            <>
-                                                                                <span className="text-rose-600 dark:text-rose-400 font-bold block text-[9px] uppercase truncate">
-                                                                                    Over (+{overPct > 999 ? '>999%' : `${overPct.toFixed(0)}%`})
-                                                                                </span>
-                                                                                <span className="font-bold text-[11px] text-rose-600 dark:text-rose-400 block truncate mt-0.5">
-                                                                                    +{formatIDR(overNominal)}
-                                                                                </span>
-                                                                            </>
+                                                                            isCovered ? (
+                                                                                <>
+                                                                                    <span className="text-amber-700 dark:text-amber-400 font-bold block text-[9px] uppercase truncate">
+                                                                                        Over (+{overPct > 999 ? '>999%' : `${overPct.toFixed(0)}%`})
+                                                                                    </span>
+                                                                                    <span className="font-bold text-[11px] text-amber-700 dark:text-amber-400 block truncate mt-0.5">
+                                                                                        +{formatIDR(overNominal)}
+                                                                                    </span>
+                                                                                    <span className="text-[8.5px] text-muted-foreground block truncate mt-0.5" title={`Tertutup sisa kuota ${alloc.name}`}>
+                                                                                        Tertutup sisa {alloc.name}
+                                                                                    </span>
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <span className="text-rose-600 dark:text-rose-400 font-bold block text-[9px] uppercase truncate">
+                                                                                        Defisit (+{overPct > 999 ? '>999%' : `${overPct.toFixed(0)}%`})
+                                                                                    </span>
+                                                                                    <span className="font-bold text-[11px] text-rose-600 dark:text-rose-400 block truncate mt-0.5">
+                                                                                        +{formatIDR(overNominal)}
+                                                                                    </span>
+                                                                                    <span className="text-[8.5px] text-rose-600 dark:text-rose-400 block truncate mt-0.5 font-bold">
+                                                                                        Jebol Plafon Induk
+                                                                                    </span>
+                                                                                </>
+                                                                            )
                                                                         ) : (
                                                                             <>
                                                                                 <span className="text-muted-foreground block text-[9px] uppercase font-semibold">

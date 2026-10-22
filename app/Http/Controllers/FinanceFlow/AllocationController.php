@@ -26,8 +26,11 @@ class AllocationController extends Controller
         // paradoks sirkular di mana plafon terus menyusut saat ada pengeluaran.
         $budgetPool = $totalIncome;
 
-        $totalOverBudgetNominal = 0;
-        $totalOverBudgetCount = 0;
+        // Skenario A: Metric Pelacakan Anggaran & Subsidi Silang
+        $totalRealOverBudgetNominal = 0;
+        $totalRealOverBudgetCount = 0;
+        $totalCrossSubsidyNominal = 0;
+        $totalCrossSubsidyCount = 0;
         $totalSpentAll = 0;
 
         // Fetch top-level allocations with sub-allocations
@@ -35,7 +38,7 @@ class AllocationController extends Controller
             ->with(['subAllocations', 'children.subAllocations', 'income', 'project'])
             ->orderBy('sort_order')
             ->get()
-            ->map(function ($alloc) use ($budgetPool, &$totalOverBudgetNominal, &$totalOverBudgetCount, &$totalSpentAll) {
+            ->map(function ($alloc) use ($budgetPool, &$totalRealOverBudgetNominal, &$totalRealOverBudgetCount, &$totalCrossSubsidyNominal, &$totalCrossSubsidyCount, &$totalSpentAll) {
                 // calculate nominal based on percentage of total budget pool (income)
                 $calculatedAmount = (float)(($alloc->percentage / 100) * $budgetPool);
                 $alloc->calculated_amount = $calculatedAmount;
@@ -43,7 +46,7 @@ class AllocationController extends Controller
                 $allocSpent = 0;
 
                 if ($alloc->subAllocations->count() > 0) {
-                    $alloc->subAllocations->map(function ($sub) use ($calculatedAmount, &$allocSpent, &$totalOverBudgetNominal, &$totalOverBudgetCount) {
+                    $alloc->subAllocations->transform(function ($sub) use ($calculatedAmount, &$allocSpent) {
                         $subBudget = (float)(($sub->percentage / 100) * $calculatedAmount);
                         $sub->calculated_amount = $subBudget;
 
@@ -71,11 +74,6 @@ class AllocationController extends Controller
                         $sub->over_budget_percentage = $overPct;
                         $sub->utilization_rate = $utilRate;
 
-                        if ($isOver) {
-                            $totalOverBudgetNominal += $overNominal;
-                            $totalOverBudgetCount++;
-                        }
-
                         $allocSpent += $spent;
                         return $sub;
                     });
@@ -88,13 +86,6 @@ class AllocationController extends Controller
                     })->sum('amount');
 
                     $allocSpent = $spent;
-                    $isOver = $spent > $calculatedAmount;
-                    $overNominal = max(0, $spent - $calculatedAmount);
-
-                    if ($isOver) {
-                        $totalOverBudgetNominal += $overNominal;
-                        $totalOverBudgetCount++;
-                    }
                 }
 
                 $totalSpentAll += $allocSpent;
@@ -115,6 +106,35 @@ class AllocationController extends Controller
                 $alloc->over_budget_percentage = $allocOverPct;
                 $alloc->utilization_rate = $allocUtilRate;
 
+                if ($allocIsOver) {
+                    $totalRealOverBudgetNominal += $allocOverNominal;
+                    $totalRealOverBudgetCount++;
+                }
+
+                // Skenario A: Tandai apakah kelebihan sub-pos tertutup aman oleh subsidi silang
+                if ($alloc->subAllocations->count() > 0) {
+                    $alloc->subAllocations->transform(function ($sub) use ($alloc, $allocIsOver, &$totalCrossSubsidyNominal, &$totalCrossSubsidyCount) {
+                        if ($sub->is_over_budget) {
+                            if (!$allocIsOver) {
+                                // Sub-pos over, tapi kuota induk masih sisa -> AMAN TERTUTUP SUBSIDI SILANG
+                                $sub->is_covered_by_subsidy = true;
+                                $sub->covered_by_allocation_name = $alloc->name;
+                                $sub->deficit_type = 'cross_subsidy';
+                                $totalCrossSubsidyNominal += $sub->over_budget_amount;
+                                $totalCrossSubsidyCount++;
+                            } else {
+                                // Pos induknya pun jebol -> DEFISIT RIIL
+                                $sub->is_covered_by_subsidy = false;
+                                $sub->deficit_type = 'real_deficit';
+                            }
+                        } else {
+                            $sub->is_covered_by_subsidy = false;
+                            $sub->deficit_type = 'safe';
+                        }
+                        return $sub;
+                    });
+                }
+
                 return $alloc;
             });
 
@@ -131,8 +151,10 @@ class AllocationController extends Controller
             'realMoneyAvailable' => (float)$realMoneyAvailable,
             'totalPercentage' => (float)$totalPercentage,
             'isPercentage100' => $isPercentage100,
-            'totalOverBudgetNominal' => (float)$totalOverBudgetNominal,
-            'totalOverBudgetCount' => $totalOverBudgetCount,
+            'totalOverBudgetNominal' => (float)$totalRealOverBudgetNominal,
+            'totalOverBudgetCount' => $totalRealOverBudgetCount,
+            'totalCrossSubsidyCount' => $totalCrossSubsidyCount,
+            'totalCrossSubsidyNominal' => (float)$totalCrossSubsidyNominal,
             'totalSpentAll' => (float)$totalSpentAll,
             'incomes' => $incomes,
             'projects' => $projects,
