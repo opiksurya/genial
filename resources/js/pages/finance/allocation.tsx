@@ -31,6 +31,12 @@ interface SubAllocation {
     amount?: number;
     calculated_amount?: number;
     sort_order?: number;
+    total_spent?: number;
+    remaining_budget?: number;
+    is_over_budget?: boolean;
+    over_budget_amount?: number;
+    over_budget_percentage?: number;
+    utilization_rate?: number;
 }
 
 interface Allocation {
@@ -41,6 +47,12 @@ interface Allocation {
     calculated_amount?: number;
     parent_id?: number;
     sub_allocations?: SubAllocation[];
+    total_spent?: number;
+    remaining_budget?: number;
+    is_over_budget?: boolean;
+    over_budget_amount?: number;
+    over_budget_percentage?: number;
+    utilization_rate?: number;
 }
 
 interface Props {
@@ -48,6 +60,9 @@ interface Props {
     realMoneyAvailable: number;
     totalPercentage: number;
     isPercentage100: boolean;
+    totalOverBudgetNominal?: number;
+    totalOverBudgetCount?: number;
+    totalSpentAll?: number;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -55,7 +70,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Allocation Management', href: '/finance/allocation' },
 ];
 
-export default function AllocationManagement({ allocations, realMoneyAvailable, totalPercentage, isPercentage100 }: Props) {
+export default function AllocationManagement({ 
+    allocations, 
+    realMoneyAvailable, 
+    totalPercentage, 
+    isPercentage100,
+    totalOverBudgetNominal = 0,
+    totalOverBudgetCount = 0,
+    totalSpentAll = 0
+}: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingAllocation, setEditingAllocation] = useState<Allocation | null>(null);
@@ -298,7 +321,7 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                     
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10 items-center">
                         {/* Real Money Metric */}
-                        <div className="lg:col-span-6 flex items-start sm:items-center gap-4">
+                        <div className="lg:col-span-5 flex items-start sm:items-center gap-4">
                             <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 shrink-0 shadow-inner">
                                 <Wallet className="w-8 h-8" />
                             </div>
@@ -321,38 +344,64 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                         </div>
 
                         {/* Status Summary Metrics */}
-                        <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t lg:border-t-0 lg:border-l border-slate-800 pt-4 lg:pt-0 lg:pl-6">
-                            <div className="bg-slate-800/50 backdrop-blur-sm p-4 rounded-xl border border-slate-700/60">
-                                <span className="text-xs text-slate-400 font-medium">Akumulasi Alokasi Utama</span>
-                                <div className="text-2xl font-black flex items-center gap-2 mt-1">
+                        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t lg:border-t-0 lg:border-l border-slate-800 pt-4 lg:pt-0 lg:pl-6">
+                            <div className="bg-slate-800/50 backdrop-blur-sm p-3.5 rounded-xl border border-slate-700/60">
+                                <span className="text-[11px] text-slate-400 font-medium">Alokasi Utama</span>
+                                <div className="text-xl font-black flex items-center gap-1.5 mt-1">
                                     <span className={isPercentage100 ? 'text-emerald-400 font-mono' : isMainOver ? 'text-rose-400 font-mono' : 'text-amber-400 font-mono'}>
                                         {totalPercentage}%
                                     </span>
                                     {isPercentage100 ? (
-                                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                                     ) : (
-                                        <ShieldAlert className={`w-5 h-5 shrink-0 ${isMainOver ? 'text-rose-400' : 'text-amber-400'}`} />
+                                        <ShieldAlert className={`w-4 h-4 shrink-0 ${isMainOver ? 'text-rose-400' : 'text-amber-400'}`} />
                                     )}
                                 </div>
-                                <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                                <p className="text-[10px] text-slate-400 mt-0.5 font-medium truncate">
                                     {isPercentage100 
-                                        ? 'Alokasi utama 100% lengkap' 
+                                        ? 'Alokasi utama 100%' 
                                         : isMainOver 
-                                        ? `⚠️ Melebihi alokasi (+${mainExcessPct}%)` 
-                                        : `Kurang ${(100 - totalPercentage).toFixed(1)}% lagi`}
+                                        ? `⚠️ Lebih +${mainExcessPct}%` 
+                                        : `Kurang ${(100 - totalPercentage).toFixed(1)}%`}
                                 </p>
                             </div>
 
-                            <div className="bg-slate-800/50 backdrop-blur-sm p-4 rounded-xl border border-slate-700/60">
-                                <span className="text-xs text-slate-400 font-medium">Status Kelengkapan Sub</span>
-                                <div className="text-2xl font-black text-white font-mono mt-1">
+                            <div className="bg-slate-800/50 backdrop-blur-sm p-3.5 rounded-xl border border-slate-700/60">
+                                <span className="text-[11px] text-slate-400 font-medium">Kelengkapan Sub</span>
+                                <div className="text-xl font-black text-white font-mono mt-1">
                                     {allocations.filter(a => {
                                         const subSum = (a.sub_allocations || []).reduce((acc, curr) => acc + (Number(curr.percentage) || 0), 0);
                                         return Math.abs(subSum - 100) < 0.01;
-                                    }).length} <span className="text-sm font-normal text-slate-400">/ {allocations.length} Kategori</span>
+                                    }).length} <span className="text-xs font-normal text-slate-400">/ {allocations.length} Pos</span>
                                 </div>
-                                <p className="text-[11px] text-slate-400 mt-0.5">
-                                    Kategori dengan sub-alokasi tepat 100%
+                                <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+                                    Sub-alokasi tepat 100%
+                                </p>
+                            </div>
+
+                            <div className="bg-slate-800/50 backdrop-blur-sm p-3.5 rounded-xl border border-slate-700/60">
+                                <span className="text-[11px] text-slate-400 font-medium">Status Over Budget</span>
+                                <div className="text-xl font-black flex items-center gap-1.5 mt-1">
+                                    {totalOverBudgetCount > 0 ? (
+                                        <>
+                                            <span className="text-rose-400 font-mono text-base font-bold">
+                                                {totalOverBudgetCount} Pos Over
+                                            </span>
+                                            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-emerald-400 font-mono text-base font-bold">
+                                                Aman
+                                            </span>
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                        </>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-0.5 truncate font-mono">
+                                    {totalOverBudgetCount > 0 
+                                        ? `+${formatIDR(totalOverBudgetNominal)}` 
+                                        : 'Semua dalam kuota'}
                                 </p>
                             </div>
                         </div>
@@ -397,7 +446,7 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                     className={`rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all duration-300 ${palette.borderHover} hover:shadow-lg group relative overflow-hidden`}
                                 >
                                     {/* Top Accent Gradient Bar */}
-                                    <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${isSubOver ? 'from-rose-500 to-red-600' : palette.accent}`} />
+                                    <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${alloc.is_over_budget || isSubOver ? 'from-rose-500 to-red-600' : palette.accent}`} />
 
                                     <div>
                                         {/* Header Row */}
@@ -451,10 +500,32 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                             {/* Progress bar of main allocation */}
                                             <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-3">
                                                 <div
-                                                    className={`h-full ${palette.progressBar} rounded-full transition-all duration-500`}
+                                                    className={`h-full ${alloc.is_over_budget ? 'bg-rose-500' : palette.progressBar} rounded-full transition-all duration-500`}
                                                     style={{ width: `${Math.min(100, alloc.percentage)}%` }}
                                                 />
                                             </div>
+
+                                            {/* Indikator Realisasi & Over Budget Induk */}
+                                            {alloc.is_over_budget ? (
+                                                <div className="mt-3 p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-between text-[11px] gap-2">
+                                                    <span className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1 text-[10px]">
+                                                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                                        Over Budget Induk:
+                                                    </span>
+                                                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-xs">
+                                                        +{formatIDR(alloc.over_budget_amount || 0)} (+{(alloc.over_budget_percentage || 0).toFixed(1)}%)
+                                                    </span>
+                                                </div>
+                                            ) : (alloc.total_spent || 0) > 0 ? (
+                                                <div className="mt-2.5 flex items-center justify-between text-[10px] text-muted-foreground pt-1.5 border-t border-border/50">
+                                                    <span>
+                                                        Terpakai: <strong className="text-foreground font-mono">{formatIDR(alloc.total_spent || 0)}</strong> ({(alloc.utilization_rate || 0).toFixed(1)}%)
+                                                    </span>
+                                                    <span className="text-emerald-600 dark:text-emerald-400 font-mono font-medium">
+                                                        Sisa: {formatIDR(alloc.remaining_budget || 0)}
+                                                    </span>
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         {/* Sub-Allocations Section with Prominent Total Sub-Percentage */}
@@ -468,7 +539,7 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
                                                     </span>
                                                 </div>
 
-                                                {/* THE CORE REQUEST: Keterangan total persentase sub-alokasi & kelebihan jika > 100% */}
+                                                {/* Keterangan total persentase sub-alokasi & kelebihan jika > 100% */}
                                                 <div>
                                                     {isSubCompleted ? (
                                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-xs">
@@ -503,37 +574,81 @@ export default function AllocationManagement({ allocations, realMoneyAvailable, 
 
                                             {/* Sub Allocations List */}
                                             {subs.length > 0 ? (
-                                                <div className="space-y-1.5 max-h-[290px] overflow-y-auto pr-1">
+                                                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
                                                     {subs.map((sub, sIdx) => {
                                                         const subCalc = sub.calculated_amount || ((sub.percentage / 100) * calculatedAmount);
                                                         // Effective percentage from net real money
                                                         const effectivePct = ((sub.percentage / 100) * (alloc.percentage / 100)) * 100;
+                                                        const isOver = Boolean(sub.is_over_budget);
+                                                        const spent = sub.total_spent || 0;
+                                                        const overNominal = sub.over_budget_amount || 0;
+                                                        const overPct = sub.over_budget_percentage || 0;
+                                                        const remaining = sub.remaining_budget ?? (subCalc - spent);
+                                                        const utilRate = sub.utilization_rate ?? (subCalc > 0 ? (spent / subCalc) * 100 : 0);
 
                                                         return (
                                                             <div 
                                                                 key={sIdx} 
-                                                                className="flex items-center justify-between gap-2 text-xs p-2.5 rounded-xl bg-card border border-border hover:bg-muted/40 transition-colors shadow-2xs"
+                                                                className={`p-2.5 rounded-xl border transition-all duration-200 shadow-2xs space-y-1.5 ${
+                                                                    isOver 
+                                                                        ? 'bg-rose-50/75 dark:bg-rose-950/25 border-rose-200 dark:border-rose-900/60' 
+                                                                        : 'bg-card border-border hover:bg-muted/40'
+                                                                }`}
                                                             >
-                                                                {/* Name column with flex-1 and min-w-0 to prevent collision! */}
-                                                                <div className="flex items-center gap-2 flex-1 min-w-0 pr-1">
-                                                                    <div className={`w-1.5 h-1.5 rounded-full ${palette.progressBar} shrink-0`} />
-                                                                    <span className="text-foreground font-medium truncate text-xs" title={sub.name}>
-                                                                        {sub.name}
-                                                                    </span>
+                                                                {/* Top row: Name, Percentage pill, Plafon nominal */}
+                                                                <div className="flex items-center justify-between gap-2 text-xs">
+                                                                    <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1">
+                                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOver ? 'bg-rose-500 animate-pulse' : palette.progressBar}`} />
+                                                                        <span className="text-foreground font-semibold truncate text-xs" title={sub.name}>
+                                                                            {sub.name}
+                                                                        </span>
+                                                                        {isOver && (
+                                                                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shrink-0">
+                                                                                Over
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-2 shrink-0">
+                                                                        <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-[11px] ${palette.subPill}`}>
+                                                                            {sub.percentage}%
+                                                                        </span>
+                                                                        <div className="text-right">
+                                                                            <span className="font-mono text-foreground font-bold text-xs block tabular-nums">
+                                                                                {formatIDR(subCalc)}
+                                                                            </span>
+                                                                            <span className="text-[10px] text-muted-foreground block -mt-0.5">
+                                                                                ({effectivePct.toFixed(1)}% Net)
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
 
-                                                                {/* Percentage badge and amount on right side */}
-                                                                <div className="flex items-center gap-2 shrink-0">
-                                                                    <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-[11px] ${palette.subPill}`}>
-                                                                        {sub.percentage}%
-                                                                    </span>
-                                                                    <div className="text-right">
-                                                                        <span className="font-mono text-foreground font-semibold text-xs block tabular-nums">
-                                                                            {formatIDR(subCalc)}
+                                                                {/* Bottom row: Realisasi Terpakai & Indikator Over Budget */}
+                                                                <div className={`pt-1.5 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] ${
+                                                                    isOver ? 'border-rose-200 dark:border-rose-900/40' : 'border-border/50'
+                                                                }`}>
+                                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                                        <span className="text-muted-foreground">Terpakai:</span>
+                                                                        <span className={`font-mono font-bold ${isOver ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
+                                                                            {formatIDR(spent)}
                                                                         </span>
-                                                                        <span className="text-[10px] text-muted-foreground block -mt-0.5">
-                                                                            ({effectivePct.toFixed(1)}% Net)
+                                                                        <span className="text-muted-foreground text-[10px]">
+                                                                            ({utilRate.toFixed(1)}%)
                                                                         </span>
+                                                                    </div>
+
+                                                                    <div>
+                                                                        {isOver ? (
+                                                                            <span className="inline-flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400 bg-rose-500/15 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-500/30 font-mono text-[10px]">
+                                                                                <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" />
+                                                                                Over: +{formatIDR(overNominal)} (+{overPct.toFixed(1)}%)
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-mono font-medium text-[10px]">
+                                                                                <span>Sisa: {formatIDR(remaining)}</span>
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </div>
