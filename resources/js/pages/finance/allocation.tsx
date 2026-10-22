@@ -667,46 +667,24 @@ export default function AllocationManagement({
                                                                 className={`p-3 rounded-xl border transition-all duration-200 ${
                                                                     isOver 
                                                                         ? isCovered
-                                                                            ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900/50 shadow-2xs'
-                                                                            : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 shadow-2xs' 
+                                                                            ? 'bg-amber-500/[0.04] dark:bg-amber-950/20 border-amber-300/80 dark:border-amber-900/50 shadow-2xs'
+                                                                            : 'bg-rose-500/[0.04] dark:bg-rose-950/20 border-rose-300/80 dark:border-rose-900/50 shadow-2xs' 
                                                                         : 'bg-card border-border/80 hover:bg-muted/40'
                                                                 }`}
                                                             >
-                                                                {/* Row 1: Sub Name + Over Tag & Budget Allocation */}
-                                                                <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                                                                    <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-1">
+                                                                {/* Line 1: Sub Name (Left) & Budget Quota + % Pill (Right) */}
+                                                                <div className="flex items-center justify-between gap-2 mb-1.5">
+                                                                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                                                         <span className={`w-2 h-2 rounded-full shrink-0 ${
                                                                             isOver ? (isCovered ? 'bg-amber-500' : 'bg-rose-500') : 'bg-emerald-500'
                                                                         }`} />
-                                                                        <span className="font-semibold text-foreground text-xs truncate" title={sub.name}>
+                                                                        <span className="font-bold text-foreground text-xs truncate" title={sub.name}>
                                                                             {sub.name}
                                                                         </span>
-                                                                        {isOver && (
-                                                                            isCovered ? (
-                                                                                <button 
-                                                                                    type="button"
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        setSelectedSubsidySub({ sub, alloc });
-                                                                                        setIsSubsidyModalOpen(true);
-                                                                                    }}
-                                                                                    className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                                                                                    title="Klik untuk melihat rincian sumber dana penutup & cara pengembalian"
-                                                                                >
-                                                                                    <RefreshCw className="w-2.5 h-2.5" />
-                                                                                    <span>Subsidi Silang</span>
-                                                                                    <Info className="w-2.5 h-2.5 opacity-80" />
-                                                                                </button>
-                                                                            ) : (
-                                                                                <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/25 shrink-0">
-                                                                                    Defisit Riil
-                                                                                </span>
-                                                                            )
-                                                                        )}
                                                                     </div>
 
-                                                                    <div className="flex items-center gap-1 shrink-0 text-right">
-                                                                        <span className="font-mono text-foreground font-bold text-xs tabular-nums">
+                                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                                        <span className="font-mono text-foreground font-semibold text-xs tabular-nums">
                                                                             {formatIDR(subCalc)}
                                                                         </span>
                                                                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${palette.subPill}`}>
@@ -715,8 +693,42 @@ export default function AllocationManagement({
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Row 2: Micro Progress Bar */}
-                                                                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden mb-2">
+                                                                {/* Line 2 (Only when Over): Dedicated Full-Width Status Banner */}
+                                                                {isOver && (
+                                                                    <div className="mb-2">
+                                                                        {isCovered ? (
+                                                                            <div className="flex items-center justify-between gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25">
+                                                                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 min-w-0">
+                                                                                    <RefreshCw className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                                                                                    <span className="truncate">Tertutup Subsidi Silang</span>
+                                                                                </div>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setSelectedSubsidySub({ sub, alloc });
+                                                                                        setIsSubsidyModalOpen(true);
+                                                                                    }}
+                                                                                    className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 shrink-0 flex items-center gap-0.5 cursor-pointer underline underline-offset-2 ml-1"
+                                                                                    title="Klik untuk melihat dari mana uang diambil dan cara mengembalikannya"
+                                                                                >
+                                                                                    <span>Rincian</span>
+                                                                                    <ChevronRight className="w-3 h-3" />
+                                                                                </button>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="flex items-center justify-between gap-1.5 px-2 py-1 rounded-lg bg-rose-500/10 border border-rose-500/25 text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                                                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                                                    <AlertTriangle className="w-3 h-3 shrink-0" />
+                                                                                    <span className="truncate">Defisit Riil (Jebol Plafon)</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Line 3: Micro Progress Bar */}
+                                                                <div className="w-full bg-muted/80 rounded-full h-1.5 overflow-hidden mb-2">
                                                                     <div 
                                                                         className={`h-full rounded-full transition-all duration-500 ${
                                                                             isOver 
@@ -727,7 +739,7 @@ export default function AllocationManagement({
                                                                     />
                                                                 </div>
 
-                                                                {/* Row 3: 2-Column Grid for Metrics (Guaranteed to NEVER overflow!) */}
+                                                                {/* Line 4: 2-Column Metrics (Zero overlap!) */}
                                                                 <div className="grid grid-cols-2 gap-2 text-[10px] font-mono leading-tight pt-0.5">
                                                                     <div>
                                                                         <span className="text-muted-foreground block text-[9px] uppercase font-semibold">
@@ -744,40 +756,18 @@ export default function AllocationManagement({
 
                                                                     <div className="text-right">
                                                                         {isOver ? (
-                                                                            isCovered ? (
-                                                                                <>
-                                                                                    <span className="text-amber-700 dark:text-amber-400 font-bold block text-[9px] uppercase truncate">
-                                                                                        Over (+{overPct > 999 ? '>999%' : `${overPct.toFixed(0)}%`})
-                                                                                    </span>
-                                                                                    <span className="font-bold text-[11px] text-amber-700 dark:text-amber-400 block truncate mt-0.5">
-                                                                                        +{formatIDR(overNominal)}
-                                                                                    </span>
-                                                                                    <button 
-                                                                                        type="button"
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            setSelectedSubsidySub({ sub, alloc });
-                                                                                            setIsSubsidyModalOpen(true);
-                                                                                        }}
-                                                                                        className="text-[8.5px] text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold block truncate mt-0.5 text-right cursor-pointer underline underline-offset-2"
-                                                                                        title={`Tertutup sisa kuota ${alloc.name}. Klik untuk rincian sumber & cara balikin.`}
-                                                                                    >
-                                                                                        Tertutup sisa {alloc.name} (Rincian →)
-                                                                                    </button>
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <span className="text-rose-600 dark:text-rose-400 font-bold block text-[9px] uppercase truncate">
-                                                                                        Defisit (+{overPct > 999 ? '>999%' : `${overPct.toFixed(0)}%`})
-                                                                                    </span>
-                                                                                    <span className="font-bold text-[11px] text-rose-600 dark:text-rose-400 block truncate mt-0.5">
-                                                                                        +{formatIDR(overNominal)}
-                                                                                    </span>
-                                                                                    <span className="text-[8.5px] text-rose-600 dark:text-rose-400 block truncate mt-0.5 font-bold">
-                                                                                        Jebol Plafon Induk
-                                                                                    </span>
-                                                                                </>
-                                                                            )
+                                                                            <>
+                                                                                <span className={`font-bold block text-[9px] uppercase truncate ${
+                                                                                    isCovered ? 'text-amber-700 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+                                                                                }`}>
+                                                                                    Over (+{overPct > 999 ? '>999%' : `${overPct.toFixed(0)}%`})
+                                                                                </span>
+                                                                                <span className={`font-bold text-[11px] block truncate mt-0.5 ${
+                                                                                    isCovered ? 'text-amber-700 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+                                                                                }`}>
+                                                                                    +{formatIDR(overNominal)}
+                                                                                </span>
+                                                                            </>
                                                                         ) : (
                                                                             <>
                                                                                 <span className="text-muted-foreground block text-[9px] uppercase font-semibold">
