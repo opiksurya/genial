@@ -25,6 +25,13 @@ import {
     RefreshCw
 } from 'lucide-react';
 
+interface SurplusSource {
+    id?: number;
+    name: string;
+    remaining_budget: number;
+    percentage: number;
+}
+
 interface SubAllocation {
     id?: number;
     name: string;
@@ -40,7 +47,9 @@ interface SubAllocation {
     utilization_rate?: number;
     is_covered_by_subsidy?: boolean;
     covered_by_allocation_name?: string;
+    parent_remaining_budget?: number;
     deficit_type?: 'cross_subsidy' | 'real_deficit' | 'safe';
+    surplus_sources?: SurplusSource[];
 }
 
 interface Allocation {
@@ -96,6 +105,8 @@ export default function AllocationManagement({
     const [editingAllocation, setEditingAllocation] = useState<Allocation | null>(null);
     const [isSubModalOpen, setIsSubModalOpen] = useState(false);
     const [selectedParentAlloc, setSelectedParentAlloc] = useState<Allocation | null>(null);
+    const [selectedSubsidySub, setSelectedSubsidySub] = useState<{ sub: SubAllocation; alloc: Allocation } | null>(null);
+    const [isSubsidyModalOpen, setIsSubsidyModalOpen] = useState(false);
 
     // Create Main Allocation Form
     const { data: mainData, setData: setMainData, post: postMain, reset: resetMain, processing: mainProcessing } = useForm({
@@ -649,13 +660,20 @@ export default function AllocationManagement({
                                                                         </span>
                                                                         {isOver && (
                                                                             isCovered ? (
-                                                                                <span 
-                                                                                    className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0 flex items-center gap-1"
-                                                                                    title={`Kelebihan ${formatIDR(overNominal)} tertutup aman oleh sisa kuota pos tetangga di ${alloc.name}`}
+                                                                                <button 
+                                                                                    type="button"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setSelectedSubsidySub({ sub, alloc });
+                                                                                        setIsSubsidyModalOpen(true);
+                                                                                    }}
+                                                                                    className="text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 px-1.5 py-0.5 rounded border border-amber-500/30 shrink-0 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                                                                                    title="Klik untuk melihat rincian sumber dana penutup & cara pengembalian"
                                                                                 >
                                                                                     <RefreshCw className="w-2.5 h-2.5" />
-                                                                                    Subsidi Silang
-                                                                                </span>
+                                                                                    <span>Subsidi Silang</span>
+                                                                                    <Info className="w-2.5 h-2.5 opacity-80" />
+                                                                                </button>
                                                                             ) : (
                                                                                 <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/25 shrink-0">
                                                                                     Defisit Riil
@@ -711,9 +729,18 @@ export default function AllocationManagement({
                                                                                     <span className="font-bold text-[11px] text-amber-700 dark:text-amber-400 block truncate mt-0.5">
                                                                                         +{formatIDR(overNominal)}
                                                                                     </span>
-                                                                                    <span className="text-[8.5px] text-muted-foreground block truncate mt-0.5" title={`Tertutup sisa kuota ${alloc.name}`}>
-                                                                                        Tertutup sisa {alloc.name}
-                                                                                    </span>
+                                                                                    <button 
+                                                                                        type="button"
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            setSelectedSubsidySub({ sub, alloc });
+                                                                                            setIsSubsidyModalOpen(true);
+                                                                                        }}
+                                                                                        className="text-[8.5px] text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold block truncate mt-0.5 text-right cursor-pointer underline underline-offset-2"
+                                                                                        title={`Tertutup sisa kuota ${alloc.name}. Klik untuk rincian sumber & cara balikin.`}
+                                                                                    >
+                                                                                        Tertutup sisa {alloc.name} (Rincian →)
+                                                                                    </button>
                                                                                 </>
                                                                             ) : (
                                                                                 <>
@@ -1242,6 +1269,206 @@ export default function AllocationManagement({
                                 </div>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Detail Subsidi Silang: Uang Dari Mana & Cara Mengembalikan */}
+            {isSubsidyModalOpen && selectedSubsidySub && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-2xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-5 relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                        {/* Header */}
+                        <div className="flex items-start justify-between border-b border-border pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 shrink-0">
+                                    <RefreshCw className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h3 className="text-lg font-bold text-foreground">
+                                            Rincian Subsidi Silang: {selectedSubsidySub.sub.name}
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                            Tertutup Aman
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        Pos ini berada di bawah Alokasi Induk: <strong className="text-foreground">{selectedSubsidySub.alloc.name}</strong> ({selectedSubsidySub.alloc.percentage}%)
+                                    </p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setIsSubsidyModalOpen(false)} 
+                                className="p-1 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Top Stat Banner: Over Amount & Safe Status */}
+                        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <span className="text-[10px] uppercase font-bold text-amber-800 dark:text-amber-300 block">
+                                    Jatah Awal Kuota
+                                </span>
+                                <span className="text-sm font-black font-mono text-foreground mt-0.5 block">
+                                    {formatIDR(selectedSubsidySub.sub.calculated_amount || 0)} ({selectedSubsidySub.sub.percentage}%)
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] uppercase font-bold text-amber-800 dark:text-amber-300 block">
+                                    Total Realisasi Belanja
+                                </span>
+                                <span className="text-sm font-black font-mono text-foreground mt-0.5 block">
+                                    {formatIDR(selectedSubsidySub.sub.total_spent || 0)}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] uppercase font-bold text-amber-800 dark:text-amber-300 block">
+                                    Kelebihan Yang Ditalangi
+                                </span>
+                                <span className="text-sm font-black font-mono text-amber-700 dark:text-amber-400 mt-0.5 block">
+                                    +{formatIDR(selectedSubsidySub.sub.over_budget_amount || 0)} (+{(selectedSubsidySub.sub.over_budget_percentage || 0).toFixed(1)}%)
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Bagian 1: Ngambil Dananya Dari Mana? */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                                    1
+                                </span>
+                                <h4 className="text-sm font-bold text-foreground">
+                                    Uangnya Ngambil Dari Mana? (Sumber Dana Penutup)
+                                </h4>
+                            </div>
+
+                            <div className="bg-muted/40 p-4 rounded-xl border border-border text-xs space-y-3">
+                                <p className="text-muted-foreground leading-relaxed">
+                                    Kelebihan belanja sebesar <strong className="text-amber-600 dark:text-amber-400 font-mono font-bold">+{formatIDR(selectedSubsidySub.sub.over_budget_amount || 0)}</strong> pada pos <strong>{selectedSubsidySub.sub.name}</strong> secara otomatis diserap dan ditalangi oleh <strong>pos-pos tetangga yang masih memiliki sisa kuota (surplus)</strong> di dalam alokasi <strong className="text-foreground">{selectedSubsidySub.alloc.name}</strong>:
+                                </p>
+
+                                {/* Sibling Pos Donor List */}
+                                <div className="space-y-2 pt-1">
+                                    <span className="text-[11px] font-bold text-foreground uppercase tracking-wider block">
+                                        Pos Donor Yang Menyediakan Sisa Kuota (Surplus):
+                                    </span>
+                                    {(selectedSubsidySub.sub.surplus_sources && selectedSubsidySub.sub.surplus_sources.length > 0) ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {selectedSubsidySub.sub.surplus_sources.map((src, idx) => (
+                                                <div key={idx} className="p-2.5 rounded-lg bg-card border border-border flex items-center justify-between">
+                                                    <div className="min-w-0 pr-2">
+                                                        <span className="font-semibold text-foreground text-xs block truncate">
+                                                            {src.name}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground font-mono">
+                                                            Porsi kuota: {src.percentage}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block uppercase">
+                                                            Sisa Kuota
+                                                        </span>
+                                                        <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                                                            +{formatIDR(src.remaining_budget)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 rounded-lg bg-muted text-xs text-muted-foreground">
+                                            Kuota cadangan alokasi {selectedSubsidySub.alloc.name} siap menyerap.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] flex items-center gap-2.5">
+                                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                                    <span>
+                                        Total sisa kuota belanja di alokasi <strong>{selectedSubsidySub.alloc.name}</strong> saat ini adalah <strong className="font-mono">{formatIDR(selectedSubsidySub.alloc.remaining_budget || 0)}</strong> (Sangat mencukupi untuk meng-cover kelebihan pos ini).
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bagian 2: Cara Mengembalikannya Gimana? */}
+                        <div className="space-y-3 pt-2">
+                            <div className="flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                                    2
+                                </span>
+                                <h4 className="text-sm font-bold text-foreground">
+                                    Cara Mengembalikannya Gimana? (Alur Penggantian Finansial)
+                                </h4>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {/* Opsi A: Otomatis Impas */}
+                                <div className="p-3.5 rounded-xl border border-border bg-card space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded-full bg-indigo-500/15 text-indigo-600 text-[11px] font-bold flex items-center justify-center shrink-0">
+                                            A
+                                        </span>
+                                        <h5 className="font-bold text-xs text-foreground">Otomatis Impas di Kas</h5>
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        Karena pos ini dan pos penutupnya sama-sama berada di dalam alokasi <strong className="text-foreground">{selectedSubsidySub.alloc.name}</strong>, uang fisik di rekening bank <strong>tidak pernah keluar dari pagu</strong>. Keuangan Anda langsung impas tanpa perlu transfer setor dana fisik.
+                                    </p>
+                                </div>
+
+                                {/* Opsi B: Rebalance Persentase */}
+                                <div className="p-3.5 rounded-xl border border-indigo-500/30 bg-indigo-50/20 dark:bg-indigo-950/20 space-y-2 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0">
+                                                B
+                                            </span>
+                                            <h5 className="font-bold text-xs text-indigo-600 dark:text-indigo-400">Rebalance Persentase</h5>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground leading-relaxed mt-1.5">
+                                            Jika pos <strong>{selectedSubsidySub.sub.name}</strong> memang butuh anggaran lebih besar setiap bulannya, Anda bisa menaikkan % pos ini dan mengurangi % pos surplus agar pas.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsSubsidyModalOpen(false);
+                                            handleOpenSubModal(selectedSubsidySub.alloc);
+                                        }}
+                                        className="w-full mt-2 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Sliders className="w-3 h-3" />
+                                        <span>Atur Persentase Sub</span>
+                                    </button>
+                                </div>
+
+                                {/* Opsi C: Disiplin Kuota Periode Depan */}
+                                <div className="p-3.5 rounded-xl border border-border bg-card space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[11px] font-bold flex items-center justify-center shrink-0">
+                                            C
+                                        </span>
+                                        <h5 className="font-bold text-xs text-foreground">Hemat di Periode Depan</h5>
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        Instruksikan tim/PIC pos <strong>{selectedSubsidySub.sub.name}</strong> agar menghemat belanja sebesar <strong className="font-mono text-foreground">+{formatIDR(selectedSubsidySub.sub.over_budget_amount || 0)}</strong> di bulan berikutnya untuk memulihkan cadangan kuota pos tetangga.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="flex justify-end pt-4 border-t border-border">
+                            <button
+                                type="button"
+                                onClick={() => setIsSubsidyModalOpen(false)}
+                                className="px-5 py-2 rounded-xl bg-muted text-foreground text-xs font-semibold hover:bg-muted/80 cursor-pointer transition-colors"
+                            >
+                                Tutup Penjelasan
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

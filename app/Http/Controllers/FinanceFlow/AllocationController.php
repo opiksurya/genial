@@ -113,23 +113,42 @@ class AllocationController extends Controller
 
                 // Skenario A: Tandai apakah kelebihan sub-pos tertutup aman oleh subsidi silang
                 if ($alloc->subAllocations->count() > 0) {
-                    $alloc->subAllocations->transform(function ($sub) use ($alloc, $allocIsOver, &$totalCrossSubsidyNominal, &$totalCrossSubsidyCount) {
+                    $surplusSiblings = $alloc->subAllocations
+                        ->filter(function ($s) {
+                            return ($s->remaining_budget ?? 0) > 0;
+                        })
+                        ->values()
+                        ->map(function ($s) {
+                            return [
+                                'id' => $s->id,
+                                'name' => $s->name,
+                                'remaining_budget' => (float)$s->remaining_budget,
+                                'percentage' => (float)$s->percentage,
+                            ];
+                        })
+                        ->toArray();
+
+                    $alloc->subAllocations->transform(function ($sub) use ($alloc, $allocIsOver, $surplusSiblings, &$totalCrossSubsidyNominal, &$totalCrossSubsidyCount) {
                         if ($sub->is_over_budget) {
                             if (!$allocIsOver) {
                                 // Sub-pos over, tapi kuota induk masih sisa -> AMAN TERTUTUP SUBSIDI SILANG
                                 $sub->is_covered_by_subsidy = true;
                                 $sub->covered_by_allocation_name = $alloc->name;
+                                $sub->parent_remaining_budget = (float)$alloc->remaining_budget;
                                 $sub->deficit_type = 'cross_subsidy';
+                                $sub->surplus_sources = $surplusSiblings;
                                 $totalCrossSubsidyNominal += $sub->over_budget_amount;
                                 $totalCrossSubsidyCount++;
                             } else {
                                 // Pos induknya pun jebol -> DEFISIT RIIL
                                 $sub->is_covered_by_subsidy = false;
                                 $sub->deficit_type = 'real_deficit';
+                                $sub->surplus_sources = [];
                             }
                         } else {
                             $sub->is_covered_by_subsidy = false;
                             $sub->deficit_type = 'safe';
+                            $sub->surplus_sources = [];
                         }
                         return $sub;
                     });
