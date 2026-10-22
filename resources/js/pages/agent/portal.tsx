@@ -400,31 +400,6 @@ export default function AgentPortal({
                         </div>
                     </div>
 
-                    {/* Secondary Stat: Total Omzet Client */}
-                    <div className="rounded-2xl bg-slate-900 border border-slate-800 p-3.5 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
-                                <Building2 className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    Total Omzet Client
-                                </div>
-                                <div className="text-base font-black text-white font-mono mt-0.5">
-                                    {formatIDR(stats.total_client_income)}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-[10px] text-purple-400 font-semibold">
-                                {clients.length} Client Aktif
-                            </div>
-                            <div className="text-[10px] text-slate-400">
-                                {commissions.length} Transaksi
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Bank Account Info Card (with One-Tap Copy) */}
                     {agent.bank_name && (
                         <div className="rounded-2xl bg-slate-900 border border-slate-800/90 p-3.5 relative overflow-hidden">
