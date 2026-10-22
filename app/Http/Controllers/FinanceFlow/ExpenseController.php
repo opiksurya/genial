@@ -137,23 +137,28 @@ class ExpenseController extends Controller
         $approvedExpense = (float)Expense::where('approval_status', 'approved')->sum('amount');
         $pendingExpense = (float)Expense::where('approval_status', 'pending')->sum('amount');
 
-        // Standard / fallback categories for legacy records
-        $standardCategories = [
-            'Operational',
-            'Ads Budget',
-            'Software Subscription',
-            'Salary',
-            'Freelancer',
-            'Tools',
-            'Tax',
-            'Other'
-        ];
+        // Build category summary aligned with allocation categories + legacy expenses
+        $categorySummary = [];
+        foreach ($allocationCategories as $ac) {
+            $categorySummary[$ac['name']] = (float)$ac['total_spent'];
+        }
+        foreach ($rawCategorySummary as $catName => $catTotal) {
+            if (!isset($categorySummary[$catName]) && (float)$catTotal > 0) {
+                $categorySummary[$catName] = (float)$catTotal;
+            }
+        }
+
+        $activeAllocationCategoryNames = collect($allocationCategories)
+            ->pluck('name')
+            ->unique()
+            ->values()
+            ->all();
 
         return Inertia::render('finance/expense', [
             'expenses' => $expenses,
             'incomes' => $incomes,
             'projects' => $projects,
-            'categorySummary' => $rawCategorySummary,
+            'categorySummary' => $categorySummary,
             'allocationCategories' => $allocationCategories,
             'stats' => [
                 'totalExpense' => (float)$totalExpense,
@@ -161,7 +166,7 @@ class ExpenseController extends Controller
                 'pendingExpense' => (float)$pendingExpense,
                 'realMoneyAvailable' => (float)$realMoneyAvailable,
             ],
-            'categories' => $standardCategories,
+            'categories' => $activeAllocationCategoryNames,
         ]);
     }
 
@@ -179,6 +184,21 @@ class ExpenseController extends Controller
             'description' => 'nullable|string',
             'proof_attachment' => 'nullable|string|max:255',
         ]);
+
+        // Auto-sync category name with allocation / sub_allocation record
+        if ($request->filled('sub_allocation_id')) {
+            $sub = SubAllocation::find($request->sub_allocation_id);
+            if ($sub) {
+                $validated['category'] = $sub->name;
+                $validated['allocation_id'] = $sub->allocation_id;
+            }
+        } elseif ($request->filled('allocation_id')) {
+            $alloc = Allocation::find($request->allocation_id);
+            if ($alloc) {
+                $validated['category'] = $alloc->name;
+                $validated['sub_allocation_id'] = null;
+            }
+        }
 
         $validated['created_by'] = auth()->id();
         $validated['approval_status'] = 'approved';
@@ -212,6 +232,21 @@ class ExpenseController extends Controller
             'description' => 'nullable|string',
             'proof_attachment' => 'nullable|string|max:255',
         ]);
+
+        // Auto-sync category name with allocation / sub_allocation record
+        if ($request->filled('sub_allocation_id')) {
+            $sub = SubAllocation::find($request->sub_allocation_id);
+            if ($sub) {
+                $validated['category'] = $sub->name;
+                $validated['allocation_id'] = $sub->allocation_id;
+            }
+        } elseif ($request->filled('allocation_id')) {
+            $alloc = Allocation::find($request->allocation_id);
+            if ($alloc) {
+                $validated['category'] = $alloc->name;
+                $validated['sub_allocation_id'] = null;
+            }
+        }
 
         $expense->update($validated);
 

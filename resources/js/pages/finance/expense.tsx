@@ -9,20 +9,16 @@ import {
     Clock, 
     XCircle, 
     Search, 
-    Filter, 
-    FileText, 
     Trash2, 
     Edit3, 
     X,
-    Building,
-    ExternalLink,
-    ShieldCheck,
     AlertTriangle,
     Scale,
     Coins,
     Layers,
     Info,
-    Wallet
+    Wallet,
+    ArrowUpRight
 } from 'lucide-react';
 
 interface Income {
@@ -144,6 +140,18 @@ export default function ExpenseManagement({
         return cleanDate;
     };
 
+    // Group allocation categories by parent allocation name
+    const groupedAllocations = allocationCategories.reduce((acc, item) => {
+        const groupName = item.parent_name 
+            ? `📌 Alokasi: ${item.parent_name} (${item.parent_percentage}%)` 
+            : '💼 Pos Alokasi Utama';
+        if (!acc[groupName]) {
+            acc[groupName] = [];
+        }
+        acc[groupName].push(item);
+        return acc;
+    }, {} as Record<string, AllocationCategory[]>);
+
     const handleOpenCreateModal = () => {
         setEditingExpense(null);
         reset();
@@ -163,11 +171,10 @@ export default function ExpenseManagement({
                 proof_attachment: '',
             });
         } else {
-            const defaultCat = categories[0] || 'Operational';
-            setSelectedCategoryKey(defaultCat);
+            setSelectedCategoryKey('');
             setData({
                 name: '',
-                category: defaultCat,
+                category: '',
                 allocation_id: '',
                 sub_allocation_id: '',
                 income_id: '',
@@ -196,17 +203,21 @@ export default function ExpenseManagement({
             );
             if (match) {
                 foundKey = match.key;
-            } else {
-                foundKey = exp.category;
+            } else if (allocationCategories.length > 0) {
+                // If legacy category does not match, default to first allocation pos
+                foundKey = allocationCategories[0].key;
             }
         }
 
         setSelectedCategoryKey(foundKey);
+        
+        const activeAllocMatch = allocationCategories.find((ac) => ac.key === foundKey);
+
         setData({
             name: exp.name,
-            category: exp.category,
-            allocation_id: exp.allocation_id ? String(exp.allocation_id) : '',
-            sub_allocation_id: exp.sub_allocation_id ? String(exp.sub_allocation_id) : '',
+            category: activeAllocMatch ? activeAllocMatch.name : exp.category,
+            allocation_id: activeAllocMatch ? String(activeAllocMatch.allocation_id) : (exp.allocation_id ? String(exp.allocation_id) : ''),
+            sub_allocation_id: activeAllocMatch?.sub_allocation_id ? String(activeAllocMatch.sub_allocation_id) : (exp.sub_allocation_id ? String(exp.sub_allocation_id) : ''),
             income_id: exp.income_id ? String(exp.income_id) : '',
             project_id: exp.project_id ? String(exp.project_id) : '',
             amount: String(exp.amount),
@@ -226,13 +237,6 @@ export default function ExpenseManagement({
                 category: allocMatch.name,
                 allocation_id: String(allocMatch.allocation_id),
                 sub_allocation_id: allocMatch.sub_allocation_id ? String(allocMatch.sub_allocation_id) : '',
-            }));
-        } else {
-            setData((prev) => ({
-                ...prev,
-                category: key,
-                allocation_id: '',
-                sub_allocation_id: '',
             }));
         }
     };
@@ -307,11 +311,11 @@ export default function ExpenseManagement({
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">Expense Management</h1>
                             <span className="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-xs font-semibold shrink-0 flex items-center gap-1.5">
                                 <Scale className="w-3.5 h-3.5" />
-                                Budget-Guarded Outflow
+                                Alokasi Anggaran Real-Time
                             </span>
                         </div>
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            Pencatatan seluruh pengeluaran operasional dengan validasi batas kuota alokasi dana secara real-time.
+                            Pencatatan pengeluaran operasional yang disinkronisasikan langsung dengan pos alokasi dana dan plafon anggaran.
                         </p>
                     </div>
 
@@ -356,7 +360,7 @@ export default function ExpenseManagement({
                         />
                     </div>
 
-                    {/* Categories Pills */}
+                    {/* Categories Pills (Derived purely from active allocations) */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 w-full max-w-full scrollbar-none">
                         <button
                             onClick={() => setSelectedCategory('all')}
@@ -391,7 +395,7 @@ export default function ExpenseManagement({
                             <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
                                 <tr>
                                     <th className="p-4">Tanggal</th>
-                                    <th className="p-4">Kategori & Nama Expense</th>
+                                    <th className="p-4">Pos Alokasi & Nama Expense</th>
                                     <th className="p-4">Linked Income / Project</th>
                                     <th className="p-4">Jumlah Nominal</th>
                                     <th className="p-4">Approval Status</th>
@@ -424,7 +428,7 @@ export default function ExpenseManagement({
                                                     {exp.is_over_budget && (
                                                         <span 
                                                             className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30"
-                                                            title="Total pengeluaran kategori ini melebihi plafon alokasi dana yang dianggarkan"
+                                                            title="Total pengeluaran kategori ini telah melampaui plafon alokasi dana yang dianggarkan"
                                                         >
                                                             <AlertTriangle className="w-3 h-3 text-amber-500" />
                                                             Over Budget
@@ -520,7 +524,7 @@ export default function ExpenseManagement({
                                     {editingExpense ? 'Edit Expense' : 'Catat Pengeluaran Baru'}
                                 </h3>
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                    Pilih kategori dari alokasi dana untuk mengontrol ketersediaan anggaran.
+                                    Pos pengeluaran terhubung langsung ke alokasi dana dan plafon anggaran.
                                 </p>
                             </div>
                             <button
@@ -531,217 +535,245 @@ export default function ExpenseManagement({
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Kategori Expense (Berdasarkan Alokasi Dana) */}
-                            <div>
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-semibold text-foreground">
-                                        Kategori Expense (Alokasi Dana) *
-                                    </label>
-                                    {activeAlloc && (
-                                        <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-                                            Alokasi: {activeAlloc.percentage}%
-                                        </span>
-                                    )}
-                                </div>
-
-                                <select
-                                    value={selectedCategoryKey}
-                                    onChange={(e) => handleCategoryChange(e.target.value)}
-                                    className="mt-1.5 w-full px-3 py-2.5 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500 font-semibold cursor-pointer"
-                                >
-                                    {allocationCategories.length > 0 && (
-                                        <optgroup label="🎯 Pos Alokasi & Sub-Alokasi Dana">
-                                            {allocationCategories.map((ac) => (
-                                                <option key={ac.key} value={ac.key}>
-                                                    {ac.label} — (Budget: {formatIDR(ac.budget_ceiling)} | Sisa: {formatIDR(ac.remaining_budget)})
-                                                </option>
-                                            ))}
-                                        </optgroup>
-                                    )}
-
-                                    {categories.length > 0 && (
-                                        <optgroup label="📁 Kategori Standar / Bebas">
-                                            {categories.map((c) => (
-                                                <option key={c} value={c}>{c}</option>
-                                            ))}
-                                        </optgroup>
-                                    )}
-                                </select>
-                            </div>
-
-                            {/* LIVE BUDGET CEILING & REMAINING WIDGET */}
-                            {activeAlloc && (
-                                <div className="p-3.5 rounded-xl border bg-muted/40 border-border/80 space-y-2.5">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-foreground flex items-center gap-1.5">
-                                            <Scale className="w-3.5 h-3.5 text-indigo-500" />
-                                            Monitoring Kuota: <span className="text-indigo-600 dark:text-indigo-400">{activeAlloc.label}</span>
-                                        </span>
-                                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                                            {activeAlloc.percentage}% Pos Dana
-                                        </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-2 text-[11px]">
-                                        <div className="p-2 rounded-xl bg-card border border-border">
-                                            <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Plafon Budget</span>
-                                            <span className="font-mono font-bold text-foreground text-xs block mt-0.5">
-                                                {formatIDR(activeAlloc.budget_ceiling)}
-                                            </span>
-                                        </div>
-                                        <div className="p-2 rounded-xl bg-card border border-border">
-                                            <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Sudah Terpakai</span>
-                                            <span className="font-mono font-bold text-foreground text-xs block mt-0.5">
-                                                {formatIDR(adjustedSpent)}
-                                            </span>
-                                        </div>
-                                        <div className={`p-2 rounded-xl border ${
-                                            effectiveRemainingBudget !== null && effectiveRemainingBudget < 0
-                                                ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
-                                                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-                                        }`}>
-                                            <span className="block text-[10px] uppercase font-semibold">Sisa Kuota</span>
-                                            <span className="font-mono font-bold text-xs block mt-0.5">
-                                                {formatIDR(effectiveRemainingBudget || 0)}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Type 1 Soft Warning Alert when entered amount exceeds budget */}
-                                    {enteredAmount > 0 && (
-                                        <div className={`p-2.5 rounded-xl text-xs flex items-start gap-2.5 transition-all duration-200 ${
-                                            isExceedingBudget 
-                                                ? 'bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300' 
-                                                : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
-                                        }`}>
-                                            {isExceedingBudget ? (
-                                                <>
-                                                    <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-                                                    <div className="space-y-0.5">
-                                                        <span className="font-bold text-xs block text-rose-700 dark:text-rose-400">
-                                                            ⚠️ Perhatian: Melebihi Kuota Anggaran (+{formatIDR(excessAmount)})
-                                                        </span>
-                                                        <p className="text-[11px] leading-relaxed opacity-90">
-                                                            Nominal pengeluaran ini ({formatIDR(enteredAmount)}) melebihi sisa budget alokasi ({formatIDR(effectiveRemainingBudget || 0)}). Transaksi tetap dapat disimpan dengan tanda <strong>Over Budget</strong>.
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                                                    <div>
-                                                        <span className="font-bold text-xs block text-emerald-700 dark:text-emerald-400">
-                                                            Budget Tersedia & Aman
-                                                        </span>
-                                                        <p className="text-[11px] opacity-90">
-                                                            Sisa budget alokasi setelah transaksi ini: <strong>{formatIDR((effectiveRemainingBudget || 0) - enteredAmount)}</strong>
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="text-xs font-semibold text-foreground">Expense Name *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Contoh: Pembayaran Gaji Karyawan / Langganan Server"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-xs font-semibold text-foreground">Link ke Income (Optional)</label>
-                                    <select
-                                        value={data.income_id}
-                                        onChange={(e) => setData('income_id', e.target.value)}
-                                        className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
+                        {allocationCategories.length === 0 ? (
+                            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs space-y-2">
+                                <p className="font-bold flex items-center gap-1.5 text-sm">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    Belum Ada Pos Alokasi Dana Dibuat
+                                </p>
+                                <p className="leading-relaxed opacity-90">
+                                    Kategori pengeluaran sekarang wajib mengacu pada alokasi dana perusahaan. Silakan buat pos alokasi dana terlebih dahulu di menu <strong>Allocation Management</strong>.
+                                </p>
+                                <div className="pt-2">
+                                    <a 
+                                        href="/finance/allocation" 
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-colors"
                                     >
-                                        <option value="">-- Pilih Income --</option>
-                                        {incomes.map((inc) => (
-                                            <option key={inc.id} value={inc.id}>{inc.name}</option>
+                                        Buka Allocation Management
+                                        <ArrowUpRight className="w-3.5 h-3.5" />
+                                    </a>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                {/* Kategori Expense (Berdasarkan Pos Alokasi Dana) */}
+                                <div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-semibold text-foreground">
+                                            Pos Alokasi Dana (Kategori) *
+                                        </label>
+                                        {activeAlloc && (
+                                            <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                                                Porsi Alokasi: {activeAlloc.percentage}%
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <select
+                                        value={selectedCategoryKey}
+                                        onChange={(e) => handleCategoryChange(e.target.value)}
+                                        className="mt-1.5 w-full px-3 py-2.5 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500 font-semibold cursor-pointer"
+                                    >
+                                        {Object.entries(groupedAllocations).map(([groupTitle, items]) => (
+                                            <optgroup key={groupTitle} label={groupTitle}>
+                                                {items.map((ac) => (
+                                                    <option key={ac.key} value={ac.key}>
+                                                        {ac.name} — (Plafon: {formatIDR(ac.budget_ceiling)} | Sisa: {formatIDR(ac.remaining_budget)})
+                                                    </option>
+                                                ))}
+                                            </optgroup>
                                         ))}
                                     </select>
                                 </div>
 
+                                {/* Banner for legacy category migration if editing old record */}
+                                {!activeAlloc && editingExpense && (
+                                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2.5">
+                                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                        <div>
+                                            <span className="font-bold block">
+                                                Kategori Lama: "{editingExpense.category}"
+                                            </span>
+                                            <p className="text-[11px] opacity-90 leading-relaxed mt-0.5">
+                                                Pengeluaran ini sebelumnya dicatat dengan kategori lama. Silakan pilih salah satu pos alokasi dana resmi di atas untuk menghubungkan pengeluaran ini ke anggaran alokasi.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LIVE BUDGET CEILING & REMAINING WIDGET */}
+                                {activeAlloc && (
+                                    <div className="p-3.5 rounded-xl border bg-muted/40 border-border/80 space-y-2.5">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="font-bold text-foreground flex items-center gap-1.5">
+                                                <Scale className="w-3.5 h-3.5 text-indigo-500" />
+                                                Monitoring Kuota: <span className="text-indigo-600 dark:text-indigo-400">{activeAlloc.label}</span>
+                                            </span>
+                                            <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                                                {activeAlloc.percentage}% Pos Dana
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-2 text-[11px]">
+                                            <div className="p-2 rounded-xl bg-card border border-border">
+                                                <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Plafon Budget</span>
+                                                <span className="font-mono font-bold text-foreground text-xs block mt-0.5">
+                                                    {formatIDR(activeAlloc.budget_ceiling)}
+                                                </span>
+                                            </div>
+                                            <div className="p-2 rounded-xl bg-card border border-border">
+                                                <span className="text-muted-foreground block text-[10px] uppercase font-semibold">Sudah Terpakai</span>
+                                                <span className="font-mono font-bold text-foreground text-xs block mt-0.5">
+                                                    {formatIDR(adjustedSpent)}
+                                                </span>
+                                            </div>
+                                            <div className={`p-2 rounded-xl border ${
+                                                effectiveRemainingBudget !== null && effectiveRemainingBudget < 0
+                                                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                                                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                                            }`}>
+                                                <span className="block text-[10px] uppercase font-semibold">Sisa Kuota</span>
+                                                <span className="font-mono font-bold text-xs block mt-0.5">
+                                                    {formatIDR(effectiveRemainingBudget || 0)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Type 1 Soft Warning Alert when entered amount exceeds budget */}
+                                        {enteredAmount > 0 && (
+                                            <div className={`p-2.5 rounded-xl text-xs flex items-start gap-2.5 transition-all duration-200 ${
+                                                isExceedingBudget 
+                                                    ? 'bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300' 
+                                                    : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                                            }`}>
+                                                {isExceedingBudget ? (
+                                                    <>
+                                                        <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                                                        <div className="space-y-0.5">
+                                                            <span className="font-bold text-xs block text-rose-700 dark:text-rose-400">
+                                                                ⚠️ Perhatian: Melebihi Kuota Anggaran (+{formatIDR(excessAmount)})
+                                                            </span>
+                                                            <p className="text-[11px] leading-relaxed opacity-90">
+                                                                Nominal pengeluaran ini ({formatIDR(enteredAmount)}) melebihi sisa budget alokasi ({formatIDR(effectiveRemainingBudget || 0)}). Transaksi tetap dapat disimpan dengan tanda <strong>Over Budget</strong>.
+                                                            </p>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                                        <div>
+                                                            <span className="font-bold text-xs block text-emerald-700 dark:text-emerald-400">
+                                                                Budget Tersedia & Aman
+                                                            </span>
+                                                            <p className="text-[11px] opacity-90">
+                                                                Sisa budget alokasi setelah transaksi ini: <strong>{formatIDR((effectiveRemainingBudget || 0) - enteredAmount)}</strong>
+                                                            </p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div>
-                                    <label className="text-xs font-semibold text-foreground">Link ke Project (Optional)</label>
-                                    <select
-                                        value={data.project_id}
-                                        onChange={(e) => setData('project_id', e.target.value)}
+                                    <label className="text-xs font-semibold text-foreground">Expense Name *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Contoh: Pembayaran Gaji Karyawan / Langganan Server"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
                                         className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-semibold text-foreground">Link ke Income (Optional)</label>
+                                        <select
+                                            value={data.income_id}
+                                            onChange={(e) => setData('income_id', e.target.value)}
+                                            className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                        >
+                                            <option value="">-- Pilih Income --</option>
+                                            {incomes.map((inc) => (
+                                                <option key={inc.id} value={inc.id}>{inc.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-semibold text-foreground">Link ke Project (Optional)</label>
+                                        <select
+                                            value={data.project_id}
+                                            onChange={(e) => setData('project_id', e.target.value)}
+                                            className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                        >
+                                            <option value="">-- Pilih Project --</option>
+                                            {projects.map((p) => (
+                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-semibold text-foreground">Nominal (IDR) *</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="5000000"
+                                            value={data.amount}
+                                            onChange={(e) => setData('amount', e.target.value)}
+                                            className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono font-bold"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-semibold text-foreground">Tanggal Pengeluaran *</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={data.date}
+                                            onChange={(e) => setData('date', e.target.value)}
+                                            className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-foreground">Deskripsi / Catatan</label>
+                                    <textarea
+                                        rows={2}
+                                        placeholder="Rincian biaya atau keperluan pengeluaran..."
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                    />
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="px-4 py-2.5 rounded-xl bg-muted text-muted-foreground text-xs font-semibold hover:bg-muted/80 cursor-pointer"
                                     >
-                                        <option value="">-- Pilih Project --</option>
-                                        {projects.map((p) => (
-                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                        ))}
-                                    </select>
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-md shadow-rose-600/30 cursor-pointer disabled:opacity-50"
+                                    >
+                                        {processing ? 'Menyimpan...' : 'Simpan Expense'}
+                                    </button>
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-xs font-semibold text-foreground">Nominal (IDR) *</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="5000000"
-                                        value={data.amount}
-                                        onChange={(e) => setData('amount', e.target.value)}
-                                        className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono font-bold"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-foreground">Tanggal Pengeluaran *</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={data.date}
-                                        onChange={(e) => setData('date', e.target.value)}
-                                        className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-semibold text-foreground">Deskripsi / Catatan</label>
-                                <textarea
-                                    rows={2}
-                                    placeholder="Rincian biaya atau keperluan pengeluaran..."
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-rose-500"
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2.5 rounded-xl bg-muted text-muted-foreground text-xs font-semibold hover:bg-muted/80 cursor-pointer"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-md shadow-rose-600/30 cursor-pointer disabled:opacity-50"
-                                >
-                                    {processing ? 'Menyimpan...' : 'Simpan Expense'}
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
