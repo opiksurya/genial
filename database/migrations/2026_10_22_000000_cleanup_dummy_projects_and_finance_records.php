@@ -10,12 +10,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        } catch (\Exception $e) {}
+
         // 1. Find all project IDs matching dummy names
         $dummyProjectIds = DB::table('projects')
             ->where('client', 'LIKE', '%Batik%')
             ->orWhere('client', 'LIKE', '%Glowing%')
-            ->orWhere('name', 'LIKE', '%E-Commerce Website & Omnichannel%')
-            ->orWhere('name', 'LIKE', '%SEO & Performance Marketing%')
+            ->orWhere('name', 'LIKE', '%E-Commerce Website%')
+            ->orWhere('name', 'LIKE', '%SEO & Performance%')
             ->pluck('id');
 
         if ($dummyProjectIds->isNotEmpty()) {
@@ -65,6 +69,10 @@ return new class extends Migration
                 ->orWhere('activity_name', 'LIKE', '%Client Website Project%')
                 ->delete();
         }
+
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        } catch (\Exception $e) {}
     }
 
     /**
