@@ -157,11 +157,14 @@ export default function IncomeManagement({ incomes, projects, agents = [], stats
         }
     };
 
-    const filteredIncomes = incomes.filter((inc) => {
-        const matchesSearch = inc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (inc.client_name && inc.client_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (inc.invoice_number && inc.invoice_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (inc.agent && inc.agent.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredIncomes = (incomes || []).filter((inc) => {
+        const q = (searchQuery || '').toLowerCase().trim();
+        const matchesSearch = !q ||
+            (inc.name || '').toLowerCase().includes(q) ||
+            (inc.client_name || '').toLowerCase().includes(q) ||
+            (inc.invoice_number || '').toLowerCase().includes(q) ||
+            (inc.project?.name || '').toLowerCase().includes(q) ||
+            (inc.agent?.name || '').toLowerCase().includes(q);
 
         const matchesStatus = statusFilter === 'all' || inc.status === statusFilter;
         return matchesSearch && matchesStatus;
