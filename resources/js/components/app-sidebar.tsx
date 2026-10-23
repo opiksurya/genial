@@ -19,7 +19,8 @@ import {
     CalendarDays,
     CalendarCheck,
     Briefcase,
-    Palette
+    Palette,
+    ShoppingBag
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -34,6 +35,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as shopeeIndex } from '@/routes/shopee';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -61,6 +63,11 @@ const mainNavItems: NavItem[] = [
         title: 'Katalog Digital Kreatif',
         href: '/creative-services',
         icon: Palette,
+    },
+    {
+        title: 'Shopee Analytics',
+        href: shopeeIndex(),
+        icon: ShoppingBag,
     },
     {
         title: 'ProjectFlow',
