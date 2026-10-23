@@ -47,7 +47,48 @@ class MetaAdsDataService implements MetaAdsAnalyticsSource
         $placements = $this->buildPlacements($currentTotals);
 
         // Campaigns
-        $campaigns = $this->buildCampaigns($brandName, $currentTotals);
+        $campaigns = [];
+        if ($isLiveConnected) {
+            try {
+                $liveCampaigns = MetaClientService::getCampaigns($metaConfig);
+                if (!empty($liveCampaigns)) {
+                    $campaigns = array_map(function ($c) {
+                        $spend = (int) round($c['spend']);
+                        $roas = (float) ($c['roas'] ?? 0);
+                        $revenue = $spend > 0 ? (int) round($spend * ($roas > 0 ? $roas : 3.8)) : 0;
+                        $impressions = (int) ($c['impressions'] ?? 0);
+                        $clicks = (int) ($c['clicks'] ?? 0);
+                        $purchases = (int) ($c['purchases'] ?? 0);
+                        $leads = (int) ($c['leads'] ?? 0);
+                        $cpa = ($purchases + $leads) > 0 ? (int) round($spend / ($purchases + $leads)) : 0;
+
+                        return [
+                            'id' => (string) $c['id'],
+                            'name' => $c['name'],
+                            'status' => ($c['status'] ?? '') === 'ACTIVE' ? 'ACTIVE' : 'PAUSED',
+                            'objective' => (string) ($c['objective'] ?? 'OUTCOME_SALES'),
+                            'dailyBudget' => (int) ($c['budget'] ?? 0),
+                            'spend' => $spend,
+                            'revenue' => $revenue,
+                            'roas' => $roas,
+                            'impressions' => $impressions,
+                            'clicks' => $clicks,
+                            'ctr' => (float) ($c['ctr'] ?? 0),
+                            'cpc' => (int) round($c['cpc'] ?? 0),
+                            'purchases' => $purchases,
+                            'leads' => $leads,
+                            'cpa' => $cpa,
+                        ];
+                    }, $liveCampaigns);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Meta live campaigns error: ' . $e->getMessage());
+            }
+        }
+
+        if (empty($campaigns)) {
+            $campaigns = $this->buildCampaigns($brandName, $currentTotals);
+        }
 
         // Audiences & Demographics
         $audiences = $this->buildAudiences($currentTotals);

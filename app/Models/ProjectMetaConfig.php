@@ -22,6 +22,10 @@ class ProjectMetaConfig extends Model
         'meta_raw_data',
     ];
 
+    protected $hidden = [
+        'access_token',
+    ];
+
     protected $casts = [
         'access_token' => 'encrypted',
         'meta_raw_data' => 'array',

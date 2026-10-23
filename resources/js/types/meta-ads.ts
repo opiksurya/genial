@@ -8,11 +8,31 @@ export type MetaAdsProjectOption = {
     name: string;
     client: string | null;
     slug?: string;
-    metaConfig?: {
+    meta_config?: {
+        id?: number;
+        project_id?: number;
         ad_account_id?: string | null;
         pixel_id?: string | null;
         account_name?: string | null;
-        status?: string | null;
+        currency?: string | null;
+        timezone_name?: string | null;
+        account_status?: number | null;
+        status?: 'connected' | 'error' | 'disconnected' | string;
+        last_synced_at?: string | null;
+        error_message?: string | null;
+    } | null;
+    metaConfig?: {
+        id?: number;
+        project_id?: number;
+        ad_account_id?: string | null;
+        pixel_id?: string | null;
+        account_name?: string | null;
+        currency?: string | null;
+        timezone_name?: string | null;
+        account_status?: number | null;
+        status?: 'connected' | 'error' | 'disconnected' | string;
+        last_synced_at?: string | null;
+        error_message?: string | null;
     } | null;
 };
 

@@ -6,8 +6,10 @@ import {
     CalendarRange,
     Clapperboard,
     FlaskConical,
+    KeyRound,
     LayoutDashboard,
     Megaphone,
+    Settings,
     Share2,
     Users,
 } from 'lucide-react';
@@ -18,7 +20,9 @@ import { CreativesSection } from '@/components/meta-ads/creatives-section';
 import { formatDate } from '@/components/meta-ads/format';
 import { PixelSection } from '@/components/meta-ads/pixel-section';
 import { SummarySection } from '@/components/meta-ads/summary-section';
+import { ClientMetaConnectModal } from '@/components/projects/client-meta-connect-modal';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Select,
     SelectContent,
@@ -62,6 +66,23 @@ export default function MetaAdsAnalyticsPage({
     analytics,
 }: Props) {
     const [tab, setTab] = useState<TabKey>('summary');
+    const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+
+    const isConnected = Boolean(
+        (selectedProject?.meta_config && selectedProject.meta_config.status === 'connected') ||
+        (selectedProject?.metaConfig && selectedProject.metaConfig.status === 'connected') ||
+        analytics.isConnected
+    );
+
+    const modalProject = selectedProject
+        ? {
+              id: selectedProject.id,
+              name: selectedProject.name,
+              client: selectedProject.client || selectedProject.name,
+              meta_config: (selectedProject.meta_config || selectedProject.metaConfig || null) as any,
+          }
+        : null;
+
     const rangeLabel = `${formatDate(analytics.range.start, { day: 'numeric', month: 'short', year: 'numeric' })} – ${formatDate(analytics.range.end, { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
     return (
@@ -115,7 +136,35 @@ export default function MetaAdsAnalyticsPage({
                     </div>
 
                     {/* Right: Controls Toolbar - Strictly Right Aligned */}
-                    <div className="flex items-center justify-end gap-2 ml-auto shrink-0">
+                    <div className="flex items-center justify-end gap-2 ml-auto shrink-0 flex-wrap sm:flex-nowrap">
+                        {/* Meta Ads Connection Button */}
+                        {isConnected ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsConnectModalOpen(true)}
+                                disabled={!selectedProject}
+                                className="h-8 rounded-lg border-emerald-500/30 bg-emerald-500/10 px-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400 gap-1.5 shadow-2xs cursor-pointer"
+                                title="Kelola Kredensial Meta Ads & Sinkronisasi"
+                            >
+                                <Settings className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                                <span>Kelola Meta</span>
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => setIsConnectModalOpen(true)}
+                                disabled={!selectedProject}
+                                className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 text-xs font-bold gap-1.5 shadow-sm shadow-blue-500/25 cursor-pointer"
+                                title="Hubungkan Akun Meta Ads untuk project ini"
+                            >
+                                <KeyRound className="size-3.5" aria-hidden />
+                                <span>Hubungkan Meta</span>
+                            </Button>
+                        )}
+
                         {/* Project / Client Switcher */}
                         {projects.length > 0 && (
                             <Select
@@ -186,18 +235,30 @@ export default function MetaAdsAnalyticsPage({
 
                 {/* Simulation Mode Banner - Compact */}
                 {analytics.isDummy && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs shadow-2xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs shadow-2xs">
                         <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 min-w-0">
                             <FlaskConical className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
                             <span className="truncate">
-                                <strong>Simulasi Meta Ads ({analytics.accountName})</strong>: Data terisolasi per project. Otomatis menampilkan data real-time saat akun Meta Graph API terhubung di Project Flow.
+                                <strong>Simulasi Meta Ads ({analytics.accountName})</strong>: Data terisolasi per project. Hubungkan akun Meta Graph API untuk menarik live campaigns real-time.
                             </span>
                         </div>
-                        {selectedProject && (
-                            <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-[10px] font-bold text-amber-800 dark:text-amber-300 shrink-0">
-                                Project: {selectedProject.name}
-                            </Badge>
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => setIsConnectModalOpen(true)}
+                                disabled={!selectedProject}
+                                className="h-7 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-2.5 shadow-2xs gap-1.5 cursor-pointer"
+                            >
+                                <KeyRound className="size-3" aria-hidden />
+                                <span>Hubungkan Meta Ads</span>
+                            </Button>
+                            {selectedProject && (
+                                <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-[10px] font-bold text-amber-800 dark:text-amber-300 shrink-0">
+                                    Project: {selectedProject.name}
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -229,11 +290,23 @@ export default function MetaAdsAnalyticsPage({
                 {/* Tab Panel Content */}
                 <div role="tabpanel">
                     {tab === 'summary' && <SummarySection analytics={analytics} />}
-                    {tab === 'campaigns' && <CampaignsSection campaigns={analytics.campaigns} />}
+                    {tab === 'campaigns' && (
+                        <CampaignsSection
+                            campaigns={analytics.campaigns}
+                            onManageConnection={() => setIsConnectModalOpen(true)}
+                        />
+                    )}
                     {tab === 'audiences' && <AudiencesSection audiences={analytics.audiences} />}
                     {tab === 'creatives' && <CreativesSection creatives={analytics.creatives} />}
                     {tab === 'pixel' && <PixelSection pixelHealth={analytics.pixelHealth} />}
                 </div>
+
+                {/* Client Meta Connect Modal */}
+                <ClientMetaConnectModal
+                    project={modalProject}
+                    isOpen={isConnectModalOpen}
+                    onClose={() => setIsConnectModalOpen(false)}
+                />
             </div>
         </AppLayout>
     );

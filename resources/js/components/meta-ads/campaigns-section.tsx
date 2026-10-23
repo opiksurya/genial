@@ -4,7 +4,13 @@ import { SectionCard, StatTile, TableWrapper, Td, Th } from '@/components/meta-a
 import { Badge } from '@/components/ui/badge';
 import type { MetaAdsCampaign } from '@/types/meta-ads';
 
-export function CampaignsSection({ campaigns }: { campaigns: MetaAdsCampaign[] }) {
+export function CampaignsSection({
+    campaigns,
+    onManageConnection,
+}: {
+    campaigns: MetaAdsCampaign[];
+    onManageConnection?: () => void;
+}) {
     const totalSpend = campaigns.reduce((acc, c) => acc + c.spend, 0);
     const totalRevenue = campaigns.reduce((acc, c) => acc + c.revenue, 0);
     const totalPurchases = campaigns.reduce((acc, c) => acc + c.purchases, 0);
@@ -30,7 +36,22 @@ export function CampaignsSection({ campaigns }: { campaigns: MetaAdsCampaign[] }
             </div>
 
             {/* Campaign Table */}
-            <SectionCard title="Daftar Kampanye Meta Ads" description="Performa real-time kampanye iklan Meta untuk periode ini.">
+            <SectionCard
+                title="Daftar Kampanye Meta Ads"
+                description="Performa real-time kampanye iklan Meta untuk periode ini."
+                action={
+                    onManageConnection && (
+                        <button
+                            type="button"
+                            onClick={onManageConnection}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground shadow-2xs hover:bg-muted/60 transition-colors cursor-pointer"
+                        >
+                            <Zap className="size-3 text-blue-600" aria-hidden />
+                            <span>Koneksi & Sinkronisasi Meta</span>
+                        </button>
+                    )
+                }
+            >
                 <TableWrapper>
                     <thead>
                         <tr>
