@@ -79,8 +79,8 @@ export function SummarySection({ analytics }: { analytics: ShopeeAnalytics }) {
     const { summary, sales, range } = analytics;
 
     return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="space-y-4 sm:space-y-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {summary.kpis.map((kpi) => {
                     const config = KPI_CONFIG[kpi.key] || {
                         icon: TrendingUp,
@@ -93,26 +93,26 @@ export function SummarySection({ analytics }: { analytics: ShopeeAnalytics }) {
                         <div
                             key={kpi.key}
                             className={cn(
-                                'group relative flex flex-col justify-between min-w-0 rounded-2xl border border-border/80 bg-card p-5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+                                'group relative flex flex-col justify-between min-w-0 rounded-xl border border-border/70 bg-card p-3.5 sm:p-4 shadow-2xs transition-all duration-150 hover:border-orange-500/30 hover:shadow-xs',
                                 config.hoverBorder,
                             )}
                         >
-                            <div className="flex items-start justify-between gap-2">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <div className="flex items-start justify-between gap-1.5">
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                     {kpi.label}
                                 </span>
-                                <div className={cn('rounded-xl p-2 transition-transform duration-200 group-hover:scale-110', config.bgClass)}>
-                                    <Icon className="size-4" aria-hidden />
+                                <div className={cn('rounded-lg p-1.5 transition-transform duration-150 group-hover:scale-105', config.bgClass)}>
+                                    <Icon className="size-3.5" aria-hidden />
                                 </div>
                             </div>
 
-                            <div className="mt-3 truncate text-2xl font-black tracking-tight text-foreground tabular-nums sm:text-3xl">
+                            <div className="mt-2 truncate text-lg font-bold tracking-tight text-foreground tabular-nums sm:text-xl">
                                 {formatKpiValue(kpi.value, kpi.format)}
                             </div>
 
-                            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/50 pt-2.5">
+                            <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/40 pt-2 text-[11px]">
                                 <ChangeBadge change={kpi.change} higherIsBetter={kpi.higherIsBetter} />
-                                <span className="truncate text-[11px] font-medium text-muted-foreground">
+                                <span className="truncate text-[10px] font-normal text-muted-foreground">
                                     sebelumnya {formatKpiValue(kpi.previous, kpi.format)}
                                 </span>
                             </div>
@@ -121,7 +121,7 @@ export function SummarySection({ analytics }: { analytics: ShopeeAnalytics }) {
                 })}
             </div>
 
-            <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3.5 py-2 text-xs text-muted-foreground shadow-2xs">
+            <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground shadow-2xs">
                 <CalendarRange className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                 <span>
                     Perbandingan dengan periode sebelumnya:{' '}
