@@ -146,9 +146,19 @@ export type ShopeeStorefront = {
     slowMoving: ShopeeProduct[];
 };
 
+export type ShopeeProjectOption = {
+    id: number;
+    name: string;
+    client: string | null;
+    slug?: string;
+};
+
 export type ShopeeAnalytics = {
     isDummy: boolean;
     storeName: string;
+    projectId?: number | null;
+    projectName?: string | null;
+    clientName?: string | null;
     range: { start: string; end: string; previousStart: string; previousEnd: string };
     summary: { kpis: ShopeeKpi[]; channels: ShopeeChannel[] };
     sales: ShopeeSales;

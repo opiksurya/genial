@@ -2,6 +2,7 @@
 
 namespace App\Services\ShopeeAnalytics;
 
+use App\Models\Project;
 use Carbon\CarbonImmutable;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
@@ -17,6 +18,8 @@ use Random\Randomizer;
 class ShopeeDummyDataService implements ShopeeAnalyticsSource
 {
     private const string SEED_PREFIX = 'genial-shopee-dummy-v1';
+
+    private ?Project $activeProject = null;
 
     private const int BASE_DAILY_VIEWS = 220;
 
@@ -109,8 +112,12 @@ class ShopeeDummyDataService implements ShopeeAnalyticsSource
     /**
      * {@inheritDoc}
      */
-    public function report(ShopeePeriod $period, CarbonImmutable $endDate): array
+    public function report(ShopeePeriod $period, CarbonImmutable $endDate, ?Project $project = null): array
     {
+        $this->activeProject = $project;
+        $this->simulatedDays = [];
+        $this->publishedVideos = [];
+
         $end = $endDate->startOfDay();
         $start = $end->subDays($period->value - 1);
         $previousEnd = $start->subDay();
@@ -119,9 +126,16 @@ class ShopeeDummyDataService implements ShopeeAnalyticsSource
         $current = $this->aggregate($start, $end);
         $previous = $this->aggregate($previousStart, $previousEnd);
 
+        $storeName = $project 
+            ? (($project->client ?: $project->name) . ' Official Store') 
+            : 'Genial Beauty Store';
+
         return [
             'isDummy' => true,
-            'storeName' => 'Genial Beauty Store',
+            'storeName' => $storeName,
+            'projectId' => $project?->id,
+            'projectName' => $project?->name,
+            'clientName' => $project?->client,
             'range' => [
                 'start' => $start->toDateString(),
                 'end' => $end->toDateString(),
@@ -522,7 +536,8 @@ class ShopeeDummyDataService implements ShopeeAnalyticsSource
 
     private function randomizer(string $stream, string $dateKey): Randomizer
     {
-        return new Randomizer(new Mt19937(crc32(self::SEED_PREFIX.'|'.$stream.'|'.$dateKey)));
+        $projectPart = $this->activeProject ? ('|p' . $this->activeProject->id) : '';
+        return new Randomizer(new Mt19937(crc32(self::SEED_PREFIX . $projectPart . '|' . $stream . '|' . $dateKey)));
     }
 
     /**
@@ -668,11 +683,13 @@ class ShopeeDummyDataService implements ShopeeAnalyticsSource
     private function buildAds(array $current): array
     {
         $campaigns = [];
+        $brand = $this->activeProject ? ($this->activeProject->client ?: $this->activeProject->name) : 'Genial Beauty';
         foreach (self::CAMPAIGNS as $campaign) {
+            $campaignName = str_replace('Genial Beauty', $brand, $campaign['name']);
             $stats = $current['campaigns'][$campaign['id']];
             $campaigns[] = [
                 'id' => $campaign['id'],
-                'name' => $campaign['name'],
+                'name' => $campaignName,
                 'type' => $campaign['type'],
                 'dailyBudget' => $campaign['dailyBudget'],
                 ...$this->adMetrics($stats),

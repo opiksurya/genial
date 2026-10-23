@@ -2,6 +2,7 @@
 
 namespace App\Services\ShopeeAnalytics;
 
+use App\Models\Project;
 use Carbon\CarbonImmutable;
 use Illuminate\Container\Attributes\Bind;
 
@@ -18,6 +19,10 @@ interface ShopeeAnalyticsSource
      *
      * @return array{
      *     isDummy: bool,
+     *     storeName: string,
+     *     projectId: int|null,
+     *     projectName: string|null,
+     *     clientName: string|null,
      *     range: array<string, string>,
      *     summary: array<string, mixed>,
      *     sales: array<string, mixed>,
@@ -26,5 +31,5 @@ interface ShopeeAnalyticsSource
      *     storefront: array<string, mixed>
      * }
      */
-    public function report(ShopeePeriod $period, CarbonImmutable $endDate): array;
+    public function report(ShopeePeriod $period, CarbonImmutable $endDate, ?Project $project = null): array;
 }

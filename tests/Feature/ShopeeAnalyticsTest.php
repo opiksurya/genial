@@ -124,3 +124,48 @@ test('products without sales are flagged as slow moving', function () {
     expect($unsold)->not->toBeEmpty()
         ->and(collect($report['storefront']['slowMoving'])->pluck('id')->all())->toContain(...$unsold->pluck('id')->all());
 });
+
+test('switching projects customizes store name and generates distinct deterministic data', function () {
+    $user = User::factory()->create();
+    $projectA = \App\Models\Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+    $projectB = \App\Models\Project::create([
+        'name' => 'Prestige Atelier',
+        'client' => 'Prestige Atelier',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $responseA = $this->actingAs($user)
+        ->get(route('shopee.index', ['project_id' => $projectA->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('selectedProjectId', $projectA->id)
+            ->where('selectedProject.name', 'Tatamu Brand')
+            ->where('analytics.storeName', 'Tatamu Official Store')
+            ->has('projects')
+        );
+
+    $responseB = $this->actingAs($user)
+        ->get(route('shopee.index', ['project_id' => $projectB->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('selectedProjectId', $projectB->id)
+            ->where('selectedProject.name', 'Prestige Atelier')
+            ->where('analytics.storeName', 'Prestige Atelier Official Store')
+        );
+
+    $service = new ShopeeDummyDataService();
+    $date = CarbonImmutable::parse('2026-10-22');
+    $reportA = $service->report(ShopeePeriod::Last30Days, $date, $projectA);
+    $reportB = $service->report(ShopeePeriod::Last30Days, $date, $projectB);
+
+    expect($reportA['storeName'])->toBe('Tatamu Official Store')
+        ->and($reportB['storeName'])->toBe('Prestige Atelier Official Store')
+        ->and($reportA['sales']['totals']['revenue'])->not->toBe($reportB['sales']['totals']['revenue']);
+});
+

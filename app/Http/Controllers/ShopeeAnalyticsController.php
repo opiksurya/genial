@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Project;
 use App\Services\ShopeeAnalytics\ShopeeAnalyticsSource;
 use App\Services\ShopeeAnalytics\ShopeePeriod;
 use Carbon\CarbonImmutable;
@@ -24,10 +25,24 @@ class ShopeeAnalyticsController extends Controller
     {
         $period = ShopeePeriod::fromInput($request->query('period'));
 
+        $projects = Project::select('id', 'name', 'client', 'slug')
+            ->orderBy('name')
+            ->get();
+
+        $projectId = $request->query('project_id');
+        $selectedProject = $projectId ? $projects->firstWhere('id', (int) $projectId) : null;
+
+        if (! $selectedProject && $projects->isNotEmpty()) {
+            $selectedProject = $projects->first();
+        }
+
         return Inertia::render('shopee/index', [
             'period' => $period->value,
             'periodOptions' => ShopeePeriod::options(),
-            'analytics' => $this->analytics->report($period, CarbonImmutable::yesterday()),
+            'projects' => $projects,
+            'selectedProjectId' => $selectedProject?->id,
+            'selectedProject' => $selectedProject,
+            'analytics' => $this->analytics->report($period, CarbonImmutable::yesterday(), $selectedProject),
         ]);
     }
 }
