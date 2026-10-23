@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    'claude_office' => [
+        'url' => env('CLAUDE_OFFICE_URL'),
+    ],
+
 ];

@@ -78,6 +78,7 @@ Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name(
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+use App\Http\Controllers\ClaudeOfficeAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -111,6 +112,10 @@ Route::prefix('freelancer')->name('freelancer.portal.')->group(function () {
     Route::post('/portal/{access_token}/contents/{contentPlan}/submit', [FreelancerPortalController::class, 'submitContentWork'])->name('submitContent');
     Route::put('/portal/{access_token}/contents/{contentPlan}/status', [FreelancerPortalController::class, 'updateContentStatus'])->name('updateContentStatus');
 });
+
+// Claude Office auth check (Nginx auth_request). Kept outside the auth
+// middleware so guests get a 401 instead of a redirect to the login page.
+Route::get('office-auth', ClaudeOfficeAuthController::class)->name('claude-office.auth');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

@@ -41,6 +41,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'claudeOfficeUrl' => $request->user()?->hasRole('Super Admin') ? config('services.claude_office.url') : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'metaPixel' => [
                 'pixel_id' => \App\Models\Setting::get('meta_pixel_id', ''),

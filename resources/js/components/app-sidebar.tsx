@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { 
     LayoutGrid, 
     ShieldCheck, 
@@ -19,9 +19,11 @@ import {
     CalendarDays,
     CalendarCheck,
     Briefcase,
-    Palette
+    Palette,
+    Bot
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
+import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -154,6 +156,12 @@ const mainNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { claudeOfficeUrl } = usePage().props;
+
+    const footerNavItems: NavItem[] = claudeOfficeUrl
+        ? [{ title: 'Claude Office', href: claudeOfficeUrl, icon: Bot }]
+        : [];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -173,6 +181,8 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter className="p-3 space-y-3">
+                {footerNavItems.length > 0 && <NavFooter items={footerNavItems} />}
+
                 <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 text-xs space-y-2 group-data-[collapsible=icon]:hidden">
                     <div className="flex items-center justify-between">
                         <span className="font-semibold text-foreground flex items-center gap-1.5">
