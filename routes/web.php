@@ -245,6 +245,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/google/connect', [GoogleController::class, 'connectCalendar'])->name('google.connect');
         Route::post('/google/disconnect', [GoogleController::class, 'disconnectCalendar'])->name('google.disconnect');
     });
+
+    // Shopee Analytics Module Routes (dummy data)
+    Route::prefix('shopee')->name('shopee.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ShopeeAnalyticsController::class, 'index'])->name('index');
+    });
 });
 
 // Live iCalendar (.ics) Feed for Google Calendar Subscription
