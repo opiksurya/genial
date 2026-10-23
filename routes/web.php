@@ -70,6 +70,33 @@ Route::get('/our-story', function () {
     ]);
 })->name('our-story');
 
+Route::get('/privacy-policy', function () {
+    return Inertia\Inertia::render('privacy-policy', [
+        'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin bertanya mengenai Kebijakan Privasi'),
+    ]);
+})->name('privacy-policy');
+
+Route::get('/terms', function () {
+    return Inertia\Inertia::render('terms', [
+        'whatsappNumber' => Setting::get('whatsapp_number', '6281234567890'),
+        'whatsappDefaultMessage' => Setting::get('whatsapp_default_message', 'Halo Genial Digital Solution, saya ingin bertanya mengenai Syarat & Ketentuan'),
+    ]);
+})->name('terms');
+
+// Generic OAuth redirect target for ad platform apps (Meta, Google, TikTok, LinkedIn).
+// Only shows the result for now; token exchange is added per platform integration.
+Route::get('/oauth/callback', function (Illuminate\Http\Request $request) {
+    $error = is_string($request->query('error')) ? $request->query('error') : null;
+    $errorDescription = is_string($request->query('error_description')) ? $request->query('error_description') : null;
+    $hasCode = is_string($request->query('code')) && $request->query('code') !== '';
+
+    return Inertia\Inertia::render('oauth-callback', [
+        'status' => $error ? 'error' : ($hasCode ? 'success' : 'empty'),
+        'errorMessage' => $error ? Illuminate\Support\Str::limit($errorDescription ?: $error, 200) : null,
+    ])->toResponse($request)->header('X-Robots-Tag', 'noindex, nofollow');
+})->name('oauth.callback');
+
 Route::post('/audit-request', [AuditRequestController::class, 'store'])->name('audit.request');
 
 Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name('meta.capi.track');

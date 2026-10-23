@@ -18,6 +18,11 @@ export default function PublicFooter({ themeMode = 'dark' }: PublicFooterProps) 
         { title: 'Penunjang Bisnis & ERP', href: '/support' },
     ];
 
+    const legalItems = [
+        { title: 'Kebijakan Privasi', href: '/privacy-policy' },
+        { title: 'Syarat & Ketentuan', href: '/terms' },
+    ];
+
     return (
         <footer className={`border-t ${borderClass} py-12 transition-colors duration-300`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -36,6 +41,14 @@ export default function PublicFooter({ themeMode = 'dark' }: PublicFooterProps) 
                     ))}
                 </nav>
             </div>
+
+            <nav aria-label="Legal" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex flex-wrap items-center justify-center md:justify-end gap-6 text-xs">
+                {legalItems.map((item) => (
+                    <a key={item.href} href={item.href} className={`transition-colors ${navText}`}>
+                        {item.title}
+                    </a>
+                ))}
+            </nav>
         </footer>
     );
 }
