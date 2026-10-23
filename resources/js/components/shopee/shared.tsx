@@ -17,11 +17,11 @@ export function SectionCard({
     className?: string;
 }) {
     return (
-        <Card className={cn('min-w-0 gap-4 py-5', className)}>
+        <Card className={cn('min-w-0 gap-4 py-5 rounded-2xl border-border/80 bg-card shadow-2xs transition-all hover:shadow-xs', className)}>
             <CardHeader className="flex flex-col gap-2 px-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-1">
-                    <CardTitle className="text-base">{title}</CardTitle>
-                    {description && <CardDescription className="text-xs">{description}</CardDescription>}
+                    <CardTitle className="text-base font-bold tracking-tight text-foreground">{title}</CardTitle>
+                    {description && <CardDescription className="text-xs text-muted-foreground">{description}</CardDescription>}
                 </div>
                 {action}
             </CardHeader>
@@ -32,13 +32,13 @@ export function SectionCard({
 
 export function StatTile({ label, value, hint, icon }: { label: string; value: string; hint?: ReactNode; icon?: ReactNode }) {
     return (
-        <div className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-2 text-xs font-medium text-muted-foreground">
-                <span className="truncate">{label}</span>
-                {icon}
+        <div className="group min-w-0 rounded-2xl border border-border/80 bg-card p-4 sm:p-5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-500/30 hover:shadow-md">
+            <div className="flex items-center justify-between gap-2 text-xs font-semibold text-muted-foreground">
+                <span className="truncate uppercase tracking-wider">{label}</span>
+                {icon && <div className="text-muted-foreground transition-transform duration-200 group-hover:scale-110 group-hover:text-orange-600">{icon}</div>}
             </div>
-            <div className="mt-2 truncate text-xl font-bold text-foreground tabular-nums">{value}</div>
-            {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
+            <div className="mt-2.5 truncate text-xl font-black tracking-tight text-foreground tabular-nums sm:text-2xl">{value}</div>
+            {hint && <div className="mt-1.5 text-xs text-muted-foreground font-medium">{hint}</div>}
         </div>
     );
 }
@@ -49,7 +49,7 @@ export function StatTile({ label, value, hint, icon }: { label: string; value: s
  */
 export function ChangeBadge({ change, higherIsBetter = true }: { change: number | null; higherIsBetter?: boolean }) {
     if (change === null) {
-        return <span className="text-xs text-muted-foreground">Tidak ada data pembanding</span>;
+        return <span className="text-xs text-muted-foreground font-medium">Tidak ada data pembanding</span>;
     }
 
     const isFlat = change === 0;
@@ -59,13 +59,13 @@ export function ChangeBadge({ change, higherIsBetter = true }: { change: number 
     return (
         <span
             className={cn(
-                'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums',
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums shadow-2xs',
                 isGood === null && 'bg-muted text-muted-foreground',
-                isGood === true && 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-                isGood === false && 'bg-rose-500/10 text-rose-700 dark:text-rose-400',
+                isGood === true && 'border border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+                isGood === false && 'border border-rose-500/20 bg-rose-500/15 text-rose-700 dark:text-rose-400',
             )}
         >
-            <Icon className="size-3.5" aria-hidden />
+            <Icon className="size-3.5 stroke-[2.5]" aria-hidden />
             {change > 0 ? '+' : ''}
             {change.toLocaleString('id-ID')}%
         </span>
