@@ -277,6 +277,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('shopee')->name('shopee.')->group(function () {
         Route::get('/', [\App\Http\Controllers\ShopeeAnalyticsController::class, 'index'])->name('index');
     });
+
+    // Meta Ads Analytics Module Routes
+    Route::prefix('meta-ads')->name('meta-ads.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\MetaAdsAnalyticsController::class, 'index'])->name('index');
+    });
 });
 
 // Live iCalendar (.ics) Feed for Google Calendar Subscription

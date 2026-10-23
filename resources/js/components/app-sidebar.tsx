@@ -21,7 +21,8 @@ import {
     Briefcase,
     Palette,
     Bot,
-    ShoppingBag
+    ShoppingBag,
+    Share2,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -37,6 +38,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as metaAdsIndex } from '@/routes/meta-ads';
 import { index as shopeeIndex } from '@/routes/shopee';
 import type { NavItem } from '@/types';
 
@@ -70,6 +72,11 @@ const mainNavItems: NavItem[] = [
         title: 'Shopee Analytics',
         href: shopeeIndex(),
         icon: ShoppingBag,
+    },
+    {
+        title: 'Meta Ads Analytics',
+        href: metaAdsIndex(),
+        icon: Share2,
     },
     {
         title: 'ProjectFlow',
