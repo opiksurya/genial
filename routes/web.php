@@ -105,6 +105,15 @@ Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name(
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+// Shopee Open Platform Global Callback Route (Fallback matching standard /auth/shopee/callback)
+Route::get('/auth/shopee/callback', function (\Illuminate\Http\Request $request) {
+    $projectId = session('shopee_oauth_project_id');
+    if ($projectId && $project = \App\Models\Project::find($projectId)) {
+        return app(\App\Http\Controllers\ProjectFlow\ProjectShopeeController::class)->oauthCallback($request, $project);
+    }
+    return redirect()->route('shopee.index')->with('error', 'Sesi Shopee OAuth tidak ditemukan.');
+})->name('auth.shopee.callback');
+
 use App\Http\Controllers\ClaudeOfficeAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RoleController;
@@ -116,6 +125,7 @@ use App\Http\Controllers\ProjectFlow\ProjectTeamController;
 use App\Http\Controllers\ProjectFlow\ProjectReportController;
 use App\Http\Controllers\ProjectFlow\ProjectCredentialController;
 use App\Http\Controllers\ProjectFlow\ProjectMetaController;
+use App\Http\Controllers\ProjectFlow\ProjectShopeeController;
 use App\Http\Controllers\FinanceFlow\FinanceDashboardController;
 use App\Http\Controllers\FinanceFlow\IncomeController;
 use App\Http\Controllers\FinanceFlow\ExpenseController;
@@ -188,6 +198,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{project}/meta-config/sync', [ProjectMetaController::class, 'sync'])->whereNumber('project')->name('meta.sync');
         Route::get('{project}/meta-campaigns', [ProjectMetaController::class, 'getCampaigns'])->whereNumber('project')->name('meta.campaigns');
         Route::delete('{project}/meta-config', [ProjectMetaController::class, 'destroy'])->whereNumber('project')->name('meta.destroy');
+
+        // Shopee Open Platform Integration Routes
+        Route::get('{project}/shopee-config/oauth/redirect', [ProjectShopeeController::class, 'oauthRedirect'])->whereNumber('project')->name('shopee.oauth.redirect');
+        Route::get('{project}/shopee-config/oauth/callback', [ProjectShopeeController::class, 'oauthCallback'])->whereNumber('project')->name('shopee.oauth.callback');
+        Route::post('{project}/shopee-config', [ProjectShopeeController::class, 'update'])->whereNumber('project')->name('shopee.update');
+        Route::post('{project}/shopee-config/test', [ProjectShopeeController::class, 'testConnection'])->whereNumber('project')->name('shopee.test');
+        Route::post('{project}/shopee-config/disconnect', [ProjectShopeeController::class, 'disconnect'])->whereNumber('project')->name('shopee.disconnect');
     });
 
     // Genial FinanceFlow Module Routes

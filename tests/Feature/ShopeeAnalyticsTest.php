@@ -169,3 +169,100 @@ test('switching projects customizes store name and generates distinct determinis
         ->and($reportA['sales']['totals']['revenue'])->not->toBe($reportB['sales']['totals']['revenue']);
 });
 
+test('saving shopee api credentials stores partner_id, encrypted partner_key and sandbox flag', function () {
+    $user = User::factory()->create();
+    $project = \App\Models\Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('projects.shopee.update', $project), [
+            'partner_id' => '2046979',
+            'partner_key' => 'shopee_partner_secret_key_abc123',
+            'is_sandbox' => true,
+        ])
+        ->assertRedirect();
+
+    $config = $project->fresh()->shopeeConfig;
+    expect($config)->not->toBeNull()
+        ->and($config->partner_id)->toBe('2046979')
+        ->and($config->partner_key)->toBe('shopee_partner_secret_key_abc123')
+        ->and($config->is_sandbox)->toBeTrue();
+});
+
+test('shopee oauth redirect generates shopee open platform url with hmac signature', function () {
+    $user = User::factory()->create();
+    $project = \App\Models\Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('projects.shopee.oauth.redirect', [
+            'project' => $project->id,
+            'partner_id' => '2046979',
+            'partner_key' => 'secret_key_xyz',
+            'is_sandbox' => '0',
+        ]));
+
+    $response->assertRedirect();
+    $targetUrl = $response->headers->get('Location');
+
+    expect($targetUrl)->toContain('https://partner.shopeemobile.com/api/v2/shop/auth_partner')
+        ->and($targetUrl)->toContain('partner_id=2046979')
+        ->and($targetUrl)->toContain('sign=')
+        ->and(session('shopee_oauth_project_id'))->toBe($project->id);
+});
+
+test('shopee oauth callback rejects missing code and shop_id', function () {
+    $user = User::factory()->create();
+    $project = \App\Models\Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('projects.shopee.oauth.callback', [
+            'project' => $project->id,
+        ]));
+
+    $response->assertRedirect()
+        ->assertSessionHas('error');
+});
+
+test('disconnecting shopee store clears tokens', function () {
+    $user = User::factory()->create();
+    $project = \App\Models\Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $config = \App\Models\ProjectShopeeConfig::create([
+        'project_id' => $project->id,
+        'partner_id' => '2046979',
+        'partner_key' => 'secret_key_xyz',
+        'shop_id' => '998877',
+        'shop_name' => 'Tatamu Official Shop',
+        'access_token' => 'active_token',
+        'status' => 'connected',
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('projects.shopee.disconnect', $project))
+        ->assertRedirect();
+
+    $fresh = $config->fresh();
+    expect($fresh->status)->toBe('disconnected')
+        ->and($fresh->access_token)->toBeNull();
+});
+
+

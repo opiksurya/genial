@@ -50,7 +50,7 @@ class ProjectDashboardController extends Controller
             ->take(6)
             ->get();
 
-        $projectsQueryWithRelations = Project::with(['manager', 'tasks', 'members.user', 'metaConfig']);
+        $projectsQueryWithRelations = Project::with(['manager', 'tasks', 'members.user', 'metaConfig', 'shopeeConfig']);
         if ($user && $user->hasRole('Client')) {
             $projectsQueryWithRelations->whereIn('id', $userProjectIds);
         }

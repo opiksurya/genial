@@ -9,6 +9,7 @@ import {
     PlaySquare,
     ShoppingBag,
     Store,
+    Settings,
 } from 'lucide-react';
 import { useState } from 'react';
 import { AdsSection } from '@/components/shopee/ads-section';
@@ -18,6 +19,8 @@ import { SalesSection } from '@/components/shopee/sales-section';
 import { StorefrontSection } from '@/components/shopee/storefront-section';
 import { SummarySection } from '@/components/shopee/summary-section';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ClientShopeeConnectModal } from '@/components/projects/client-shopee-connect-modal';
 import {
     Select,
     SelectContent,
@@ -61,6 +64,13 @@ export default function ShopeeAnalyticsPage({
     analytics,
 }: Props) {
     const [tab, setTab] = useState<TabKey>('summary');
+    const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+
+    const isShopeeConnected = Boolean(
+        selectedProject?.shopee_config?.status === 'connected' ||
+        selectedProject?.shopeeConfig?.status === 'connected'
+    );
+
     const rangeLabel = `${formatDate(analytics.range.start, { day: 'numeric', month: 'short', year: 'numeric' })} – ${formatDate(analytics.range.end, { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
     return (
@@ -83,10 +93,15 @@ export default function ShopeeAnalyticsPage({
                                     <Store className="size-3" aria-hidden />
                                     {analytics.storeName}
                                 </span>
-                                {analytics.isDummy && (
+                                {analytics.isDummy ? (
                                     <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
                                         <FlaskConical className="size-2.5" aria-hidden />
                                         Simulasi
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
+                                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        Live API
                                     </Badge>
                                 )}
                             </div>
@@ -107,7 +122,35 @@ export default function ShopeeAnalyticsPage({
                     </div>
 
                     {/* Right: Controls Toolbar - Strictly Right Aligned */}
-                    <div className="flex items-center justify-end gap-2 ml-auto shrink-0">
+                    <div className="flex items-center justify-end gap-2 ml-auto shrink-0 flex-wrap sm:flex-nowrap">
+                        {/* Shopee API Connection Button */}
+                        {isShopeeConnected ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsConnectModalOpen(true)}
+                                disabled={!selectedProject}
+                                className="h-8 rounded-lg border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-950/20 px-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100/50 dark:text-emerald-400 gap-1.5 shadow-2xs cursor-pointer"
+                                title="Kelola Kredensial Shopee API"
+                            >
+                                <Settings className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                                <span>Kelola Shopee</span>
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => setIsConnectModalOpen(true)}
+                                disabled={!selectedProject}
+                                className="h-8 rounded-lg bg-[#EE4D2D] hover:bg-[#d73211] text-white px-3 text-xs font-bold gap-1.5 shadow-sm shadow-orange-500/25 cursor-pointer"
+                                title="Hubungkan Shopee API"
+                            >
+                                <ShoppingBag className="size-3.5" aria-hidden />
+                                <span>Hubungkan Shopee</span>
+                            </Button>
+                        )}
+
                         {/* Project / Client Switcher */}
                         {projects.length > 0 && (
                             <Select
@@ -182,7 +225,16 @@ export default function ShopeeAnalyticsPage({
                         <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 min-w-0">
                             <FlaskConical className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
                             <span className="truncate">
-                                <strong>Mode Simulasi ({analytics.storeName})</strong>: Data terisolasi per project. Otomatis tersambung saat akun Shopee Open API resmi dihubungkan.
+                                <strong>Mode Simulasi ({analytics.storeName})</strong>: Data terisolasi per project.{' '}
+                                {!isShopeeConnected && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsConnectModalOpen(true)}
+                                        className="underline font-bold text-orange-700 dark:text-orange-400 hover:text-orange-800 cursor-pointer"
+                                    >
+                                        Hubungkan Shopee API sekarang
+                                    </button>
+                                )}
                             </span>
                         </div>
                         {selectedProject && (
@@ -226,6 +278,13 @@ export default function ShopeeAnalyticsPage({
                     {tab === 'content' && <ContentSection content={analytics.content} />}
                     {tab === 'storefront' && <StorefrontSection storefront={analytics.storefront} />}
                 </div>
+
+                {/* Client Shopee API Connect Modal */}
+                <ClientShopeeConnectModal
+                    project={selectedProject as any}
+                    isOpen={isConnectModalOpen}
+                    onClose={() => setIsConnectModalOpen(false)}
+                />
             </div>
         </AppLayout>
     );

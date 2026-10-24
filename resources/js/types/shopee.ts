@@ -146,11 +146,26 @@ export type ShopeeStorefront = {
     slowMoving: ShopeeProduct[];
 };
 
+export type ShopeeConfig = {
+    id?: number;
+    project_id?: number;
+    partner_id?: string | null;
+    is_sandbox?: boolean;
+    shop_id?: string | null;
+    shop_name?: string | null;
+    status: 'connected' | 'error' | 'disconnected';
+    token_expires_at?: string | null;
+    last_synced_at?: string | null;
+    error_message?: string | null;
+};
+
 export type ShopeeProjectOption = {
     id: number;
     name: string;
     client: string | null;
     slug?: string;
+    shopee_config?: ShopeeConfig | null;
+    shopeeConfig?: ShopeeConfig | null;
 };
 
 export type ShopeeAnalytics = {

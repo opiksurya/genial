@@ -29,10 +29,12 @@ import {
     Trash2,
     ExternalLink,
     Link2,
-    Share2
+    Share2,
+    ShoppingBag,
 } from 'lucide-react';
 import { ProjectCredentialsModal } from '@/components/projects/project-credentials-modal';
 import { ClientMetaConnectModal } from '@/components/projects/client-meta-connect-modal';
+import { ClientShopeeConnectModal } from '@/components/projects/client-shopee-connect-modal';
 
 
 interface TaskItem {
@@ -111,6 +113,8 @@ interface ProjectItem {
     members?: { id: number; user: { name: string }; role: string }[];
     credentials?: any[];
     meta_config?: any;
+    shopee_config?: any;
+    shopeeConfig?: any;
 }
 
 
@@ -179,6 +183,7 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
     const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
     const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
     const [isMetaConnectModalOpen, setIsMetaConnectModalOpen] = useState(false);
+    const [isShopeeConnectModalOpen, setIsShopeeConnectModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
     const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
 
@@ -588,6 +593,21 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                     <Share2 className="w-3 h-3 text-blue-500" />
                                     <span>Meta Ads</span>
                                     {activeProject.meta_config?.status === 'connected' && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" title="Terhubung" />
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setIsShopeeConnectModalOpen(true)}
+                                    className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-semibold border transition-all shadow-xs cursor-pointer ${
+                                        activeProject.shopee_config?.status === 'connected' || activeProject.shopeeConfig?.status === 'connected'
+                                            ? 'border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400'
+                                            : 'border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 text-slate-400'
+                                    }`}
+                                    title="Kredensial & Otorisasi Shopee API"
+                                >
+                                    <ShoppingBag className="w-3 h-3 text-[#EE4D2D]" />
+                                    <span>Shopee</span>
+                                    {(activeProject.shopee_config?.status === 'connected' || activeProject.shopeeConfig?.status === 'connected') && (
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" title="Terhubung" />
                                     )}
                                 </button>
@@ -1527,6 +1547,12 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                 project={activeProject || null}
                 isOpen={isMetaConnectModalOpen}
                 onClose={() => setIsMetaConnectModalOpen(false)}
+            />
+
+            <ClientShopeeConnectModal
+                project={activeProject || null}
+                isOpen={isShopeeConnectModalOpen}
+                onClose={() => setIsShopeeConnectModalOpen(false)}
             />
         </AppLayout>
     );

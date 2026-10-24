@@ -18,7 +18,8 @@ import {
     Eye,
     EyeOff,
     BookOpen,
-    Share2
+    Share2,
+    ShoppingBag
 } from 'lucide-react';
 
 interface ProjectItem {
@@ -27,6 +28,8 @@ interface ProjectItem {
     client: string;
     client_logo?: string;
     meta_config?: any;
+    shopee_config?: any;
+    shopeeConfig?: any;
     category: string;
     status: string;
     priority: string;
@@ -278,6 +281,12 @@ export default function ProjectDashboard({ stats, projects, upcomingDeadlines }:
                                                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20" title={`Meta Ads Terhubung: ${p.meta_config.ad_account_id}`}>
                                                         <Share2 className="w-2.5 h-2.5" />
                                                         <span>Meta Ads</span>
+                                                    </span>
+                                                )}
+                                                {(p.shopee_config?.status === 'connected' || p.shopeeConfig?.status === 'connected') && (
+                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-[#EE4D2D] border border-orange-500/20" title={`Shopee Terhubung: ${p.shopee_config?.shop_name || p.shopeeConfig?.shop_name || 'Shop'}`}>
+                                                        <ShoppingBag className="w-2.5 h-2.5" />
+                                                        <span>Shopee</span>
                                                     </span>
                                                 )}
                                             </p>

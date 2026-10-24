@@ -107,6 +107,11 @@ class Project extends Model
         return $this->hasOne(ProjectMetaConfig::class);
     }
 
+    public function shopeeConfig(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ProjectShopeeConfig::class);
+    }
+
 
     /**
      * Recalculate progress % automatically based on completed tasks.
