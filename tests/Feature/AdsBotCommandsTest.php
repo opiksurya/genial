@@ -122,7 +122,7 @@ test('accounts lists meta connections without exposing tokens', function () {
             'ad_account_id' => 'act_123',
             'currency' => 'IDR',
             'status' => 'connected',
-            'token_expires_at' => '2026-12-20T00:00:00+00:00',
+            'token_expires_at' => '2026-12-20T00:00:00+07:00',
         ]])
         ->and($raw)->not->toContain('secret-meta-token')
         ->and($raw)->not->toContain('access_token');
