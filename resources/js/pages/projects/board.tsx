@@ -1510,7 +1510,17 @@ export default function ProjectBoard({ projects, activeProject, tasks, users, ag
                                         <div key={c.id} className="p-3 rounded-xl bg-muted/40 border border-sidebar-border text-xs space-y-1">
                                             <div className="flex items-center justify-between font-bold text-foreground">
                                                 <span>{c.user?.name || 'User'}</span>
-                                                <span className="text-[10px] font-normal text-muted-foreground">{c.created_at}</span>
+                                                <span className="text-[10px] font-normal text-muted-foreground">
+                                                    {new Date(c.created_at).toLocaleString('id-ID', {
+                                                        timeZone: 'Asia/Jakarta',
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}{' '}
+                                                    WIB
+                                                </span>
                                             </div>
                                             <p className="text-muted-foreground leading-relaxed">{c.comment}</p>
                                         </div>
