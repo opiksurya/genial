@@ -57,7 +57,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function UsersIndex({ users, roles, projects = [] }: Props) {
-    const { flash } = usePage<any>().props;
+    const { flash, canAccessFinance } = usePage<any>().props;
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserItem | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -348,7 +348,7 @@ export default function UsersIndex({ users, roles, projects = [] }: Props) {
                                             {/* Actions */}
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    {u.roles.includes('Agent') && (
+                                                    {canAccessFinance && u.roles.includes('Agent') && (
                                                         <a
                                                             href="/finance/agents"
                                                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-bold transition-all shadow-sm"

@@ -174,13 +174,17 @@ const isFinanceNavItem = (item: NavItem): boolean =>
 
 const isRolesNavItem = (item: NavItem): boolean => item.href === '/roles';
 
+const isUsersNavItem = (item: NavItem): boolean => item.href === '/users';
+
 export function AppSidebar() {
-    const { claudeOfficeUrl, canAccessFinance, canManageRoles } = usePage().props;
+    const { claudeOfficeUrl, canAccessFinance, canManageRoles, canManageUsers } =
+        usePage().props;
 
     const visibleNavItems = mainNavItems.filter(
         (item) =>
             (canAccessFinance || !isFinanceNavItem(item)) &&
-            (canManageRoles || !isRolesNavItem(item)),
+            (canManageRoles || !isRolesNavItem(item)) &&
+            (canManageUsers || !isUsersNavItem(item)),
     );
 
     const footerNavItems: NavItem[] = claudeOfficeUrl
