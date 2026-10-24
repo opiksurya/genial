@@ -28,7 +28,7 @@ class IncomeController extends Controller
                 return $inc;
             });
 
-        $projects = Project::select('id', 'name', 'client')->get();
+        $projects = Project::select('id', 'name', 'client', 'agent_id')->get();
         $agents = Agent::where('status', 'active')->select('id', 'name', 'commission_rate')->get();
 
         $totalIncome = Income::sum('amount');

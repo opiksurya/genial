@@ -26,6 +26,7 @@ interface Project {
     id: number;
     name: string;
     client: string;
+    agent_id?: number | null;
 }
 
 interface AgentItem {
@@ -73,6 +74,8 @@ export default function IncomeManagement({ incomes, projects, agents = [], stats
     const [editingIncome, setEditingIncome] = useState<Income | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    // Set when the agent field was filled from the selected project; cleared once the user picks an agent manually.
+    const [autoAgent, setAutoAgent] = useState<{ agentId: string; projectName: string } | null>(null);
 
     const { data, setData, post, put, processing, reset, errors } = useForm({
         name: '',
@@ -111,12 +114,14 @@ export default function IncomeManagement({ incomes, projects, agents = [], stats
 
     const handleOpenCreateModal = () => {
         setEditingIncome(null);
+        setAutoAgent(null);
         reset();
         setIsModalOpen(true);
     };
 
     const handleOpenEditModal = (inc: Income) => {
         setEditingIncome(inc);
+        setAutoAgent(null);
         setData({
             name: inc.name,
             project_id: inc.project_id ? String(inc.project_id) : '',
@@ -417,11 +422,24 @@ export default function IncomeManagement({ incomes, projects, agents = [], stats
                                         value={data.project_id}
                                         onChange={(e) => {
                                             const pid = e.target.value;
-                                            setData('project_id', pid);
                                             const p = projects.find(proj => String(proj.id) === pid);
-                                            if (p && !data.client_name) {
-                                                setData('client_name', p.client);
+                                            const projectAgentId = p?.agent_id && agents.some(ag => ag.id === p.agent_id)
+                                                ? String(p.agent_id)
+                                                : '';
+                                            let agentId = data.agent_id;
+                                            if (p && projectAgentId) {
+                                                agentId = projectAgentId;
+                                                setAutoAgent({ agentId: projectAgentId, projectName: p.name });
+                                            } else if (autoAgent && autoAgent.agentId === data.agent_id) {
+                                                agentId = '';
+                                                setAutoAgent(null);
                                             }
+                                            setData((prev) => ({
+                                                ...prev,
+                                                project_id: pid,
+                                                agent_id: agentId,
+                                                client_name: p && !prev.client_name ? p.client : prev.client_name,
+                                            }));
                                         }}
                                         className="mt-1 w-full px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     >
@@ -452,7 +470,10 @@ export default function IncomeManagement({ incomes, projects, agents = [], stats
                                 </label>
                                 <select
                                     value={data.agent_id}
-                                    onChange={(e) => setData('agent_id', e.target.value)}
+                                    onChange={(e) => {
+                                        setData('agent_id', e.target.value);
+                                        setAutoAgent(null);
+                                    }}
                                     className="mt-1 w-full px-3 py-2 bg-purple-500/5 border border-purple-500/20 rounded-xl text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 >
                                     <option value="">-- Tanpa Agent (No Agent) --</option>
@@ -462,6 +483,11 @@ export default function IncomeManagement({ incomes, projects, agents = [], stats
                                         </option>
                                     ))}
                                 </select>
+                                {autoAgent && autoAgent.agentId === data.agent_id && (
+                                    <p className="mt-1 text-[11px] text-purple-400">
+                                        Otomatis dari project {autoAgent.projectName} — bisa diganti atau pilih Tanpa Agent
+                                    </p>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
