@@ -169,8 +169,15 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const isFinanceNavItem = (item: NavItem): boolean =>
+    typeof item.href === 'string' && item.href.startsWith('/finance');
+
 export function AppSidebar() {
-    const { claudeOfficeUrl } = usePage().props;
+    const { claudeOfficeUrl, canAccessFinance } = usePage().props;
+
+    const visibleNavItems = canAccessFinance
+        ? mainNavItems
+        : mainNavItems.filter((item) => !isFinanceNavItem(item));
 
     const footerNavItems: NavItem[] = claudeOfficeUrl
         ? [{ title: 'Claude Office', href: claudeOfficeUrl, icon: Bot }]
@@ -191,7 +198,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="px-2 py-4">
-                <NavMain items={mainNavItems} />
+                <NavMain items={visibleNavItems} />
             </SidebarContent>
 
             <SidebarFooter className="p-3 space-y-3">

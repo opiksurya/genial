@@ -12,6 +12,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             claudeOfficeUrl: string | null;
+            canAccessFinance: boolean;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

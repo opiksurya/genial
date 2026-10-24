@@ -208,7 +208,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Genial FinanceFlow Module Routes
-    Route::prefix('finance')->name('finance.')->group(function () {
+    Route::prefix('finance')->name('finance.')->middleware('role:Super Admin|Admin')->group(function () {
         Route::get('dashboard', [FinanceDashboardController::class, 'index'])->name('dashboard');
         
         Route::get('income', [IncomeController::class, 'index'])->name('income.index');
