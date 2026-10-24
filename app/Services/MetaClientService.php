@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Log;
 
 class MetaClientService
 {
-    protected const GRAPH_API_VERSION = 'v21.0';
-    protected const BASE_URL = 'https://graph.facebook.com/' . self::GRAPH_API_VERSION;
+    public const GRAPH_API_VERSION = 'v21.0';
+    public const BASE_URL = 'https://graph.facebook.com/' . self::GRAPH_API_VERSION;
 
     /**
      * Format Ad Account ID with 'act_' prefix if needed.
