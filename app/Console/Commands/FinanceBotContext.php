@@ -48,16 +48,18 @@ class FinanceBotContext extends Command
                     'name' => $sub->name,
                     'allocation_id' => $sub->allocation_id,
                 ])->all(),
-            'projects' => Project::orderBy('name')->get(['id', 'name', 'client'])
+            'projects' => Project::orderBy('name')->get(['id', 'name', 'client', 'agent_id'])
                 ->map(fn (Project $project): array => [
                     'id' => $project->id,
                     'name' => $project->name,
                     'client' => $project->client,
+                    'agent_id' => $project->agent_id,
                 ])->all(),
-            'agents' => Agent::where('status', 'active')->orderBy('name')->get(['id', 'name'])
+            'agents' => Agent::where('status', 'active')->orderBy('name')->get(['id', 'name', 'commission_rate'])
                 ->map(fn (Agent $agent): array => [
                     'id' => $agent->id,
                     'name' => $agent->name,
+                    'commission_rate' => (float) $agent->commission_rate,
                 ])->all(),
             'expense_categories' => Expense::query()->distinct()->orderBy('category')->pluck('category')->filter()->values()->all(),
             'income_statuses' => ['pending', 'paid', 'partial'],

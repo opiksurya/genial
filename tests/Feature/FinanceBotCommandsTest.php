@@ -45,8 +45,9 @@ test('context lists the finance choices for the bot', function () {
     $operational = Allocation::create(['name' => 'Operasional', 'percentage' => 40]);
     $child = Allocation::create(['name' => 'Kantor', 'percentage' => 10, 'parent_id' => $operational->id]);
     $sub = SubAllocation::create(['allocation_id' => $operational->id, 'name' => 'Internet', 'percentage' => 50]);
-    $project = Project::create(['name' => 'Toko Online', 'client' => 'CV Sinar', 'start_date' => '2026-10-01', 'end_date' => '2026-12-01']);
-    $activeAgent = Agent::create(['name' => 'Budi']);
+    $activeAgent = Agent::create(['name' => 'Budi', 'commission_rate' => 7.5]);
+    $project = Project::create(['name' => 'Toko Online', 'client' => 'CV Sinar', 'agent_id' => $activeAgent->id, 'start_date' => '2026-10-01', 'end_date' => '2026-12-01']);
+    $projectWithoutAgent = Project::create(['name' => 'Website', 'client' => 'PT Maju', 'start_date' => '2026-10-01', 'end_date' => '2026-12-01']);
     Agent::create(['name' => 'Lama', 'status' => 'inactive']);
     Expense::create(['name' => 'Wifi', 'category' => 'Internet', 'amount' => 1, 'date' => '2026-10-01']);
 
@@ -55,8 +56,11 @@ test('context lists the finance choices for the bot', function () {
     expect($exitCode)->toBe(0)
         ->and($json['allocations'])->toContain(['id' => $child->id, 'name' => 'Kantor', 'parent_id' => $operational->id, 'parent' => 'Operasional'])
         ->and($json['sub_allocations'])->toBe([['id' => $sub->id, 'name' => 'Internet', 'allocation_id' => $operational->id]])
-        ->and($json['projects'])->toBe([['id' => $project->id, 'name' => 'Toko Online', 'client' => 'CV Sinar']])
-        ->and($json['agents'])->toBe([['id' => $activeAgent->id, 'name' => 'Budi']])
+        ->and($json['projects'])->toBe([
+            ['id' => $project->id, 'name' => 'Toko Online', 'client' => 'CV Sinar', 'agent_id' => $activeAgent->id],
+            ['id' => $projectWithoutAgent->id, 'name' => 'Website', 'client' => 'PT Maju', 'agent_id' => null],
+        ])
+        ->and($json['agents'])->toBe([['id' => $activeAgent->id, 'name' => 'Budi', 'commission_rate' => 7.5]])
         ->and($json['expense_categories'])->toBe(['Internet'])
         ->and($json['income_default_status'])->toBe('paid');
 });
