@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\FinanceFlow;
 
+use App\Actions\FinanceFlow\CreateExpense;
+use App\Actions\FinanceFlow\DeleteExpense;
 use App\Http\Controllers\Controller;
 use App\Models\Allocation;
 use App\Models\Expense;
@@ -9,12 +11,13 @@ use App\Models\FinancialTransaction;
 use App\Models\Income;
 use App\Models\Project;
 use App\Models\SubAllocation;
+use App\Services\FinanceFlow\AllocationUsage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ExpenseController extends Controller
 {
-    public function index()
+    public function index(AllocationUsage $allocationUsage)
     {
         $expenses = Expense::with(['income', 'project', 'creator', 'approver', 'allocation', 'subAllocation'])
             ->latest('date')
@@ -27,81 +30,7 @@ class ExpenseController extends Controller
         $totalExpense = (float)Expense::sum('amount');
         $realMoneyAvailable = max(0, $totalIncome - $totalExpense);
 
-        // Fetch top-level allocations with sub-allocations
-        $allocations = Allocation::whereNull('parent_id')
-            ->with(['subAllocations'])
-            ->orderBy('sort_order')
-            ->get();
-
-        // Build structured allocation categories with budget ceiling & spent tracking
-        $allocationCategories = [];
-
-        foreach ($allocations as $alloc) {
-            $allocBudget = (float)(($alloc->percentage / 100) * $totalIncome);
-
-            if ($alloc->subAllocations && $alloc->subAllocations->count() > 0) {
-                foreach ($alloc->subAllocations as $sub) {
-                    $subBudget = (float)(($sub->percentage / 100) * $allocBudget);
-
-                    // Spent calculation: match by sub_allocation_id or category name
-                    $spent = (float)Expense::where(function ($q) use ($sub) {
-                        $q->where('sub_allocation_id', $sub->id)
-                          ->orWhere(function ($sq) use ($sub) {
-                              $sq->whereNull('sub_allocation_id')->where(function ($inner) use ($sub) {
-                                  $inner->where('category', $sub->name);
-                                  if (stripos($sub->name, 'agent') !== false || stripos($sub->name, 'komisi') !== false) {
-                                      $inner->orWhere('category', 'Freelancer')
-                                            ->orWhere('name', 'like', 'Komisi Agent%');
-                                  }
-                              });
-                          });
-                    })->sum('amount');
-
-                    $remaining = $subBudget - $spent;
-
-                    $allocationCategories[] = [
-                        'key' => 'sub:' . $sub->id,
-                        'type' => 'sub',
-                        'allocation_id' => $alloc->id,
-                        'sub_allocation_id' => $sub->id,
-                        'name' => $sub->name,
-                        'parent_name' => $alloc->name,
-                        'label' => $alloc->name . ' > ' . $sub->name,
-                        'percentage' => (float)$sub->percentage,
-                        'parent_percentage' => (float)$alloc->percentage,
-                        'budget_ceiling' => $subBudget,
-                        'total_spent' => $spent,
-                        'remaining_budget' => $remaining,
-                        'is_over_budget' => $spent > $subBudget,
-                    ];
-                }
-            } else {
-                $spent = (float)Expense::where(function ($q) use ($alloc) {
-                    $q->where('allocation_id', $alloc->id)
-                      ->orWhere(function ($sq) use ($alloc) {
-                          $sq->whereNull('allocation_id')->where('category', $alloc->name);
-                      });
-                })->sum('amount');
-
-                $remaining = $allocBudget - $spent;
-
-                $allocationCategories[] = [
-                    'key' => 'alloc:' . $alloc->id,
-                    'type' => 'main',
-                    'allocation_id' => $alloc->id,
-                    'sub_allocation_id' => null,
-                    'name' => $alloc->name,
-                    'parent_name' => null,
-                    'label' => $alloc->name,
-                    'percentage' => (float)$alloc->percentage,
-                    'parent_percentage' => (float)$alloc->percentage,
-                    'budget_ceiling' => $allocBudget,
-                    'total_spent' => $spent,
-                    'remaining_budget' => $remaining,
-                    'is_over_budget' => $spent > $allocBudget,
-                ];
-            }
-        }
+        $allocationCategories = $allocationUsage->categories();
 
         // Category summary for pill filter
         $rawCategorySummary = Expense::groupBy('category')
@@ -176,50 +105,9 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, CreateExpense $createExpense)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'allocation_id' => 'nullable|exists:allocations,id',
-            'sub_allocation_id' => 'nullable|exists:sub_allocations,id',
-            'income_id' => 'nullable|exists:incomes,id',
-            'project_id' => 'nullable|exists:projects,id',
-            'amount' => 'required|numeric|min:0',
-            'date' => 'required|date',
-            'description' => 'nullable|string',
-            'proof_attachment' => 'nullable|string|max:255',
-        ]);
-
-        // Auto-sync category name with allocation / sub_allocation record
-        if ($request->filled('sub_allocation_id')) {
-            $sub = SubAllocation::find($request->sub_allocation_id);
-            if ($sub) {
-                $validated['category'] = $sub->name;
-                $validated['allocation_id'] = $sub->allocation_id;
-            }
-        } elseif ($request->filled('allocation_id')) {
-            $alloc = Allocation::find($request->allocation_id);
-            if ($alloc) {
-                $validated['category'] = $alloc->name;
-                $validated['sub_allocation_id'] = null;
-            }
-        }
-
-        $validated['created_by'] = auth()->id();
-        $validated['approval_status'] = 'approved';
-
-        $expense = Expense::create($validated);
-
-        FinancialTransaction::create([
-            'type' => 'expense',
-            'reference_type' => Expense::class,
-            'reference_id' => $expense->id,
-            'activity_name' => 'Added Expense: [' . $expense->category . '] ' . $expense->name,
-            'user_id' => auth()->id(),
-            'amount' => $expense->amount,
-            'status' => 'completed',
-        ]);
+        $createExpense->create($request->user(), $request->all());
 
         return redirect()->back()->with('success', 'Pengeluaran berhasil dicatat!');
     }
@@ -283,9 +171,10 @@ class ExpenseController extends Controller
         return redirect()->back()->with('success', 'Status pengeluaran berhasil diubah!');
     }
 
-    public function destroy(Expense $expense)
+    public function destroy(Expense $expense, DeleteExpense $deleteExpense)
     {
-        $expense->delete();
+        $deleteExpense->delete($expense);
+
         return redirect()->back()->with('success', 'Pengeluaran berhasil dihapus!');
     }
 }
