@@ -211,15 +211,17 @@ export function LineCompareChart({
     const count = labels.length;
     const visibleLabelIndexes = xLabelIndexes(count);
 
-    const getX = (idx: number) => (count > 1 ? (idx / (count - 1)) * 100 : 50);
-    const getY = (val: number) => (max > 0 ? 100 - (val / max) * 100 : 100);
+    const width = 1000;
+    const height = 300;
+    const getX = (idx: number) => (count > 1 ? (idx / (count - 1)) * width : width / 2);
+    const getY = (val: number) => (max > 0 ? height - (val / max) * height : height);
 
     return (
         <div aria-label={ariaLabel} className="space-y-2">
             <div className="flex items-center justify-end gap-4 text-xs">
                 {series.map((s, idx) => (
                     <div key={s.key} className="flex items-center gap-1.5">
-                        <span className={cn('h-0.5 w-4 rounded-full', idx === 0 ? 'bg-blue-600' : 'bg-pink-600')} />
+                        <span className={cn('h-1 w-3 rounded-full', idx === 0 ? 'bg-blue-600' : 'bg-pink-600')} />
                         <span className="text-muted-foreground font-medium">{s.label}</span>
                     </div>
                 ))}
@@ -235,10 +237,22 @@ export function LineCompareChart({
                 </div>
 
                 <div className="relative flex-1 border-b border-border">
-                    <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+                    <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none" viewBox={`0 0 ${width} ${height}`}>
                         {ticks.map((_, index) => {
-                            const y = (index / (ticks.length - 1)) * 100;
-                            return <line key={index} x1="0" y1={y} x2="100" y2={y} stroke="currentColor" strokeOpacity="0.1" strokeWidth="0.5" />;
+                            const y = (index / (ticks.length - 1)) * height;
+                            return (
+                                <line
+                                    key={index}
+                                    x1="0"
+                                    y1={y}
+                                    x2={width}
+                                    y2={y}
+                                    stroke="currentColor"
+                                    strokeOpacity="0.08"
+                                    strokeWidth="1"
+                                    vectorEffect="non-scaling-stroke"
+                                />
+                            );
                         })}
 
                         {series.map((s, sIdx) => {
@@ -253,6 +267,7 @@ export function LineCompareChart({
                                     strokeWidth="2"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
+                                    vectorEffect="non-scaling-stroke"
                                     points={points}
                                 />
                             );
@@ -271,6 +286,7 @@ export function LineCompareChart({
 
                             return (
                                 <div key={idx} tabIndex={0} className="group relative flex-1 focus-visible:outline-none">
+                                    <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px bg-foreground/20 group-hover:block group-focus-visible:block" />
                                     <div className="h-full w-full opacity-0 hover:bg-blue-500/5 transition-colors" />
                                     <ChartTooltip title={title} lines={tooltipLines} alignRight={alignRight} />
                                 </div>
