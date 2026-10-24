@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\SubAllocation;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -127,6 +128,44 @@ test('income action fills the client name from the project', function () {
     ]);
 
     expect($income->client_name)->toBe('CV Sinar');
+});
+
+test('income page sends the agent of each project to the form', function () {
+    $agent = Agent::create(['name' => 'Budi', 'commission_rate' => 10]);
+    $projectWithAgent = Project::create(['name' => 'Tatamu', 'client' => 'PT Tatamu', 'agent_id' => $agent->id, 'start_date' => '2026-10-01', 'end_date' => '2026-12-01']);
+    $projectWithoutAgent = Project::create(['name' => 'Website', 'client' => 'PT Maju', 'start_date' => '2026-10-01', 'end_date' => '2026-12-01']);
+
+    $this->actingAs($this->admin)
+        ->get(route('finance.income.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('finance/income')
+            ->has('projects', 2)
+            ->where('projects.0.id', $projectWithAgent->id)
+            ->where('projects.0.agent_id', $agent->id)
+            ->where('projects.1.id', $projectWithoutAgent->id)
+            ->where('projects.1.agent_id', null)
+        );
+});
+
+test('web income store without an agent creates no commission even when the project has an agent', function () {
+    $agent = Agent::create(['name' => 'Budi', 'commission_rate' => 10]);
+    $project = Project::create(['name' => 'Tatamu', 'client' => 'PT Tatamu', 'agent_id' => $agent->id, 'start_date' => '2026-10-01', 'end_date' => '2026-12-01']);
+
+    $this->actingAs($this->admin)
+        ->from(route('finance.income.index'))
+        ->post(route('finance.income.store'), [
+            'name' => 'Termin 1 Tatamu',
+            'project_id' => $project->id,
+            'agent_id' => '',
+            'amount' => 1000000,
+            'date' => '2026-10-02',
+            'status' => 'paid',
+        ])
+        ->assertRedirect(route('finance.income.index'));
+
+    expect(Income::sole()->agent_id)->toBeNull()
+        ->and(AgentCommission::count())->toBe(0);
 });
 
 test('income action rejects invalid data without saving', function () {
