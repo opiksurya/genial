@@ -11,25 +11,33 @@ class ProjectMetaConfig extends Model
         'project_id',
         'ad_account_id',
         'pixel_id',
+        'app_id',
+        'app_secret',
         'access_token',
         'account_name',
         'currency',
         'timezone_name',
         'account_status',
+        'fb_user_id',
+        'fb_user_name',
         'status',
         'last_synced_at',
+        'token_expires_at',
         'error_message',
         'meta_raw_data',
     ];
 
     protected $hidden = [
         'access_token',
+        'app_secret',
     ];
 
     protected $casts = [
         'access_token' => 'encrypted',
+        'app_secret' => 'encrypted',
         'meta_raw_data' => 'array',
         'last_synced_at' => 'datetime',
+        'token_expires_at' => 'datetime',
         'account_status' => 'integer',
     ];
 

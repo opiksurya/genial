@@ -13,12 +13,16 @@ export type MetaAdsProjectOption = {
         project_id?: number;
         ad_account_id?: string | null;
         pixel_id?: string | null;
+        app_id?: string | null;
+        fb_user_id?: string | null;
+        fb_user_name?: string | null;
         account_name?: string | null;
         currency?: string | null;
         timezone_name?: string | null;
         account_status?: number | null;
         status?: 'connected' | 'error' | 'disconnected' | string;
         last_synced_at?: string | null;
+        token_expires_at?: string | null;
         error_message?: string | null;
     } | null;
     metaConfig?: {
@@ -26,12 +30,16 @@ export type MetaAdsProjectOption = {
         project_id?: number;
         ad_account_id?: string | null;
         pixel_id?: string | null;
+        app_id?: string | null;
+        fb_user_id?: string | null;
+        fb_user_name?: string | null;
         account_name?: string | null;
         currency?: string | null;
         timezone_name?: string | null;
         account_status?: number | null;
         status?: 'connected' | 'error' | 'disconnected' | string;
         last_synced_at?: string | null;
+        token_expires_at?: string | null;
         error_message?: string | null;
     } | null;
 };

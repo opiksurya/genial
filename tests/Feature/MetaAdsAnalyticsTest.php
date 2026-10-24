@@ -126,3 +126,84 @@ test('meta ads dummy data totals are internally consistent', function (MetaAdsPe
         ->and(array_sum(array_column($daily, 'impressions')))->toBe($totals['impressions'])
         ->and(round($totals['revenue'] / $totals['spend'], 2))->toBe($totals['roas']);
 })->with(MetaAdsPeriod::cases());
+
+test('updating project meta config saves app_id and encrypted app_secret', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('projects.meta.update', $project), [
+            'ad_account_id' => 'act_4489107658080015',
+            'app_id' => '1808794403668949',
+            'app_secret' => 'super_secret_meta_key_123',
+            'pixel_id' => '928374615283921',
+        ])
+        ->assertRedirect();
+
+    $config = $project->fresh()->metaConfig;
+    expect($config)->not->toBeNull()
+        ->and($config->ad_account_id)->toBe('act_4489107658080015')
+        ->and($config->app_id)->toBe('1808794403668949')
+        ->and($config->app_secret)->toBe('super_secret_meta_key_123')
+        ->and($config->pixel_id)->toBe('928374615283921');
+});
+
+test('meta oauth redirect generates facebook oauth url and sets state session', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('projects.meta.oauth.redirect', [
+            'project' => $project->id,
+            'app_id' => '1808794403668949',
+            'app_secret' => 'my_secret_token',
+            'ad_account_id' => 'act_4489107658080015',
+        ]));
+
+    $response->assertRedirect();
+    $targetUrl = $response->headers->get('Location');
+
+    expect($targetUrl)->toContain('https://www.facebook.com/v21.0/dialog/oauth')
+        ->and($targetUrl)->toContain('client_id=1808794403668949')
+        ->and($targetUrl)->toContain('ads_read')
+        ->and(session('meta_oauth_state'))->not->toBeNull()
+        ->and(session('meta_oauth_project_id'))->toBe($project->id);
+
+    $config = $project->fresh()->metaConfig;
+    expect($config->app_id)->toBe('1808794403668949')
+        ->and($config->app_secret)->toBe('my_secret_token')
+        ->and($config->ad_account_id)->toBe('act_4489107658080015');
+});
+
+test('meta oauth callback rejects invalid state', function () {
+    $user = User::factory()->create();
+    $project = Project::create([
+        'name' => 'Tatamu Brand',
+        'client' => 'Tatamu',
+        'start_date' => now(),
+        'end_date' => now()->addMonth(),
+    ]);
+
+    session(['meta_oauth_state' => 'valid_state_123']);
+
+    $response = $this->actingAs($user)
+        ->get(route('projects.meta.oauth.callback', [
+            'project' => $project->id,
+            'state' => 'invalid_state_456',
+            'code' => 'fb_auth_code_sample',
+        ]));
+
+    $response->assertRedirect()
+        ->assertSessionHas('error');
+});
+

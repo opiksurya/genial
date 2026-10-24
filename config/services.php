@@ -41,6 +41,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    'facebook' => [
+        'client_id' => env('META_APP_ID', env('FACEBOOK_CLIENT_ID')),
+        'client_secret' => env('META_APP_SECRET', env('FACEBOOK_CLIENT_SECRET')),
+        'redirect' => env('META_REDIRECT_URI', env('FACEBOOK_REDIRECT_URI')),
+    ],
+
     'claude_office' => [
         'url' => env('CLAUDE_OFFICE_URL'),
     ],

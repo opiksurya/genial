@@ -270,4 +270,84 @@ class MetaClientService
             return null;
         }
     }
+
+    /**
+     * Generate Facebook OAuth authorization URL for 1-click connect.
+     */
+    public static function generateOAuthUrl(string $appId, string $redirectUri, string $state): string
+    {
+        $scopes = ['ads_read', 'ads_management', 'read_insights', 'public_profile', 'email'];
+
+        return 'https://www.facebook.com/' . self::GRAPH_API_VERSION . '/dialog/oauth?' . http_build_query([
+            'client_id' => trim($appId),
+            'redirect_uri' => $redirectUri,
+            'state' => $state,
+            'response_type' => 'code',
+            'scope' => implode(',', $scopes),
+        ]);
+    }
+
+    /**
+     * Exchange OAuth code for Long-Lived User Access Token and user profile.
+     */
+    public static function handleOAuthCallback(string $code, string $appId, string $appSecret, string $redirectUri): array
+    {
+        try {
+            // Step 1: Exchange code for short-lived token
+            $shortResponse = Http::timeout(15)->get(self::BASE_URL . '/oauth/access_token', [
+                'client_id' => trim($appId),
+                'client_secret' => trim($appSecret),
+                'redirect_uri' => $redirectUri,
+                'code' => trim($code),
+            ]);
+
+            if (!$shortResponse->successful()) {
+                $errMsg = $shortResponse->json('error.message') ?? 'Gagal menukarkan kode otorisasi Facebook.';
+                Log::warning('Meta short-lived token exchange failed: ' . $shortResponse->body());
+                return ['success' => false, 'message' => $errMsg];
+            }
+
+            $shortToken = $shortResponse->json('access_token');
+
+            // Step 2: Exchange for long-lived access token (~60 days)
+            $longResponse = Http::timeout(15)->get(self::BASE_URL . '/oauth/access_token', [
+                'grant_type' => 'fb_exchange_token',
+                'client_id' => trim($appId),
+                'client_secret' => trim($appSecret),
+                'fb_exchange_token' => $shortToken,
+            ]);
+
+            $longToken = $longResponse->successful() ? $longResponse->json('access_token') : $shortToken;
+            $expiresIn = $longResponse->successful() ? (int) $longResponse->json('expires_in', 5184000) : 5184000;
+
+            // Step 3: Fetch Facebook User profile (Name & ID)
+            $profileResponse = Http::timeout(10)->get(self::BASE_URL . '/me', [
+                'fields' => 'id,name,email',
+                'access_token' => $longToken,
+            ]);
+
+            $profile = $profileResponse->successful() ? $profileResponse->json() : [];
+
+            // Step 4: Fetch user's accessible Ad Accounts
+            $adAccountsResponse = Http::timeout(15)->get(self::BASE_URL . '/me/adaccounts', [
+                'fields' => 'id,account_id,name,currency,account_status',
+                'limit' => 25,
+                'access_token' => $longToken,
+            ]);
+
+            $adAccounts = $adAccountsResponse->successful() ? ($adAccountsResponse->json('data') ?? []) : [];
+
+            return [
+                'success' => true,
+                'access_token' => $longToken,
+                'expires_in' => $expiresIn,
+                'fb_user_id' => $profile['id'] ?? null,
+                'fb_user_name' => $profile['name'] ?? null,
+                'ad_accounts' => $adAccounts,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Meta handleOAuthCallback exception: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Koneksi ke Facebook error: ' . $e->getMessage()];
+        }
+    }
 }

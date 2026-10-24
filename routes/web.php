@@ -181,6 +181,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{project}/article', [ProjectBoardController::class, 'updateArticle'])->whereNumber('project')->name('article.update');
 
         // Meta Ads Integration Routes
+        Route::get('{project}/meta-config/oauth/redirect', [ProjectMetaController::class, 'oauthRedirect'])->whereNumber('project')->name('meta.oauth.redirect');
+        Route::get('{project}/meta-config/oauth/callback', [ProjectMetaController::class, 'oauthCallback'])->whereNumber('project')->name('meta.oauth.callback');
         Route::post('{project}/meta-config', [ProjectMetaController::class, 'update'])->whereNumber('project')->name('meta.update');
         Route::post('{project}/meta-config/test', [ProjectMetaController::class, 'testConnection'])->whereNumber('project')->name('meta.test');
         Route::post('{project}/meta-config/sync', [ProjectMetaController::class, 'sync'])->whereNumber('project')->name('meta.sync');
