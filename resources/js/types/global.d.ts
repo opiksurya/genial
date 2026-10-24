@@ -14,6 +14,7 @@ declare module '@inertiajs/core' {
             claudeOfficeUrl: string | null;
             canAccessFinance: boolean;
             canManageRoles: boolean;
+            canManageUsers: boolean;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

@@ -156,7 +156,7 @@ Route::get('office-auth', ClaudeOfficeAuthController::class)->name('claude-offic
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
 
     // Genial ProjectFlow Module Routes
