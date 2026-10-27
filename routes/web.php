@@ -288,6 +288,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{meeting}', [\App\Http\Controllers\MeetingController::class, 'update'])->name('update');
         Route::delete('/{meeting}', [\App\Http\Controllers\MeetingController::class, 'destroy'])->name('destroy');
         Route::get('/{meeting}/download-ics', [\App\Http\Controllers\MeetingController::class, 'downloadIcs'])->name('download-ics');
+        Route::post('/feed-token/regenerate', [\App\Http\Controllers\MeetingController::class, 'regenerateFeedToken'])->name('feed-token.regenerate');
         Route::get('/google/connect', [GoogleController::class, 'connectCalendar'])->name('google.connect');
         Route::post('/google/disconnect', [GoogleController::class, 'disconnectCalendar'])->name('google.disconnect');
     });
@@ -303,8 +304,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-// Live iCalendar (.ics) Feed for Google Calendar Subscription
-Route::get('/meetings/feed.ics', [\App\Http\Controllers\MeetingController::class, 'feed'])->name('meetings.feed');
+// Live iCalendar (.ics) Feed for Google Calendar Subscription (private, secured by a per-user secret token)
+Route::get('/meetings/feed/{token}.ics', [\App\Http\Controllers\MeetingController::class, 'feed'])->name('meetings.feed');
+// Old public feed URL without a token: gone, never serves data
+Route::get('/meetings/feed.ics', [\App\Http\Controllers\MeetingController::class, 'legacyFeed'])->name('meetings.feed.legacy');
 
 
 require __DIR__.'/settings.php';

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Meeting;
 use App\Models\Project;
+use App\Models\User;
 use App\Services\GoogleCalendarService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -94,7 +96,7 @@ class MeetingController extends Controller
             'upcomingMeetings' => $upcomingMeetings,
             'isGoogleConnected' => $this->googleCalendarService->isConnected($request->user()),
             'googleUserEmail' => $request->user()?->email,
-            'calendarFeedUrl' => url('/meetings/feed.ics'),
+            'calendarFeedUrl' => $this->calendarFeedUrlFor($request->user()),
             'filters' => [
                 'platform' => $request->platform ?? 'all',
                 'project_id' => $request->project_id ?? 'all',
@@ -176,11 +178,36 @@ class MeetingController extends Controller
     }
 
     /**
-     * Export all scheduled meetings as an iCalendar (.ics) live feed for Google Calendar / Apple Calendar subscription.
+     * Replace the current user's calendar feed token so old subscription URLs stop working.
      */
-    public function feed()
+    public function regenerateFeedToken(Request $request): RedirectResponse
     {
+        $request->user()->regenerateCalendarFeedToken();
+
+        return redirect()->back()->with('success', 'URL langganan kalender berhasil dibuat ulang. URL lama sudah tidak berlaku.');
+    }
+
+    /**
+     * The old public feed URL without a token no longer serves any data.
+     */
+    public function legacyFeed(): never
+    {
+        abort(410);
+    }
+
+    /**
+     * Export the token owner's scheduled meetings as an iCalendar (.ics) live feed for Google Calendar / Apple Calendar subscription.
+     */
+    public function feed(string $token): Response
+    {
+        $user = User::where('calendar_feed_token', $token)->first();
+
+        if (! $user || ! hash_equals((string) $user->calendar_feed_token, $token)) {
+            abort(404);
+        }
+
         $meetings = Meeting::with(['project', 'user'])
+            ->where('user_id', $user->id)
             ->where('status', '!=', 'cancelled')
             ->where('start_time', '>=', now()->subMonths(2))
             ->orderBy('start_time', 'asc')
@@ -239,7 +266,7 @@ class MeetingController extends Controller
         return response($icsContent, 200, [
             'Content-Type' => 'text/calendar; charset=utf-8',
             'Content-Disposition' => 'inline; filename="genial-meetings.ics"',
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Cache-Control' => 'private, no-store',
         ]);
     }
 
@@ -288,5 +315,21 @@ class MeetingController extends Controller
             'Content-Type' => 'text/calendar; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="meeting-' . $meeting->id . '.ics"',
         ]);
+    }
+
+    /**
+     * Build the private calendar subscription URL for the given user.
+     */
+    protected function calendarFeedUrlFor(?User $user): ?string
+    {
+        if (! $user) {
+            return null;
+        }
+
+        if (! $user->calendar_feed_token) {
+            $user->regenerateCalendarFeedToken();
+        }
+
+        return route('meetings.feed', ['token' => $user->calendar_feed_token]);
     }
 }
