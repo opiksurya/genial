@@ -1,6 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import React, { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
+import { regenerate as regenerateFeedToken } from '@/routes/meetings/feed-token';
 import type { BreadcrumbItem } from '@/types';
 import {
     Calendar as CalendarIcon,
@@ -27,7 +28,8 @@ import {
     CheckCircle2,
     AlertCircle,
     Info,
-    Download
+    Download,
+    RefreshCw
 } from 'lucide-react';
 
 interface ProjectOption {
@@ -75,7 +77,7 @@ interface Props {
     upcomingMeetings: UpcomingMeeting[];
     isGoogleConnected: boolean;
     googleUserEmail?: string;
-    calendarFeedUrl: string;
+    calendarFeedUrl: string | null;
     filters: {
         platform: string;
         project_id: string;
@@ -146,6 +148,7 @@ export default function MeetingCalendarIndex({
     const [selectedMeeting, setSelectedMeeting] = useState<MeetingItem | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [copiedLink, setCopiedLink] = useState(false);
+    const [copiedFeedUrl, setCopiedFeedUrl] = useState(false);
 
     // Form
     const createForm = useForm({
@@ -346,6 +349,19 @@ export default function MeetingCalendarIndex({
         setTimeout(() => setCopiedLink(false), 2000);
     };
 
+    const copyFeedUrl = () => {
+        if (!calendarFeedUrl) return;
+        navigator.clipboard.writeText(calendarFeedUrl);
+        setCopiedFeedUrl(true);
+        setTimeout(() => setCopiedFeedUrl(false), 2000);
+    };
+
+    const handleRegenerateFeedToken = () => {
+        if (confirm('Buat ulang URL langganan? URL lama akan langsung tidak berlaku dan kalender yang memakainya harus dilanggan ulang dengan URL baru.')) {
+            router.post(regenerateFeedToken.url(), {}, { preserveScroll: true });
+        }
+    };
+
     // Meeting statistics
     const stats = useMemo(() => {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -447,6 +463,49 @@ export default function MeetingCalendarIndex({
                             <Sparkles className="w-4 h-4" />
                             Hubungkan Sekarang
                         </a>
+                    </div>
+                )}
+
+                {/* PRIVATE CALENDAR SUBSCRIPTION URL */}
+                {calendarFeedUrl && (
+                    <div className="p-4 rounded-2xl border border-sidebar-border bg-card shadow-sm flex flex-col gap-3 text-xs">
+                        <div className="flex items-start gap-2.5">
+                            <Share2 className="w-5 h-5 text-primary shrink-0" />
+                            <div>
+                                <p className="font-bold text-foreground">URL Langganan Kalender Pribadi</p>
+                                <p className="text-muted-foreground mt-0.5">
+                                    Tempel URL ini di Google Calendar (Tambah kalender &gt; Dari URL) untuk melihat agenda meeting yang Anda buat. Rahasiakan URL ini; jika tersebar, klik "Buat Ulang" agar URL lama tidak berlaku.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <input
+                                type="text"
+                                readOnly
+                                value={calendarFeedUrl}
+                                onFocus={(e) => e.currentTarget.select()}
+                                aria-label="URL langganan kalender pribadi"
+                                className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-sidebar-border bg-muted/40 font-mono text-[11px] text-foreground"
+                            />
+                            <div className="flex gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={copyFeedUrl}
+                                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold transition-all"
+                                >
+                                    {copiedFeedUrl ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                    {copiedFeedUrl ? 'Tersalin' : 'Salin'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleRegenerateFeedToken}
+                                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-sidebar-border hover:border-rose-500/50 hover:text-rose-500 font-semibold transition-all"
+                                >
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    Buat Ulang
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
 

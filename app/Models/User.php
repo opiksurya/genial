@@ -25,15 +25,44 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property string|null $calendar_feed_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
 #[Fillable(['name', 'email', 'password', 'google_id', 'avatar', 'google_access_token', 'google_refresh_token', 'google_token_expires_at', 'google_calendar_id'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'google_access_token', 'google_refresh_token'])]
+#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'google_access_token', 'google_refresh_token', 'calendar_feed_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * Give every new user a secret token for the private meetings calendar feed.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            $user->calendar_feed_token ??= static::generateCalendarFeedToken();
+        });
+    }
+
+    /**
+     * Create a random 64-character token for the meetings calendar feed URL.
+     */
+    public static function generateCalendarFeedToken(): string
+    {
+        return bin2hex(random_bytes(32));
+    }
+
+    /**
+     * Replace the calendar feed token so that previously shared feed URLs stop working.
+     */
+    public function regenerateCalendarFeedToken(): string
+    {
+        $this->forceFill(['calendar_feed_token' => static::generateCalendarFeedToken()])->save();
+
+        return $this->calendar_feed_token;
+    }
 
     /**
      * Get the attributes that should be cast.
