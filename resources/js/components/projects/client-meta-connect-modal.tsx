@@ -48,6 +48,7 @@ interface MetaConfig {
     fb_user_id?: string | null;
     fb_user_name?: string | null;
     token_expires_at?: string | null;
+    has_access_token?: boolean;
     account_name?: string | null;
     currency?: string | null;
     timezone_name?: string | null;
@@ -781,7 +782,7 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
                                     <div className="flex items-center gap-2">
                                         <KeyRound className="w-4 h-4 text-muted-foreground" />
                                         <span>Opsi Alternatif: Gunakan Token Manual (System User / Tanpa Expiry)</span>
-                                        {existingConfig?.access_token && (
+                                        {existingConfig?.has_access_token && (
                                             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 font-normal">
                                                 Token Tersimpan
                                             </Badge>
@@ -799,7 +800,7 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
                                             <Input
                                                 id="access_token"
                                                 type={showToken ? 'text' : 'password'}
-                                                placeholder={existingConfig?.access_token ? '••••••••••••••••••••••••••••••••••••••••' : 'EAABw... (Token System User Meta)'}
+                                                placeholder={existingConfig?.has_access_token ? '••••••••••••••••••••••••••••••••••••••••' : 'EAABw... (Token System User Meta)'}
                                                 value={data.access_token}
                                                 onChange={(e) => setData('access_token', e.target.value)}
                                                 className="font-mono text-xs h-9 pr-9"

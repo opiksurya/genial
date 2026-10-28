@@ -32,6 +32,15 @@ class ProjectMetaConfig extends Model
         'app_secret',
     ];
 
+    /**
+     * Safe flags exposed instead of the hidden secrets.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'has_access_token',
+    ];
+
     protected $casts = [
         'access_token' => 'encrypted',
         'app_secret' => 'encrypted',
@@ -55,6 +64,14 @@ class ProjectMetaConfig extends Model
     }
 
     /**
+     * Whether an access token is stored, without decrypting or exposing it.
+     */
+    public function getHasAccessTokenAttribute(): bool
+    {
+        return ! empty($this->attributes['access_token'] ?? null);
+    }
+
+    /**
      * Format formatted ad account id (always with 'act_' prefix for API calls).
      */
     public function getFormattedAdAccountIdAttribute(): ?string
@@ -63,8 +80,8 @@ class ProjectMetaConfig extends Model
             return null;
         }
 
-        return str_starts_with($this->ad_account_id, 'act_') 
-            ? $this->ad_account_id 
-            : 'act_' . $this->ad_account_id;
+        return str_starts_with($this->ad_account_id, 'act_')
+            ? $this->ad_account_id
+            : 'act_'.$this->ad_account_id;
     }
 }
