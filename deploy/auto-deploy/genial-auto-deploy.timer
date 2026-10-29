@@ -1,0 +1,10 @@
+[Unit]
+Description=Cek main setiap 5 menit untuk tayang otomatis
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=5min
+Persistent=false
+
+[Install]
+WantedBy=timers.target

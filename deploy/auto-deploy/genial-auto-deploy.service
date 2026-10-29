@@ -1,0 +1,10 @@
+[Unit]
+Description=Genial auto deploy (tayang otomatis main)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/auto-deploy/auto-deploy.sh
+TimeoutStartSec=30min
+Nice=5
