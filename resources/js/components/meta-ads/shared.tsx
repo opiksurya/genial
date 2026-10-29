@@ -89,9 +89,19 @@ export function Th({ children, align = 'left' }: { children: ReactNode; align?: 
     );
 }
 
-export function Td({ children, align = 'left', className }: { children: ReactNode; align?: 'left' | 'right'; className?: string }) {
+export function Td({
+    children,
+    align = 'left',
+    className,
+    colSpan,
+}: {
+    children: ReactNode;
+    align?: 'left' | 'right';
+    className?: string;
+    colSpan?: number;
+}) {
     return (
-        <td className={cn('p-2.5 text-foreground', align === 'right' && 'text-right font-mono tabular-nums whitespace-nowrap', className)}>
+        <td colSpan={colSpan} className={cn('p-2.5 text-foreground', align === 'right' && 'text-right font-mono tabular-nums whitespace-nowrap', className)}>
             {children}
         </td>
     );
