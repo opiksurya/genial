@@ -52,6 +52,9 @@ class ProjectMetaConfig extends Model
         'is_default' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Project, $this>
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
