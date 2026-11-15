@@ -78,7 +78,7 @@ test('attendees, creator and google fields never reach the client', function () 
 
     $response->assertInertia(fn (Assert $page) => $page
         ->has('meetings.0', fn (Assert $m) => $m
-            ->hasAll(['id', 'title', 'description', 'start_time', 'end_time', 'platform', 'meeting_link', 'location', 'status', 'project_name'])
+            ->hasAll(['id', 'title', 'start_time', 'end_time', 'platform', 'meeting_link', 'location', 'status', 'project_name'])
             ->etc()));
 
     $content = $response->getContent();
@@ -167,4 +167,22 @@ test('staff download-ics output is unchanged after extraction', function () {
     expect($response->getContent())->toBe($expected);
 
     Carbon::setTestNow();
+});
+
+test('the meeting description never reaches the client, in the page or the ics', function () {
+    $meeting = ($this->meeting)($this->own, [
+        'description' => 'CATATAN-INTERNAL-RAHASIA tarif dan strategi',
+        'meeting_link' => 'https://meet.example.test/abc',
+    ]);
+
+    $page = $this->actingAs($this->client)->get(route('client.meetings.index'))->assertOk();
+    expect($page->getContent())->not->toContain('CATATAN-INTERNAL-RAHASIA');
+    $page->assertInertia(fn (Assert $p) => $p->has('meetings.0', fn (Assert $m) => $m->missing('description')->etc()));
+
+    $ics = $this->actingAs($this->client)->get('/client/meetings/'.$meeting->id.'/ics')->assertOk()->getContent();
+    expect($ics)->not->toContain('CATATAN-INTERNAL-RAHASIA')->toContain('DESCRIPTION:Link: https://meet.example.test/abc');
+
+    $staff = User::factory()->create()->assignRole('Super Admin');
+    $this->actingAs($staff)->get(route('meetings.download-ics', $meeting))->assertOk()
+        ->assertSee('CATATAN-INTERNAL-RAHASIA', false);
 });

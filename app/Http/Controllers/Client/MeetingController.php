@@ -28,7 +28,6 @@ class MeetingController extends Controller
             $meetingList[] = [
                 'id' => $meeting->id,
                 'title' => $meeting->title,
-                'description' => $meeting->description,
                 'start_time' => $meeting->start_time->toIso8601String(),
                 'end_time' => $meeting->end_time->toIso8601String(),
                 'platform' => $meeting->platform,
@@ -64,7 +63,7 @@ class MeetingController extends Controller
             abort(404);
         }
 
-        return response(MeetingIcs::render($meeting), 200, [
+        return response(MeetingIcs::render($meeting, includeDescription: false), 200, [
             'Content-Type' => 'text/calendar; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="meeting-'.$meeting->id.'.ics"',
         ]);

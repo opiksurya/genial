@@ -21,7 +21,6 @@ type PortalProject = {
 type PortalMeeting = {
     id: number;
     title: string;
-    description: string | null;
     start_time: string;
     end_time: string;
     platform: string | null;
@@ -144,11 +143,6 @@ export default function ClientMeetings({
                                             <p className="flex items-center gap-1 text-xs text-muted-foreground">
                                                 <MapPin className="size-3" />
                                                 {meeting.location}
-                                            </p>
-                                        )}
-                                        {meeting.description && (
-                                            <p className="mt-1 whitespace-pre-line text-sm">
-                                                {meeting.description}
                                             </p>
                                         )}
                                     </div>

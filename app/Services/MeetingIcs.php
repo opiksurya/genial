@@ -6,11 +6,12 @@ use App\Models\Meeting;
 
 /**
  * Builds the .ics (iCalendar) body for a single meeting. Shared by the staff
- * and client-portal download endpoints.
+ * and client-portal download endpoints. The client portal passes $includeDescription = false so internal
+ * notes in the description never leave the building.
  */
 final class MeetingIcs
 {
-    public static function render(Meeting $meeting): string
+    public static function render(Meeting $meeting, bool $includeDescription = true): string
     {
         $dtStart = $meeting->start_time->utc()->format('Ymd\THis\Z');
         $dtEnd = $meeting->end_time->utc()->format('Ymd\THis\Z');
@@ -21,7 +22,7 @@ final class MeetingIcs
         $location = str_replace(["\r", "\n", ';', ','], ['', ' ', "\;", '\\,'], $meeting->meeting_link ?: ($meeting->location ?: 'Online'));
 
         $descParts = [];
-        if ($meeting->description) {
+        if ($includeDescription && $meeting->description) {
             $descParts[] = $meeting->description;
         }
         if ($meeting->meeting_link) {
