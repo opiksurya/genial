@@ -93,3 +93,61 @@ test('every other parameterless GET route is closed to clients', function () {
             ->assertRedirect(route('client.dashboard'));
     }
 });
+
+test('a user with both Staff and Client roles is confined (member-only role wins)', function () {
+    $user = User::factory()->create()->assignRole('Staff')->assignRole('Client');
+
+    $this->actingAs($user)->get('/dashboard')->assertRedirect(route('client.dashboard'));
+    $this->actingAs($user)->get('/client/dashboard')->assertOk();
+});
+
+test('the allowed route list is pinned: any addition needs a deliberate change here', function () {
+    $expected = [
+        'client.*',
+        'profile.edit',
+        'profile.update',
+        'security.edit',
+        'user-password.update',
+        'appearance.edit',
+        'shopee.index',
+        'projects.shopee.oauth.redirect',
+        'projects.shopee.update',
+        'projects.shopee.test',
+        'projects.shopee.disconnect',
+        'projects.shopee.links.index',
+        'projects.shopee.links.store',
+        'projects.shopee.links.destroy',
+        'meta-ads.index',
+        'projects.meta.campaigns',
+    ];
+
+    $actual = ConfineReviewer::ALLOWED_ROUTES;
+    sort($actual);
+    sort($expected);
+
+    expect($actual)->toBe($expected);
+});
+
+test('only an explicit short list of non-GET routes is open to clients', function () {
+    $allowedWrites = [
+        'projects.shopee.update',
+        'projects.shopee.test',
+        'projects.shopee.disconnect',
+        'projects.shopee.links.store',
+        'projects.shopee.links.destroy',
+        'profile.update',
+        'user-password.update',
+    ];
+
+    $open = collect(app('router')->getRoutes()->getRoutes())
+        ->filter(fn (LaravelRoute $route) => $route->getName() !== null
+            && array_diff($route->methods(), ['GET', 'HEAD']) !== []
+            && Str::is(ConfineReviewer::ALLOWED_ROUTES, $route->getName()))
+        ->map(fn (LaravelRoute $route) => $route->getName())
+        ->unique()
+        ->sort()
+        ->values()
+        ->all();
+
+    expect(array_diff($open, $allowedWrites))->toBe([]);
+});
