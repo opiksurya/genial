@@ -16,6 +16,7 @@ declare module '@inertiajs/core' {
             canManageRoles: boolean;
             canManageUsers: boolean;
             sidebarOpen: boolean;
+            portalNav?: { title: string; href: string }[];
             [key: string]: unknown;
         };
     }
