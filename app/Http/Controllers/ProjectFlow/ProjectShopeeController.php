@@ -24,6 +24,9 @@ class ProjectShopeeController extends Controller
      */
     public function update(Request $request, Project $project)
     {
+        // Partner credentials belong to the developer; project members and clients never set them.
+        abort_unless($request->user()->hasRole('Super Admin'), 403);
+
         $validated = $request->validate([
             'partner_id' => 'nullable|string|max:100',
             'partner_key' => 'nullable|string',
@@ -57,14 +60,17 @@ class ProjectShopeeController extends Controller
     {
         $config = $project->shopeeConfig ?: new ProjectShopeeConfig(['project_id' => $project->id]);
 
-        if ($request->filled('partner_id')) {
-            $config->partner_id = trim($request->input('partner_id'));
-        }
-        if ($request->filled('partner_key')) {
-            $config->partner_key = trim($request->input('partner_key'));
-        }
-        if ($request->has('is_sandbox') && $config->partner_id) {
-            $config->is_sandbox = $request->boolean('is_sandbox');
+        // Only the developer may override the app credentials; everyone else uses what is already configured.
+        if ($request->user()->hasRole('Super Admin')) {
+            if ($request->filled('partner_id')) {
+                $config->partner_id = trim($request->input('partner_id'));
+            }
+            if ($request->filled('partner_key')) {
+                $config->partner_key = trim($request->input('partner_key'));
+            }
+            if ($request->has('is_sandbox') && $config->partner_id) {
+                $config->is_sandbox = $request->boolean('is_sandbox');
+            }
         }
         $config->save();
 
@@ -269,10 +275,11 @@ class ProjectShopeeController extends Controller
     public function testConnection(Request $request, Project $project)
     {
         $config = $project->shopeeConfig;
-        $usesInput = $request->filled('partner_id');
+        $isDeveloper = $request->user()->hasRole('Super Admin');
+        $usesInput = $isDeveloper && $request->filled('partner_id');
 
         $partnerId = $usesInput ? $request->input('partner_id') : $config?->resolvedPartnerId();
-        $partnerKey = $request->input('partner_key') ?: ($usesInput ? $config?->partner_key : $config?->resolvedPartnerKey());
+        $partnerKey = ($isDeveloper ? $request->input('partner_key') : null) ?: ($usesInput ? $config?->partner_key : $config?->resolvedPartnerKey());
         $isSandbox = $usesInput ? $request->boolean('is_sandbox') : ($config?->resolvedIsSandbox() ?? (bool) config('services.shopee.sandbox'));
 
         $result = ShopeeClientService::testCredentials(

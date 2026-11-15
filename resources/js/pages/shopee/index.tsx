@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     BarChart3,
     Building2,
@@ -68,6 +68,24 @@ export default function ShopeeAnalyticsPage({
     const visibleTabs = TABS.filter(({ key }) => !(key === 'ads' && unavailable.includes('ads')) && !(key === 'content' && unavailable.includes('content')));
     const activeTab = visibleTabs.some(({ key }) => key === tab) ? tab : 'summary';
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+    const [isRedirectingToShopee, setIsRedirectingToShopee] = useState(false);
+    const { shopeeApp } = usePage<{ shopeeApp?: { hasSharedApp: boolean } }>().props;
+
+    // With the shared Shopee app configured on the server there is nothing to fill in:
+    // go straight to Shopee's authorization page. Otherwise ask for the project's own credentials first.
+    const startShopeeConnect = () => {
+        if (!selectedProject) return;
+
+        if (shopeeApp?.hasSharedApp) {
+            setIsRedirectingToShopee(true);
+            const params = new URLSearchParams({ return_url: window.location.href });
+            window.location.href = `/projects/${selectedProject.id}/shopee-config/oauth/redirect?${params.toString()}`;
+
+            return;
+        }
+
+        setIsConnectModalOpen(true);
+    };
 
     const isShopeeConnected = Boolean(
         selectedProject?.shopee_config?.status === 'connected' ||
@@ -149,8 +167,8 @@ export default function ShopeeAnalyticsPage({
                             <Button
                                 type="button"
                                 size="sm"
-                                onClick={() => setIsConnectModalOpen(true)}
-                                disabled={!selectedProject}
+                                onClick={startShopeeConnect}
+                                disabled={!selectedProject || isRedirectingToShopee}
                                 className="h-8 rounded-lg bg-[#EE4D2D] hover:bg-[#d73211] text-white px-3 text-xs font-bold gap-1.5 shadow-sm shadow-orange-500/25 cursor-pointer"
                                 title="Hubungkan Shopee API"
                             >
@@ -237,7 +255,7 @@ export default function ShopeeAnalyticsPage({
                                 {!isShopeeConnected && (
                                     <button
                                         type="button"
-                                        onClick={() => setIsConnectModalOpen(true)}
+                                        onClick={startShopeeConnect}
                                         className="underline font-bold text-orange-700 dark:text-orange-400 hover:text-orange-800 cursor-pointer"
                                     >
                                         Hubungkan Shopee API sekarang

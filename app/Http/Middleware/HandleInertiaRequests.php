@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'canManageUsers' => $request->user()?->hasRole('Super Admin') ?? false,
             'shopeeApp' => [
                 'hasSharedApp' => filled(config('services.shopee.partner_id')) && filled(config('services.shopee.partner_key')),
+                'canManageCredentials' => $request->user()?->hasRole('Super Admin') ?? false,
                 'sandbox' => (bool) config('services.shopee.sandbox'),
                 'redirectUri' => config('services.shopee.redirect') ?: route('auth.shopee.callback'),
                 'webhookUrl' => config('services.shopee.webhook_url') ?: route('webhooks.shopee'),
