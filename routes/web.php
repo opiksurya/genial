@@ -175,6 +175,7 @@ Route::middleware(['auth', 'verified', 'confine.reviewer'])->group(function () {
         Route::get('dashboard', \App\Http\Controllers\Client\DashboardController::class)->name('dashboard');
         Route::get('meetings', [\App\Http\Controllers\Client\MeetingController::class, 'index'])->name('meetings.index');
         Route::get('meetings/{meeting}/ics', [\App\Http\Controllers\Client\MeetingController::class, 'ics'])->name('meetings.ics');
+        Route::get('freelancers', [\App\Http\Controllers\Client\FreelancerController::class, 'index'])->name('freelancers.index');
     });
 
     // Genial ProjectFlow Module Routes
