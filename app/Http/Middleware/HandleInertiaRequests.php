@@ -74,7 +74,7 @@ class HandleInertiaRequests extends Middleware
      * Sidebar for member-only roles (Client/Reviewer), chosen on the server so no
      * internal menu ever reaches their browser. Null for everyone else.
      *
-     * @return list<array{key: string, title: string, href: string}>|null
+     * @return list<array{key: string, title: string, href: string, children?: list<array{key: string, title: string, href: string}>}>|null
      */
     private function portalNav(Request $request): ?array
     {
@@ -84,7 +84,13 @@ class HandleInertiaRequests extends Middleware
 
         $items = [
             ['dashboard', 'Dashboard', 'client.dashboard'],
-            ['projectflow', 'ProjectFlow', 'client.projectflow.index'],
+            ['projectflow', 'ProjectFlow', 'client.projectflow.index', [
+                ['projectflow-dashboard', 'Dashboard Project', 'client.projectflow.index'],
+                ['projectflow-board', 'Project Board', 'client.projectflow.board'],
+                ['projectflow-timeline', 'Timeline View', 'client.projectflow.timeline'],
+                ['projectflow-team', 'Team Management', 'client.projectflow.team'],
+                ['projectflow-reports', 'Reports', 'client.projectflow.reports'],
+            ]],
             ['meetings', 'Agenda Meeting', 'client.meetings.index'],
             ['freelancers', 'Freelancer Hub', 'client.freelancers.index'],
             ['catalog', 'Katalog Digital Kreatif', 'client.catalog.index'],
@@ -92,9 +98,19 @@ class HandleInertiaRequests extends Middleware
             ['meta-ads', 'Meta Ads Analytics', 'meta-ads.index'],
         ];
 
-        return array_map(
-            fn (array $item) => ['key' => $item[0], 'title' => $item[1], 'href' => route($item[2], absolute: false)],
-            $items,
-        );
+        $link = fn (string $key, string $title, string $route): array => ['key' => $key, 'title' => $title, 'href' => route($route, absolute: false)];
+
+        $nav = [];
+        foreach ($items as $item) {
+            $entry = $link($item[0], $item[1], $item[2]);
+
+            if (isset($item[3])) {
+                $entry['children'] = array_map(fn (array $child): array => $link($child[0], $child[1], $child[2]), $item[3]);
+            }
+
+            $nav[] = $entry;
+        }
+
+        return $nav;
     }
 }

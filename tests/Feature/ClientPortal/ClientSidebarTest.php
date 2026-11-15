@@ -20,7 +20,13 @@ beforeEach(function () {
 
     $this->expectedNav = [
         ['key' => 'dashboard', 'title' => 'Dashboard', 'href' => route('client.dashboard', absolute: false)],
-        ['key' => 'projectflow', 'title' => 'ProjectFlow', 'href' => route('client.projectflow.index', absolute: false)],
+        ['key' => 'projectflow', 'title' => 'ProjectFlow', 'href' => route('client.projectflow.index', absolute: false), 'children' => [
+            ['key' => 'projectflow-dashboard', 'title' => 'Dashboard Project', 'href' => route('client.projectflow.index', absolute: false)],
+            ['key' => 'projectflow-board', 'title' => 'Project Board', 'href' => route('client.projectflow.board', absolute: false)],
+            ['key' => 'projectflow-timeline', 'title' => 'Timeline View', 'href' => route('client.projectflow.timeline', absolute: false)],
+            ['key' => 'projectflow-team', 'title' => 'Team Management', 'href' => route('client.projectflow.team', absolute: false)],
+            ['key' => 'projectflow-reports', 'title' => 'Reports', 'href' => route('client.projectflow.reports', absolute: false)],
+        ]],
         ['key' => 'meetings', 'title' => 'Agenda Meeting', 'href' => route('client.meetings.index', absolute: false)],
         ['key' => 'freelancers', 'title' => 'Freelancer Hub', 'href' => route('client.freelancers.index', absolute: false)],
         ['key' => 'catalog', 'title' => 'Katalog Digital Kreatif', 'href' => route('client.catalog.index', absolute: false)],
@@ -55,10 +61,18 @@ test('no portalNav item points to an internal route', function () {
     $items = $response->viewData('page')['props']['portalNav'];
     expect($items)->toHaveCount(7);
 
+    $links = [];
     foreach ($items as $item) {
-        $name = app('router')->getRoutes()->match(Request::create($item['href']))->getName();
+        $links[] = $item['href'];
+        foreach ($item['children'] ?? [] as $child) {
+            $links[] = $child['href'];
+        }
+    }
 
-        expect(Str::is(ConfineReviewer::ALLOWED_ROUTES, $name))->toBeTrue("{$item['href']} resolves to {$name}");
+    foreach ($links as $href) {
+        $name = app('router')->getRoutes()->match(Request::create($href))->getName();
+
+        expect(Str::is(ConfineReviewer::ALLOWED_ROUTES, $name))->toBeTrue("{$href} resolves to {$name}");
     }
 });
 

@@ -23,7 +23,6 @@ import {
     Bot,
     ShoppingBag,
     Share2,
-    KanbanSquare,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -42,7 +41,6 @@ import { dashboard } from '@/routes';
 import { index as metaAdsIndex } from '@/routes/meta-ads';
 import { index as shopeeIndex } from '@/routes/shopee';
 import type { NavItem } from '@/types';
-import type { PortalNavItem } from '@/types/global';
 
 const mainNavItems: NavItem[] = [
     {
@@ -171,9 +169,14 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const portalIcons: Record<PortalNavItem['key'], NavItem['icon']> = {
+const portalIcons: Record<string, NavItem['icon']> = {
+    'projectflow-dashboard': LayoutGrid,
+    'projectflow-board': Kanban,
+    'projectflow-timeline': Clock,
+    'projectflow-team': UserCheck,
+    'projectflow-reports': BarChart3,
     dashboard: LayoutGrid,
-    projectflow: KanbanSquare,
+    projectflow: FolderKanban,
     meetings: CalendarCheck,
     freelancers: Briefcase,
     catalog: Palette,
@@ -198,6 +201,11 @@ export function AppSidebar() {
               title: item.title,
               href: item.href,
               icon: portalIcons[item.key],
+              items: item.children?.map((child) => ({
+                  title: child.title,
+                  href: child.href,
+                  icon: portalIcons[child.key],
+              })),
           }))
         : mainNavItems.filter(
         (item) =>

@@ -1,7 +1,5 @@
 import { Head, router } from "@inertiajs/react";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
     Select,
@@ -53,7 +51,20 @@ type TeamMember = {
     role: string | null;
 };
 
+type Performance = {
+    project_id: number;
+    name: string;
+    total: number;
+    done: number;
+    delayed: number;
+    rate: number;
+};
+
+type View = "dashboard" | "board" | "timeline" | "team" | "reports";
+
 type Props = {
+    view: View;
+    performance: Performance[];
     projects: PortalProject[];
     selectedProjectId: number | null;
     projectDetails: ProjectDetail[];
@@ -63,9 +74,13 @@ type Props = {
     stats: { total: number; done: number; in_progress: number; overdue: number };
 };
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: "ProjectFlow", href: "/client/projectflow" },
-];
+const VIEW_META: Record<View, { title: string; href: string }> = {
+    dashboard: { title: "Dashboard Project", href: "/client/projectflow" },
+    board: { title: "Project Board", href: "/client/projectflow/board" },
+    timeline: { title: "Timeline View", href: "/client/projectflow/timeline" },
+    team: { title: "Team Management", href: "/client/projectflow/team" },
+    reports: { title: "Reports", href: "/client/projectflow/reports" },
+};
 
 const COLUMNS: { id: string; title: string }[] = [
     { id: "BACKLOG", title: "Backlog" },
@@ -74,15 +89,6 @@ const COLUMNS: { id: string; title: string }[] = [
     { id: "REVIEW", title: "Review" },
     { id: "DONE", title: "Selesai" },
 ];
-
-const VIEWS = [
-    { id: "overview", label: "Ringkasan" },
-    { id: "board", label: "Board" },
-    { id: "timeline", label: "Timeline" },
-    { id: "team", label: "Tim" },
-] as const;
-
-type View = (typeof VIEWS)[number]["id"];
 
 const formatDate = (value: string | null) =>
     value
@@ -94,6 +100,8 @@ const formatDate = (value: string | null) =>
         : "-";
 
 export default function ClientProjectFlow({
+    view,
+    performance,
     projects,
     selectedProjectId,
     projectDetails,
@@ -102,14 +110,18 @@ export default function ClientProjectFlow({
     team,
     stats,
 }: Props) {
-    const [view, setView] = useState<View>("overview");
+    const meta = VIEW_META[view];
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: "ProjectFlow", href: "/client/projectflow" },
+        { title: meta.title, href: meta.href },
+    ];
     const projectName = (id: number) =>
         projectDetails.find((project) => project.id === id)?.name ?? "";
     const showProject = projectDetails.length > 1;
 
     const changeProject = (value: string) => {
         router.get(
-            "/client/projectflow",
+            meta.href,
             value === "all" ? {} : { project_id: value },
             { preserveScroll: true },
         );
@@ -121,11 +133,11 @@ export default function ClientProjectFlow({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="ProjectFlow" />
+            <Head title={meta.title} />
             <div className="flex flex-col gap-6 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-xl font-semibold">ProjectFlow</h1>
+                        <h1 className="text-xl font-semibold">{meta.title}</h1>
                         <p className="text-sm text-muted-foreground">
                             Pantau progres pekerjaan proyek Anda. Tampilan ini
                             hanya untuk dilihat.
@@ -160,19 +172,6 @@ export default function ClientProjectFlow({
                     )}
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                    {VIEWS.map((item) => (
-                        <Button
-                            key={item.id}
-                            size="sm"
-                            variant={view === item.id ? "default" : "outline"}
-                            onClick={() => setView(item.id)}
-                        >
-                            {item.label}
-                        </Button>
-                    ))}
-                </div>
-
                 {projectDetails.length === 0 && (
                     <Card>
                         <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -181,7 +180,7 @@ export default function ClientProjectFlow({
                     </Card>
                 )}
 
-                {projectDetails.length > 0 && view === "overview" && (
+                {projectDetails.length > 0 && view === "dashboard" && (
                     <div className="flex flex-col gap-4">
                         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                             {[
@@ -370,6 +369,53 @@ export default function ClientProjectFlow({
                                         {member.role ?? "-"}
                                         {showProject &&
                                             ` · ${projectName(member.project_id)}`}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+                {projectDetails.length > 0 && view === "reports" && (
+                    <div className="flex flex-col gap-4">
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                            {[
+                                ["Total tugas", stats.total],
+                                ["Selesai", stats.done],
+                                ["Dikerjakan", stats.in_progress],
+                                ["Terlambat", stats.overdue],
+                            ].map(([label, value]) => (
+                                <Card key={label}>
+                                    <CardContent className="py-4">
+                                        <p className="text-xs text-muted-foreground">
+                                            {label}
+                                        </p>
+                                        <p className="text-2xl font-semibold">
+                                            {value}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                        {performance.map((row) => (
+                            <Card key={row.project_id}>
+                                <CardContent className="flex flex-col gap-2 py-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <p className="font-medium">
+                                            {row.name}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {row.done}/{row.total} selesai ·{" "}
+                                            {row.delayed} terlambat
+                                        </p>
+                                    </div>
+                                    <div className="h-2 w-full overflow-hidden rounded bg-muted">
+                                        <div
+                                            className="h-full bg-primary"
+                                            style={{ width: `${row.rate}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Penyelesaian {row.rate}%
                                     </p>
                                 </CardContent>
                             </Card>

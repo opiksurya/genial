@@ -174,6 +174,10 @@ Route::middleware(['auth', 'verified', 'confine.reviewer'])->group(function () {
     Route::prefix('client')->name('client.')->middleware('client.portal')->group(function () {
         Route::get('dashboard', \App\Http\Controllers\Client\DashboardController::class)->name('dashboard');
         Route::get('projectflow', [\App\Http\Controllers\Client\ProjectFlowController::class, 'index'])->name('projectflow.index');
+        Route::get('projectflow/board', [\App\Http\Controllers\Client\ProjectFlowController::class, 'board'])->name('projectflow.board');
+        Route::get('projectflow/timeline', [\App\Http\Controllers\Client\ProjectFlowController::class, 'timeline'])->name('projectflow.timeline');
+        Route::get('projectflow/team', [\App\Http\Controllers\Client\ProjectFlowController::class, 'team'])->name('projectflow.team');
+        Route::get('projectflow/reports', [\App\Http\Controllers\Client\ProjectFlowController::class, 'reports'])->name('projectflow.reports');
         Route::get('meetings', [\App\Http\Controllers\Client\MeetingController::class, 'index'])->name('meetings.index');
         Route::get('meetings/{meeting}/ics', [\App\Http\Controllers\Client\MeetingController::class, 'ics'])->name('meetings.ics');
         Route::get('freelancers', [\App\Http\Controllers\Client\FreelancerController::class, 'index'])->name('freelancers.index');

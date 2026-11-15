@@ -25,6 +25,31 @@ class ProjectFlowController extends Controller
 {
     public function index(Request $request): Response
     {
+        return $this->render($request, 'dashboard');
+    }
+
+    public function board(Request $request): Response
+    {
+        return $this->render($request, 'board');
+    }
+
+    public function timeline(Request $request): Response
+    {
+        return $this->render($request, 'timeline');
+    }
+
+    public function team(Request $request): Response
+    {
+        return $this->render($request, 'team');
+    }
+
+    public function reports(Request $request): Response
+    {
+        return $this->render($request, 'reports');
+    }
+
+    private function render(Request $request, string $view): Response
+    {
         $scope = ClientScope::for($request);
         $projectIds = $scope->projectIds();
         $today = now()->toDateString();
@@ -92,7 +117,25 @@ class ProjectFlowController extends Controller
 
         $taskCollection = collect($tasks);
 
+        $performance = [];
+        foreach ($projects as $project) {
+            $own = $taskCollection->where('project_id', $project['id']);
+            $total = $own->count();
+            $done = $own->where('status', 'DONE')->count();
+
+            $performance[] = [
+                'project_id' => $project['id'],
+                'name' => $project['name'],
+                'total' => $total,
+                'done' => $done,
+                'delayed' => $own->where('is_overdue', true)->count(),
+                'rate' => $total > 0 ? (int) round($done / $total * 100) : 0,
+            ];
+        }
+
         return Inertia::render('client/projectflow', [
+            'view' => $view,
+            'performance' => $performance,
             'projects' => $projectOptions,
             'selectedProjectId' => $scope->selectedProjectId(),
             'projectDetails' => $projects,

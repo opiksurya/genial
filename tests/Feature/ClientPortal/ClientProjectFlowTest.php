@@ -95,6 +95,27 @@ test('internal data never reaches the browser', function () {
         ->missing('tasks.0.comments'));
 });
 
+test('every ProjectFlow sub page renders its view with scoped data', function (string $routeName, string $view) {
+    ($this->task)($this->own, ['title' => 'Milik Saya', 'status' => 'DONE']);
+    ($this->task)($this->other, ['title' => 'Milik Orang Lain']);
+
+    $this->actingAs($this->client)
+        ->get(route($routeName))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('client/projectflow')
+            ->where('view', $view)
+            ->has('tasks', 1)
+            ->has('performance', 2)
+            ->where('performance.0.total', fn ($total) => $total <= 1));
+})->with([
+    ['client.projectflow.index', 'dashboard'],
+    ['client.projectflow.board', 'board'],
+    ['client.projectflow.timeline', 'timeline'],
+    ['client.projectflow.team', 'team'],
+    ['client.projectflow.reports', 'reports'],
+]);
+
 test('reviewer sees the same read-only page', function () {
     $reviewer = User::factory()->create()->assignRole('Reviewer');
     ProjectMember::create(['project_id' => $this->own->id, 'user_id' => $reviewer->id, 'role' => 'Member']);

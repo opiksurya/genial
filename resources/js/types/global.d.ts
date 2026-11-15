@@ -1,9 +1,10 @@
 import type { Auth } from '@/types/auth';
 
 export type PortalNavItem = {
-    key: 'dashboard' | 'projectflow' | 'meetings' | 'freelancers' | 'catalog' | 'shopee' | 'meta-ads';
+    key: string;
     title: string;
     href: string;
+    children?: { key: string; title: string; href: string }[];
 };
 
 declare module 'react' {
