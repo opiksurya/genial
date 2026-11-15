@@ -84,6 +84,7 @@ class HandleInertiaRequests extends Middleware
 
         $items = [
             ['dashboard', 'Dashboard', 'client.dashboard'],
+            ['projectflow', 'ProjectFlow', 'client.projectflow.index'],
             ['meetings', 'Agenda Meeting', 'client.meetings.index'],
             ['freelancers', 'Freelancer Hub', 'client.freelancers.index'],
             ['catalog', 'Katalog Digital Kreatif', 'client.catalog.index'],

@@ -91,5 +91,5 @@ test('the client sidebar is used on these pages', function (string $role, string
     ProjectMember::create(['project_id' => $this->own->id, 'user_id' => $user->id, 'role' => 'Member']);
 
     $this->actingAs($user)->get(route($route))
-        ->assertInertia(fn (Assert $page) => $page->has('portalNav', 6));
+        ->assertInertia(fn (Assert $page) => $page->has('portalNav', 7));
 })->with(['Client', 'Reviewer'])->with(['shopee.index', 'meta-ads.index']);

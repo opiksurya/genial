@@ -20,6 +20,7 @@ beforeEach(function () {
 
     $this->expectedNav = [
         ['key' => 'dashboard', 'title' => 'Dashboard', 'href' => route('client.dashboard', absolute: false)],
+        ['key' => 'projectflow', 'title' => 'ProjectFlow', 'href' => route('client.projectflow.index', absolute: false)],
         ['key' => 'meetings', 'title' => 'Agenda Meeting', 'href' => route('client.meetings.index', absolute: false)],
         ['key' => 'freelancers', 'title' => 'Freelancer Hub', 'href' => route('client.freelancers.index', absolute: false)],
         ['key' => 'catalog', 'title' => 'Katalog Digital Kreatif', 'href' => route('client.catalog.index', absolute: false)],
@@ -35,7 +36,7 @@ beforeEach(function () {
     };
 });
 
-test('client and reviewer get exactly the six client menus in order', function (string $role, string $routeName) {
+test('client and reviewer get exactly the seven client menus in order', function (string $role, string $routeName) {
     $this->actingAs(($this->memberOf)($role))
         ->get(route($routeName))
         ->assertOk()
@@ -52,7 +53,7 @@ test('no portalNav item points to an internal route', function () {
     $response = $this->actingAs(($this->memberOf)('Client'))->get(route('client.dashboard'))->assertOk();
 
     $items = $response->viewData('page')['props']['portalNav'];
-    expect($items)->toHaveCount(6);
+    expect($items)->toHaveCount(7);
 
     foreach ($items as $item) {
         $name = app('router')->getRoutes()->match(Request::create($item['href']))->getName();

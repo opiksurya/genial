@@ -1,7 +1,7 @@
 import type { Auth } from '@/types/auth';
 
 export type PortalNavItem = {
-    key: 'dashboard' | 'meetings' | 'freelancers' | 'catalog' | 'shopee' | 'meta-ads';
+    key: 'dashboard' | 'projectflow' | 'meetings' | 'freelancers' | 'catalog' | 'shopee' | 'meta-ads';
     title: string;
     href: string;
 };

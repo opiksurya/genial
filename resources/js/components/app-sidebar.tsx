@@ -23,6 +23,7 @@ import {
     Bot,
     ShoppingBag,
     Share2,
+    KanbanSquare,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -172,6 +173,7 @@ const mainNavItems: NavItem[] = [
 
 const portalIcons: Record<PortalNavItem['key'], NavItem['icon']> = {
     dashboard: LayoutGrid,
+    projectflow: KanbanSquare,
     meetings: CalendarCheck,
     freelancers: Briefcase,
     catalog: Palette,
