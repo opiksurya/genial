@@ -70,13 +70,18 @@ Inertia), bukan disembunyikan di klien, supaya tidak bergantung pada kode front-
    Hanya rapat milik proyek klien itu.
 3. *Freelancer Hub*: freelancer yang ditugaskan ke proyek klien: foto, nama, keahlian, portofolio, dan profil
    kinerja (mis. jumlah tugas selesai, ketepatan waktu). Tanpa tarif, kontak pribadi, atau data keuangan.
-4. *Katalog Digital Kreatif*: daftar layanan kreatif yang bisa dilihat dan diminta klien. Aksi "ajukan" membuat
-   permintaan untuk tim Genial, tidak mengubah katalog. Bentuk akhir permintaan diputuskan builder.
+4. *Katalog Digital Kreatif*: daftar layanan kreatif yang bisa dilihat klien, lengkap dengan harga klien
+   (`client_price`). Biaya freelancer dan margin tidak pernah dikirim ke klien (DTO eksplisit). Tombol "ajukan"
+   membuka WhatsApp ke tim Genial dengan pesan terisi nama layanan. Tanpa tabel baru dan tanpa halaman internal
+   tambahan.
 
 Shopee dan Meta Analytics tidak diubah; hanya disertakan di sidebar klien.
 
 **Data akun demo.** Satu proyek demo dengan data sampel (rapat, freelancer terkait, layanan) dibuat lewat
 seeder supaya halaman tidak kosong saat peragaan. Akun `Reviewer` yang ada ditautkan sebagai anggotanya.
+Pemilik mengizinkan data demo ada di production, dengan syarat ditandai "demo" dan disembunyikan dari beranda
+publik, halaman case study, dan laporan keuangan. Builder harus menambah penanda demo dan menyaringnya di
+semua kueri tersebut, serta menguji penyaringan itu.
 
 ## Pengujian
 
@@ -87,7 +92,7 @@ berubah. Satu tes menjaga agar setiap rute baru bernama `client.*` dan yang sela
 ## Diserahkan ke builder
 
 Nama kolom dan bentuk data persis tiap halaman, tata letak visual (mengikuti komponen yang ada), metrik kinerja
-freelancer yang tersedia dari data, bentuk permintaan di Katalog, dan isi seeder demo.
+freelancer yang tersedia dari data, dan isi seeder demo.
 
 ## Tahap 2 (terpisah, setelah tahap 1 disetujui di peragaan)
 
@@ -118,7 +123,8 @@ Kalender Konten (AI), Dashboard Project, Project Board, Timeline, Team, dan Repo
 - **Agenda Meeting:** hanya unduh ICS per rapat; token feed, peserta internal, dan pembuat rapat disembunyikan.
 - **Pengaturan akun:** klien boleh membuka profil dan kata sandi sendiri, bukan pengaturan lain.
 
-## Menunggu jawaban pemilik
+## Keputusan pemilik (2026-11-15)
 
-1. Data demo di production (bergantung pada pilihan Anda).
-2. Katalog: harga klien tampil atau tidak, dan cara "ajukan" bekerja.
+1. Data demo boleh ada di production, wajib ditandai "demo" dan disembunyikan dari beranda publik, case study,
+   dan laporan keuangan.
+2. Katalog menampilkan harga klien. Tombol "ajukan" cukup membuka WhatsApp, tanpa menyimpan permintaan di ERP.
