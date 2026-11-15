@@ -45,6 +45,12 @@ class HandleInertiaRequests extends Middleware
             'canAccessFinance' => $request->user()?->hasAnyRole(['Super Admin', 'Admin']) ?? false,
             'canManageRoles' => $request->user()?->hasRole('Super Admin') ?? false,
             'canManageUsers' => $request->user()?->hasRole('Super Admin') ?? false,
+            'shopeeApp' => [
+                'hasSharedApp' => filled(config('services.shopee.partner_id')) && filled(config('services.shopee.partner_key')),
+                'sandbox' => (bool) config('services.shopee.sandbox'),
+                'redirectUri' => config('services.shopee.redirect') ?: route('auth.shopee.callback'),
+                'webhookUrl' => config('services.shopee.webhook_url') ?: route('webhooks.shopee'),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'metaPixel' => [
                 'pixel_id' => \App\Models\Setting::get('meta_pixel_id', ''),

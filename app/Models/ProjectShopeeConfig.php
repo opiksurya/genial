@@ -51,7 +51,50 @@ class ProjectShopeeConfig extends Model
      */
     public function isConnected(): bool
     {
-        return $this->status === 'connected' && !empty($this->access_token);
+        return $this->status === 'connected' && ! empty($this->access_token);
+    }
+
+    /**
+     * Partner ID in effect: the project's own app if set, otherwise the shared app from config.
+     */
+    public function resolvedPartnerId(): ?string
+    {
+        $id = $this->partner_id ?: config('services.shopee.partner_id');
+
+        return $id ? (string) $id : null;
+    }
+
+    /**
+     * Partner key matching resolvedPartnerId(). Never mixes a project ID with the shared key.
+     */
+    public function resolvedPartnerKey(): ?string
+    {
+        if ($this->partner_id) {
+            return $this->partner_key ?: null;
+        }
+
+        return config('services.shopee.partner_key') ?: null;
+    }
+
+    public function resolvedIsSandbox(): bool
+    {
+        return $this->partner_id
+            ? (bool) $this->is_sandbox
+            : (bool) config('services.shopee.sandbox');
+    }
+
+    public function hasCredentials(): bool
+    {
+        return $this->resolvedPartnerId() !== null && $this->resolvedPartnerKey() !== null;
+    }
+
+    /**
+     * True when the access token is missing or expires within the given number of seconds.
+     */
+    public function accessTokenExpiresWithin(int $seconds): bool
+    {
+        return $this->token_expires_at === null
+            || $this->token_expires_at->lte(now()->addSeconds($seconds));
     }
 
     /**
@@ -59,7 +102,7 @@ class ProjectShopeeConfig extends Model
      */
     public function getBaseUrl(): string
     {
-        return $this->is_sandbox
+        return $this->resolvedIsSandbox()
             ? 'https://partner.test-stable.shopeemobile.com'
             : 'https://partner.shopeemobile.com';
     }

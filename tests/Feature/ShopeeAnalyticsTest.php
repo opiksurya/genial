@@ -216,7 +216,7 @@ test('shopee oauth redirect generates shopee open platform url with hmac signatu
     expect($targetUrl)->toContain('https://partner.shopeemobile.com/api/v2/shop/auth_partner')
         ->and($targetUrl)->toContain('partner_id=2046979')
         ->and($targetUrl)->toContain('sign=')
-        ->and(session('shopee_oauth_project_id'))->toBe($project->id);
+        ->and(urldecode($targetUrl))->toContain('/auth/shopee/callback?state=');
 });
 
 test('shopee oauth callback rejects missing code and shop_id', function () {
@@ -228,12 +228,16 @@ test('shopee oauth callback rejects missing code and shop_id', function () {
         'end_date' => now()->addMonth(),
     ]);
 
-    $response = $this->actingAs($user)
-        ->get(route('projects.shopee.oauth.callback', [
-            'project' => $project->id,
-        ]));
+    \Illuminate\Support\Facades\Cache::put('shopee_oauth:pending', [
+        'project_id' => $project->id,
+        'user_id' => $user->id,
+        'return_url' => '/shopee',
+    ], 600);
 
-    $response->assertRedirect()
+    $response = $this->actingAs($user)
+        ->get(route('auth.shopee.callback', ['state' => 'pending']));
+
+    $response->assertRedirect('/shopee')
         ->assertSessionHas('error');
 });
 

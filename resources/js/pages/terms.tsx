@@ -55,6 +55,35 @@ const sections: LegalSection[] = [
         ),
     },
     {
+        id: 'integrasi-marketplace',
+        title: 'Integrasi Marketplace',
+        content: (
+            <>
+                <p>
+                    Untuk klien yang meminta pengelolaan toko di marketplace (misalnya Shopee), berlaku ketentuan berikut:
+                </p>
+                <ul>
+                    <li>Klien menjamin bahwa dirinya adalah pemilik sah, atau berwenang atas, toko yang dihubungkan.</li>
+                    <li>
+                        Klien memberikan izin melalui halaman otorisasi resmi marketplace. Kami hanya mengakses data sebatas izin
+                        tersebut dan hanya untuk layanan yang disepakati.
+                    </li>
+                    <li>
+                        Klien dapat mencabut izin kapan saja melalui akun marketplace-nya atau dengan menghubungi kami. Pencabutan
+                        dapat membatasi fitur yang bergantung pada integrasi.
+                    </li>
+                    <li>
+                        Klien tetap tunduk pada syarat dan kebijakan marketplace yang bersangkutan. Kami tidak bertanggung jawab atas
+                        perubahan aturan, pembatasan akses, atau penangguhan akun oleh marketplace.
+                    </li>
+                </ul>
+                <p>
+                    Pengelolaan data pada integrasi ini dijelaskan dalam <a href="/privacy-policy">Kebijakan Privasi</a> kami.
+                </p>
+            </>
+        ),
+    },
+    {
         id: 'kekayaan-intelektual',
         title: 'Hak Kekayaan Intelektual',
         content: (
@@ -138,7 +167,7 @@ export default function TermsPage({ whatsappNumber, whatsappDefaultMessage }: Te
         <LegalPage
             title="Syarat dan Ketentuan"
             description={`Syarat dan Ketentuan penggunaan website dan layanan ${LEGAL_COMPANY.brand}.`}
-            effectiveDate="23 Oktober 2026"
+            effectiveDate="15 November 2026"
             intro={
                 <p>
                     Syarat dan Ketentuan ini mengatur penggunaan website dan layanan {LEGAL_COMPANY.name} ("{LEGAL_COMPANY.brand}",

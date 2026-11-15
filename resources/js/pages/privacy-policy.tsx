@@ -82,6 +82,48 @@ const sections: LegalSection[] = [
         ),
     },
     {
+        id: 'integrasi-shopee',
+        title: 'Integrasi Toko Shopee (Shopee Open Platform)',
+        content: (
+            <>
+                <p>
+                    Sebagai agensi, kami membantu klien mengelola toko Shopee mereka melalui <strong>Shopee Open Platform</strong>.
+                    Integrasi ini hanya aktif untuk toko yang pemiliknya memberikan izin secara langsung kepada kami.
+                </p>
+                <ul>
+                    <li>
+                        <strong>Otorisasi:</strong> pemilik toko masuk ke akun Shopee-nya sendiri dan menyetujui akses melalui halaman
+                        resmi Shopee. Kami tidak pernah meminta atau menyimpan kata sandi akun Shopee Anda.
+                    </li>
+                    <li>
+                        <strong>Data yang kami akses:</strong> informasi toko (ID dan nama toko), ringkasan pesanan (jumlah, status,
+                        nilai, dan waktu), data produk (nama, harga, stok, dan status), serta informasi saluran logistik, sebatas yang
+                        diperlukan untuk membuat laporan performa dan membantu pengelolaan toko.
+                    </li>
+                    <li>
+                        <strong>Data pembeli:</strong> kami tidak menggunakan data pribadi pembeli (nama, alamat, atau nomor telepon)
+                        untuk analitik, pemasaran, atau tujuan lain di luar pengelolaan pesanan yang diminta pemilik toko.
+                    </li>
+                    <li>
+                        <strong>Penyimpanan token:</strong> token akses dan token penyegaran disimpan dalam bentuk terenkripsi di server
+                        kami dan hanya dipakai oleh sistem serta tim yang berwenang untuk toko yang bersangkutan.
+                    </li>
+                    <li>
+                        <strong>Tujuan:</strong> data hanya dipakai untuk melayani pemilik toko yang bersangkutan. Kami tidak menjual,
+                        menyewakan, atau membagikannya kepada pihak lain, dan tidak mencampurnya dengan data toko klien lain.
+                    </li>
+                </ul>
+                <p>
+                    <strong>Mencabut akses:</strong> pemilik toko dapat memutus koneksi kapan saja, baik melalui menu Shopee Seller
+                    Centre (pengaturan aplikasi terotorisasi) maupun dengan meminta kami memutusnya. Setelah koneksi diputus, token
+                    langsung dihapus dari sistem kami dan kami berhenti mengakses toko tersebut. Data toko yang masih tersimpan akan
+                    dihapus atas permintaan, paling lambat 30 hari setelah permintaan diverifikasi.
+                </p>
+                <p>Penggunaan data Shopee juga tunduk pada kebijakan Shopee Open Platform.</p>
+            </>
+        ),
+    },
+    {
         id: 'berbagi-data',
         title: 'Berbagi Data dengan Pihak Lain',
         content: (
@@ -180,7 +222,7 @@ export default function PrivacyPolicyPage({ whatsappNumber, whatsappDefaultMessa
         <LegalPage
             title="Kebijakan Privasi"
             description={`Kebijakan Privasi ${LEGAL_COMPANY.brand}: data apa yang kami kumpulkan, cara kami menggunakannya, dan hak Anda.`}
-            effectiveDate="23 Oktober 2026"
+            effectiveDate="15 November 2026"
             intro={
                 <p>
                     Kebijakan Privasi ini menjelaskan bagaimana {LEGAL_COMPANY.name} ("{LEGAL_COMPANY.brand}", "kami") mengumpulkan,

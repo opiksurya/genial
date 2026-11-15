@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Shopee Push calls are server-to-server and verified by HMAC signature.
+        $middleware->validateCsrfTokens(except: ['webhooks/shopee']);
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,

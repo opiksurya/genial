@@ -44,3 +44,12 @@ test('the oauth callback tolerates empty and malformed query strings', function 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('status', 'empty'));
 });
+
+test('the legal pages describe the Shopee integration for client shops', function () {
+    // Inertia renders these pages in the browser, so guard the source text Shopee reviewers read.
+    $privacy = file_get_contents(resource_path('js/pages/privacy-policy.tsx'));
+    $terms = file_get_contents(resource_path('js/pages/terms.tsx'));
+
+    expect($privacy)->toContain('Shopee Open Platform')->toContain('Mencabut akses')
+        ->and($terms)->toContain('Integrasi Marketplace');
+});
