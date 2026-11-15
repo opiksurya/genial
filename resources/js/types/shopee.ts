@@ -180,6 +180,15 @@ export type ShopeeAnalytics = {
     ads: ShopeeAds;
     content: ShopeeContent;
     storefront: ShopeeStorefront;
+    /** Set for live data: which sections the Shopee API cannot provide, and whether results were capped. */
+    meta?: {
+        unavailable: ('ads' | 'content' | 'views' | 'returns')[];
+        truncated: boolean;
+        maxOrders: number;
+        generatedAt: string;
+    };
+    /** Set when live data failed and the simulation is shown instead. */
+    liveError?: string | null;
 };
 
 export type ShopeePeriodOption = { value: number; label: string };

@@ -24,7 +24,7 @@ function StockBadge({ status }: { status: ShopeeStockStatus }) {
     );
 }
 
-export function StorefrontSection({ storefront }: { storefront: ShopeeStorefront }) {
+export function StorefrontSection({ storefront, showViews = true }: { storefront: ShopeeStorefront; showViews?: boolean }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -47,9 +47,9 @@ export function StorefrontSection({ storefront }: { storefront: ShopeeStorefront
                             <tr>
                                 <Th>Etalase</Th>
                                 <Th align="right">Stok</Th>
-                                <Th align="right">Views</Th>
+                                {showViews && <Th align="right">Views</Th>}
                                 <Th align="right">Pesanan</Th>
-                                <Th align="right">Konversi</Th>
+                                {showViews && <Th align="right">Konversi</Th>}
                                 <Th align="right">Omzet</Th>
                             </tr>
                         </thead>
@@ -58,9 +58,9 @@ export function StorefrontSection({ storefront }: { storefront: ShopeeStorefront
                                 <tr key={etalase.name} className="hover:bg-muted/30">
                                     <Td className="font-semibold">{etalase.name}</Td>
                                     <Td align="right">{formatNumber(etalase.stock)}</Td>
-                                    <Td align="right">{formatNumber(etalase.views)}</Td>
+                                    {showViews && <Td align="right">{formatNumber(etalase.views)}</Td>}
                                     <Td align="right">{formatNumber(etalase.orders)}</Td>
-                                    <Td align="right">{formatPercent(etalase.conversionRate)}</Td>
+                                    {showViews && <Td align="right">{formatPercent(etalase.conversionRate)}</Td>}
                                     <Td align="right" className="font-semibold">
                                         {formatRupiah(etalase.revenue)}
                                     </Td>
@@ -85,7 +85,7 @@ export function StorefrontSection({ storefront }: { storefront: ShopeeStorefront
                                 <div className="min-w-0 text-xs">
                                     <div className="truncate text-sm font-semibold text-foreground">{product.name}</div>
                                     <div className="text-muted-foreground">
-                                        {product.etalase} · {formatNumber(product.views)} views · {formatNumber(product.units)} unit terjual · stok{' '}
+                                        {product.etalase} · {showViews && `${formatNumber(product.views)} views · `}{formatNumber(product.units)} unit terjual · stok{' '}
                                         {formatNumber(product.stock)}
                                     </div>
                                 </div>
@@ -105,8 +105,8 @@ export function StorefrontSection({ storefront }: { storefront: ShopeeStorefront
                             <Th align="right">Stok</Th>
                             <Th>Status Stok</Th>
                             <Th align="right">Estimasi Habis</Th>
-                            <Th align="right">Views</Th>
-                            <Th align="right">Konversi</Th>
+                            {showViews && <Th align="right">Views</Th>}
+                            {showViews && <Th align="right">Konversi</Th>}
                             <Th align="right">Unit</Th>
                             <Th align="right">Omzet</Th>
                         </tr>
@@ -125,8 +125,8 @@ export function StorefrontSection({ storefront }: { storefront: ShopeeStorefront
                                     <StockBadge status={product.stockStatus} />
                                 </Td>
                                 <Td align="right">{product.daysOfCover === null ? '–' : `${formatNumber(product.daysOfCover)} hari`}</Td>
-                                <Td align="right">{formatNumber(product.views)}</Td>
-                                <Td align="right">{formatPercent(product.conversionRate)}</Td>
+                                {showViews && <Td align="right">{formatNumber(product.views)}</Td>}
+                                {showViews && <Td align="right">{formatPercent(product.conversionRate)}</Td>}
                                 <Td align="right">{formatNumber(product.units)}</Td>
                                 <Td align="right" className="font-semibold">
                                     {formatRupiah(product.revenue)}

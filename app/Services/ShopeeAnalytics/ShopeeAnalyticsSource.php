@@ -7,11 +7,10 @@ use Carbon\CarbonImmutable;
 use Illuminate\Container\Attributes\Bind;
 
 /**
- * Source of Shopee store analytics. The dummy implementation can later be
- * replaced by a Shopee Open API implementation that returns the same shape,
- * so the controller and the UI stay unchanged.
+ * Source of Shopee store analytics. The manager serves live Shopee Open API data for
+ * connected shops and the simulation for everything else, in the same shape.
  */
-#[Bind(ShopeeDummyDataService::class)]
+#[Bind(ShopeeAnalyticsManager::class)]
 interface ShopeeAnalyticsSource
 {
     /**
