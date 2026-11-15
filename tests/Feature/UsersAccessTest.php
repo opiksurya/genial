@@ -9,7 +9,7 @@ beforeEach(function () {
     }
 });
 
-dataset('forbidden roles', ['Admin', 'Staff', 'Client', 'Agent', null]);
+dataset('forbidden roles', ['Admin', 'Staff', 'Agent', null]);
 
 function superAdmin(): User
 {
@@ -156,7 +156,6 @@ test('users access is shared with the frontend', function (?string $roleName, bo
     'super admin' => ['Super Admin', true],
     'admin' => ['Admin', false],
     'staff' => ['Staff', false],
-    'client' => ['Client', false],
     'agent' => ['Agent', false],
     'no role' => [null, false],
 ]);

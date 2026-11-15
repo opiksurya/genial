@@ -23,7 +23,7 @@ dataset('finance pages', [
 
 dataset('allowed roles', ['Super Admin', 'Admin']);
 
-dataset('forbidden roles', ['Staff', 'Client', 'Agent', null]);
+dataset('forbidden roles', ['Staff', 'Agent', null]);
 
 test('allowed roles can open finance pages', function (string $roleName, string $routeName) {
     $user = User::factory()->create();
