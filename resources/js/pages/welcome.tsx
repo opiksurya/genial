@@ -31,7 +31,7 @@ import { ShinyText } from '@/components/reactbits/shiny-text';
 import { BlurText } from '@/components/reactbits/blur-text';
 import { ParticlesBg } from '@/components/reactbits/particles-bg';
 import { CountUp } from '@/components/reactbits/count-up';
-import HeroOrbit3D from '@/components/hero-orbit-3d';
+import HeroIso3D from '@/components/hero-iso-3d';
 
 interface PageProps {
     flash?: {
@@ -286,7 +286,7 @@ export default function Welcome() {
 
                         {/* Hero Visual: 3D scene of ad channels and data orbiting an AI core */}
                         <div className="lg:col-span-5 relative">
-                            <HeroOrbit3D isDark={isDark} metrics={campaignMetrics} active={activeTab} onSelect={setActiveTab} />
+                            <HeroIso3D isDark={isDark} metrics={campaignMetrics} active={activeTab} onSelect={setActiveTab} />
                         </div>
 
                     </div>
