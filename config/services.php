@@ -47,6 +47,18 @@ return [
         'redirect' => env('META_REDIRECT_URI', env('FACEBOOK_REDIRECT_URI')),
     ],
 
+    'shopee' => [
+        // One Shopee Open Platform app (partner) shared by every client shop.
+        // Per-project credentials on ProjectShopeeConfig still override these.
+        'partner_id' => env('SHOPEE_PARTNER_ID'),
+        'partner_key' => env('SHOPEE_PARTNER_KEY'),
+        'sandbox' => (bool) env('SHOPEE_SANDBOX', false),
+        // Must exactly match the Redirect URL registered in the Shopee console.
+        'redirect' => env('SHOPEE_REDIRECT_URI'),
+        // Must exactly match the Push URL registered in the Shopee console.
+        'webhook_url' => env('SHOPEE_WEBHOOK_URL'),
+    ],
+
     'claude_office' => [
         'url' => env('CLAUDE_OFFICE_URL'),
     ],

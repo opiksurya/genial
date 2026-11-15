@@ -105,14 +105,10 @@ Route::post('/api/meta-capi/track', [MetaCapiController::class, 'track'])->name(
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-// Shopee Open Platform Global Callback Route (Fallback matching standard /auth/shopee/callback)
-Route::get('/auth/shopee/callback', function (\Illuminate\Http\Request $request) {
-    $projectId = session('shopee_oauth_project_id');
-    if ($projectId && $project = \App\Models\Project::find($projectId)) {
-        return app(\App\Http\Controllers\ProjectFlow\ProjectShopeeController::class)->oauthCallback($request, $project);
-    }
-    return redirect()->route('shopee.index')->with('error', 'Sesi Shopee OAuth tidak ditemukan.');
-})->name('auth.shopee.callback');
+// Shopee Open Platform Push (webhook). Authenticated by HMAC signature, not by session.
+Route::post('/webhooks/shopee', \App\Http\Controllers\ShopeeWebhookController::class)
+    ->middleware('throttle:120,1')
+    ->name('webhooks.shopee');
 
 use App\Http\Controllers\ClaudeOfficeAuthController;
 use App\Http\Controllers\DashboardController;
@@ -156,6 +152,9 @@ Route::get('office-auth', ClaudeOfficeAuthController::class)->name('claude-offic
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Single Redirect URL registered in the Shopee console; the project is resolved from the OAuth state.
+    Route::get('auth/shopee/callback', [ProjectShopeeController::class, 'oauthCallback'])->name('auth.shopee.callback');
+
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
 
@@ -205,7 +204,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Shopee Open Platform Integration Routes
         Route::get('{project}/shopee-config/oauth/redirect', [ProjectShopeeController::class, 'oauthRedirect'])->whereNumber('project')->name('shopee.oauth.redirect');
-        Route::get('{project}/shopee-config/oauth/callback', [ProjectShopeeController::class, 'oauthCallback'])->whereNumber('project')->name('shopee.oauth.callback');
         Route::post('{project}/shopee-config', [ProjectShopeeController::class, 'update'])->whereNumber('project')->name('shopee.update');
         Route::post('{project}/shopee-config/test', [ProjectShopeeController::class, 'testConnection'])->whereNumber('project')->name('shopee.test');
         Route::post('{project}/shopee-config/disconnect', [ProjectShopeeController::class, 'disconnect'])->whereNumber('project')->name('shopee.disconnect');

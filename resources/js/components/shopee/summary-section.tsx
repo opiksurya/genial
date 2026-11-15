@@ -150,23 +150,25 @@ export function SummarySection({ analytics }: { analytics: ShopeeAnalytics }) {
                     />
                 </SectionCard>
 
-                <SectionCard title="Sumber Omzet" description="Kontribusi tiap kanal terhadap omzet.">
-                    <StackedShareBar
-                        ariaLabel="Komposisi omzet per kanal"
-                        segments={summary.channels.map((channel, index) => {
-                            const Icon = CHANNEL_ICONS[channel.channel];
+                {summary.channels.length > 0 && (
+                    <SectionCard title="Sumber Omzet" description="Kontribusi tiap kanal terhadap omzet.">
+                        <StackedShareBar
+                            ariaLabel="Komposisi omzet per kanal"
+                            segments={summary.channels.map((channel, index) => {
+                                const Icon = CHANNEL_ICONS[channel.channel];
 
-                            return {
-                                key: channel.channel,
-                                label: channel.label,
-                                share: channel.share,
-                                swatch: SERIES_BG[index],
-                                detail: `${formatRupiah(channel.revenue)} · ${formatNumber(channel.orders)} pesanan`,
-                                icon: <Icon className="size-3.5 text-muted-foreground" aria-hidden />,
-                            };
-                        })}
-                    />
-                </SectionCard>
+                                return {
+                                    key: channel.channel,
+                                    label: channel.label,
+                                    share: channel.share,
+                                    swatch: SERIES_BG[index],
+                                    detail: `${formatRupiah(channel.revenue)} · ${formatNumber(channel.orders)} pesanan`,
+                                    icon: <Icon className="size-3.5 text-muted-foreground" aria-hidden />,
+                                };
+                            })}
+                        />
+                    </SectionCard>
+                )}
             </div>
 
             <SectionCard title="5 Produk Terlaris" description="Berdasarkan omzet pesanan selesai.">

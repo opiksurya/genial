@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import {
     Dialog,
     DialogContent,
@@ -46,6 +46,11 @@ interface Props {
 export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
     if (!project) return null;
 
+    const { shopeeApp } = usePage<{
+        shopeeApp?: { hasSharedApp: boolean; sandbox: boolean; redirectUri: string; webhookUrl: string };
+    }>().props;
+    const hasSharedApp = Boolean(shopeeApp?.hasSharedApp);
+
     const existingConfig = project.shopee_config || project.shopeeConfig;
     const isConnected = existingConfig?.status === 'connected';
 
@@ -77,9 +82,10 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
     }, [existingConfig, isOpen]);
 
     // Construct the canonical redirect URI to register in Shopee Open Platform
-    const callbackUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/shopee/callback`
-        : `/auth/shopee/callback`;
+    const callbackUrl = shopeeApp?.redirectUri
+        ?? (typeof window !== 'undefined'
+            ? `${window.location.origin}/auth/shopee/callback`
+            : `/auth/shopee/callback`);
 
     const handleCopyUrl = () => {
         if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -91,7 +97,7 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
 
     const handleShopeeAuth = () => {
         const partnerId = data.partner_id || existingConfig?.partner_id;
-        if (!partnerId) {
+        if (!partnerId && !hasSharedApp) {
             setTestResult({
                 success: false,
                 message: 'Silakan masukkan Partner ID terlebih dahulu.',
@@ -111,7 +117,7 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
     };
 
     const handleTestConnection = async () => {
-        if (!data.partner_id) {
+        if (!data.partner_id && !hasSharedApp) {
             setTestResult({
                 success: false,
                 message: 'Silakan isi Partner ID terlebih dahulu.',
@@ -231,7 +237,7 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                     )}
 
                     {/* Quick 1-Click Store Authorization Box if Partner ID is provided */}
-                    {(data.partner_id || existingConfig?.partner_id) && (
+                    {(hasSharedApp || data.partner_id || existingConfig?.partner_id) && (
                         <div className="rounded-2xl border border-orange-200/80 dark:border-orange-900/40 bg-gradient-to-r from-orange-50/80 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/10 p-3.5 flex items-center justify-between gap-3 shadow-2xs">
                             <div className="space-y-0.5 min-w-0">
                                 <div className="flex items-center gap-1.5">
@@ -265,12 +271,19 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                         </div>
                     )}
 
+                    {hasSharedApp && (
+                        <p className="text-[11px] text-muted-foreground rounded-xl border border-dashed p-2.5">
+                            Genial memakai satu aplikasi Shopee Open Platform{shopeeApp?.sandbox ? ' (mode sandbox)' : ''} untuk semua toko klien.
+                            Klik <strong>Hubungkan Toko</strong> saja. Isi Partner ID dan Key di bawah hanya jika klien memakai aplikasi sendiri.
+                        </p>
+                    )}
+
                     {/* Configuration Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Field 1: Partner ID */}
                         <div className="space-y-1.5">
                             <Label htmlFor="shopee_partner_id" className="text-xs font-bold text-foreground">
-                                Partner ID <span className="text-rose-500">*</span>
+                                Partner ID {hasSharedApp ? <span className="text-muted-foreground font-normal">(opsional)</span> : <span className="text-rose-500">*</span>}
                             </Label>
                             <Input
                                 id="shopee_partner_id"
@@ -405,7 +418,7 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                                 type="button"
                                 variant="outline"
                                 onClick={handleTestConnection}
-                                disabled={isTesting || !data.partner_id}
+                                disabled={isTesting || (!data.partner_id && !hasSharedApp)}
                                 className="text-xs h-9 px-3 rounded-xl gap-1.5 cursor-pointer"
                             >
                                 <Activity className={`size-3.5 text-orange-600 ${isTesting ? 'animate-spin' : ''}`} />
