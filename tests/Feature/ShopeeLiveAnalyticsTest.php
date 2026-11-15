@@ -83,13 +83,40 @@ function liveReport(?ShopeePeriod $period = null): array
     return app(ShopeeAnalyticsManager::class)->report($period ?? ShopeePeriod::Last7Days, CarbonImmutable::yesterday(), test()->project);
 }
 
-test('a project without a connection still gets the simulation', function () {
+test('a project without a connection gets a report with every number at zero', function () {
     $this->config->update(['status' => 'disconnected']);
+    Http::fake();
 
     $report = liveReport();
 
-    expect($report['isDummy'])->toBeTrue()
-        ->and($report)->not->toHaveKey('liveError');
+    expect($report['isConnected'])->toBeFalse()
+        ->and($report)->not->toHaveKey('liveError')
+        ->and($report['storeName'])->toBe('CV Batik')
+        ->and(collect($report['summary']['kpis'])->pluck('value')->unique()->all())->toBe([0])
+        ->and(collect($report['summary']['kpis'])->pluck('key')->all())->toHaveCount(8)
+        ->and($report['summary']['channels'])->toBe([])
+        ->and($report['sales']['totals'])->each->toBe(0)
+        ->and($report['sales']['daily'])->toHaveCount(7)
+        ->and(collect($report['sales']['daily'])->sum('revenue'))->toBe(0)
+        ->and(collect($report['sales']['statuses'])->pluck('orders')->all())->toBe([0, 0, 0])
+        ->and($report['sales']['topProducts'])->toBe([])
+        ->and($report['ads']['campaigns'])->toBe([])
+        ->and($report['ads']['totals'])->each->toBe(0)
+        ->and($report['content']['liveSessions'])->toBe([])
+        ->and($report['content']['videos'])->toBe([])
+        ->and($report['storefront']['products'])->toBe([])
+        ->and($report['storefront']['etalase'])->toBe([])
+        ->and($report)->not->toHaveKey('meta');
+    Http::assertNothingSent();
+});
+
+test('a project that does not exist yet still gets a zero report', function () {
+    $report = app(ShopeeAnalyticsManager::class)->report(ShopeePeriod::Last30Days, CarbonImmutable::yesterday(), null);
+
+    expect($report['isConnected'])->toBeFalse()
+        ->and($report['storeName'])->toBe('Belum ada proyek')
+        ->and($report['sales']['daily'])->toHaveCount(30)
+        ->and($report['sales']['totals']['revenue'])->toBe(0);
 });
 
 test('revenue counts completed orders only, while all orders count towards the total', function () {
@@ -97,7 +124,7 @@ test('revenue counts completed orders only, while all orders count towards the t
 
     $report = liveReport();
 
-    expect($report['isDummy'])->toBeFalse()
+    expect($report['isConnected'])->toBeTrue()
         ->and($report['storeName'])->toBe('Batik Resmi')
         ->and($report['range'])->toMatchArray(['start' => '2026-11-08', 'end' => '2026-11-14'])
         ->and($report['sales']['totals'])->toMatchArray([
@@ -254,13 +281,15 @@ test('the report is cached so the page does not hit Shopee on every load', funct
     expect(count(Http::recorded()))->toBe($callsAfterFirst);
 });
 
-test('a failing shopee api falls back to the simulation and says why', function () {
+test('a failing shopee api shows zeros and says why, never invented numbers', function () {
     Http::fake(['*/api/v2/*' => Http::response(['error' => 'error_permission', 'message' => 'Permission denied for order'])]);
 
     $report = liveReport();
 
-    expect($report['isDummy'])->toBeTrue()
-        ->and($report['liveError'])->toBe('Permission denied for order');
+    expect($report['isConnected'])->toBeFalse()
+        ->and($report['liveError'])->toBe('Permission denied for order')
+        ->and($report['sales']['totals']['revenue'])->toBe(0)
+        ->and(collect($report['summary']['kpis'])->pluck('value')->unique()->all())->toBe([0]);
 });
 
 test('the analytics page serves live data for a connected project and hides secrets', function () {
@@ -270,7 +299,7 @@ test('the analytics page serves live data for a connected project and hides secr
         ->get(route('shopee.index', ['project_id' => $this->project->id, 'period' => 7]));
 
     $response->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->where('analytics.isDummy', false)
+        ->where('analytics.isConnected', true)
         ->where('analytics.sales.totals.revenue', 750000)
         ->has('analytics.meta.unavailable')
     );

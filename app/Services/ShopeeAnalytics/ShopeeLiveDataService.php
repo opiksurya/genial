@@ -57,7 +57,7 @@ class ShopeeLiveDataService
         }
 
         return [
-            'isDummy' => false,
+            'isConnected' => true,
             'storeName' => $config->shop_name ?: (($project->client ?: $project->name).' Store'),
             'projectId' => $project->id,
             'projectName' => $project->name,
@@ -80,6 +80,65 @@ class ShopeeLiveDataService
                 'generatedAt' => now()->toIso8601String(),
             ],
         ];
+    }
+
+    /**
+     * Same shape as a live report, with every number at zero. Shown when no shop is connected
+     * (or the Shopee call failed) so nothing invented is ever presented as store data.
+     *
+     * @return array<string, mixed>
+     */
+    public function disconnectedReport(ShopeePeriod $period, CarbonImmutable $endDate, ?Project $project = null): array
+    {
+        $end = $endDate->startOfDay();
+        $start = $end->subDays($period->value - 1);
+        $previousEnd = $start->subDay();
+        $previousStart = $previousEnd->subDays($period->value - 1);
+
+        $current = $this->aggregate([], [], $start, $end);
+
+        return [
+            'isConnected' => false,
+            'storeName' => $project ? ($project->client ?: $project->name) : 'Belum ada proyek',
+            'projectId' => $project?->id,
+            'projectName' => $project?->name,
+            'clientName' => $project?->client,
+            'range' => [
+                'start' => $start->toDateString(),
+                'end' => $end->toDateString(),
+                'previousStart' => $previousStart->toDateString(),
+                'previousEnd' => $previousEnd->toDateString(),
+            ],
+            'summary' => ['kpis' => $this->zeroKpis(), 'channels' => []],
+            'sales' => $this->sales($current, [], $start),
+            'ads' => $this->emptyAds($current['daily']),
+            'content' => $this->emptyContent(),
+            'storefront' => $this->storefront([], $current, $period->value),
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function zeroKpis(): array
+    {
+        $definitions = [
+            'revenue' => ['Omzet (Pesanan Selesai)', 'currency', true],
+            'orders' => ['Total Pesanan', 'number', true],
+            'aov' => ['Rata-rata Nilai Pesanan (AOV)', 'currency', true],
+            'conversionRate' => ['Tingkat Konversi', 'percent', true],
+            'adSpend' => ['Biaya Iklan', 'currency', false],
+            'roas' => ['ROAS Iklan', 'ratio', true],
+            'contentRevenue' => ['Omzet dari Live & Video', 'currency', true],
+            'cancellationRate' => ['Rasio Batal & Retur', 'percent', false],
+        ];
+
+        $kpis = [];
+        foreach ($definitions as $key => [$label, $format, $higherIsBetter]) {
+            $kpis[] = ['key' => $key, 'label' => $label, 'format' => $format, 'higherIsBetter' => $higherIsBetter, 'value' => 0, 'previous' => 0, 'change' => null];
+        }
+
+        return $kpis;
     }
 
     /**
@@ -361,13 +420,18 @@ class ShopeeLiveDataService
     }
 
     /**
+     * @param  list<array<string, mixed>>  $days
      * @return array<string, mixed>
      */
-    private function emptyAds(): array
+    private function emptyAds(array $days = []): array
     {
         $zero = ['spend' => 0, 'impressions' => 0, 'clicks' => 0, 'ctr' => 0, 'cpc' => 0, 'conversions' => 0, 'conversionRate' => 0, 'costPerConversion' => 0, 'revenue' => 0, 'roas' => 0];
 
-        return ['totals' => $zero, 'campaigns' => [], 'daily' => []];
+        return [
+            'totals' => $zero,
+            'campaigns' => [],
+            'daily' => array_map(fn (array $day): array => ['date' => $day['date'], 'spend' => 0, 'revenue' => 0], $days),
+        ];
     }
 
     /**

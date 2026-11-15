@@ -10,7 +10,7 @@ test('guests are redirected to the login page', function () {
     $this->get(route('shopee.index'))->assertRedirect(route('login'));
 });
 
-test('authenticated users see the shopee analytics page with dummy data for the default period', function () {
+test('authenticated users see the shopee analytics page with zeros when no shop is connected', function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-23 10:00:00'));
 
     $this->actingAs(User::factory()->create())
@@ -20,17 +20,20 @@ test('authenticated users see the shopee analytics page with dummy data for the 
             ->component('shopee/index')
             ->where('period', 30)
             ->has('periodOptions', 3)
-            ->where('analytics.isDummy', true)
+            ->where('analytics.isConnected', false)
             ->where('analytics.range.start', '2026-09-23')
             ->where('analytics.range.end', '2026-10-22')
             ->where('analytics.range.previousEnd', '2026-09-22')
             ->has('analytics.sales.daily', 30)
+            ->where('analytics.sales.totals.revenue', 0)
+            ->where('analytics.sales.totals.orders', 0)
             ->has('analytics.summary.kpis', 8)
-            ->has('analytics.ads.campaigns')
-            ->has('analytics.content.liveSessions')
-            ->has('analytics.content.videos')
-            ->has('analytics.storefront.etalase')
-            ->has('analytics.storefront.products', 16)
+            ->where('analytics.summary.kpis.0.value', 0)
+            ->has('analytics.ads.campaigns', 0)
+            ->has('analytics.content.liveSessions', 0)
+            ->has('analytics.content.videos', 0)
+            ->has('analytics.storefront.etalase', 0)
+            ->has('analytics.storefront.products', 0)
         );
 });
 
@@ -146,7 +149,7 @@ test('switching projects customizes store name and generates distinct determinis
         ->assertInertia(fn (Assert $page) => $page
             ->where('selectedProjectId', $projectA->id)
             ->where('selectedProject.name', 'Tatamu Brand')
-            ->where('analytics.storeName', 'Tatamu Official Store')
+            ->where('analytics.storeName', 'Tatamu')
             ->has('projects')
         );
 
@@ -156,7 +159,7 @@ test('switching projects customizes store name and generates distinct determinis
         ->assertInertia(fn (Assert $page) => $page
             ->where('selectedProjectId', $projectB->id)
             ->where('selectedProject.name', 'Prestige Atelier')
-            ->where('analytics.storeName', 'Prestige Atelier Official Store')
+            ->where('analytics.storeName', 'Prestige Atelier')
         );
 
     $service = new ShopeeDummyDataService();

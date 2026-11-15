@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Serves real Shopee data for connected shops, and the simulation for projects without a connection.
- * If the live call fails the simulation is shown together with the reason, never silently.
+ * Serves real Shopee data for connected shops. Projects without a connection, or whose live call failed,
+ * get a report with every number at zero (plus the reason on failure), never invented figures.
  */
 class ShopeeAnalyticsManager implements ShopeeAnalyticsSource
 {
@@ -19,7 +19,6 @@ class ShopeeAnalyticsManager implements ShopeeAnalyticsSource
 
     public function __construct(
         private ShopeeLiveDataService $live,
-        private ShopeeDummyDataService $dummy,
     ) {}
 
     /**
@@ -31,7 +30,7 @@ class ShopeeAnalyticsManager implements ShopeeAnalyticsSource
         $config = $project ? ProjectShopeeConfig::where('project_id', $project->id)->first() : null;
 
         if (! $project || ! $config || ! $config->isConnected() || ! $config->hasCredentials()) {
-            return $this->dummy->report($period, $endDate, $project);
+            return $this->live->disconnectedReport($period, $endDate, $project);
         }
 
         $key = sprintf('shopee_analytics:%d:%s:%d:%s', $project->id, $config->shop_id, $period->value, $endDate->toDateString());
@@ -41,7 +40,7 @@ class ShopeeAnalyticsManager implements ShopeeAnalyticsSource
         } catch (ShopeeApiException $e) {
             Log::warning('Shopee live analytics failed', ['project_id' => $project->id, 'message' => $e->getMessage(), 'code' => $e->errorCode]);
 
-            return [...$this->dummy->report($period, $endDate, $project), 'liveError' => $e->getMessage()];
+            return [...$this->live->disconnectedReport($period, $endDate, $project), 'liveError' => $e->getMessage()];
         }
     }
 }

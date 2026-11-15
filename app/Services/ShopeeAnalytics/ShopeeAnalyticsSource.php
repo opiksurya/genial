@@ -8,7 +8,7 @@ use Illuminate\Container\Attributes\Bind;
 
 /**
  * Source of Shopee store analytics. The manager serves live Shopee Open API data for
- * connected shops and the simulation for everything else, in the same shape.
+ * connected shops and an all-zero report for everything else, in the same shape.
  */
 #[Bind(ShopeeAnalyticsManager::class)]
 interface ShopeeAnalyticsSource
@@ -17,7 +17,7 @@ interface ShopeeAnalyticsSource
      * Build the full analytics report for the period ending on the given date (inclusive).
      *
      * @return array{
-     *     isDummy: bool,
+     *     isConnected: bool,
      *     storeName: string,
      *     projectId: int|null,
      *     projectName: string|null,

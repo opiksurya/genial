@@ -131,7 +131,7 @@ class ShopeeDummyDataService implements ShopeeAnalyticsSource
             : 'Genial Beauty Store';
 
         return [
-            'isDummy' => true,
+            'isConnected' => false,
             'storeName' => $storeName,
             'projectId' => $project?->id,
             'projectName' => $project?->name,
