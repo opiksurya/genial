@@ -80,12 +80,12 @@ export default function ClientCatalog({ services, whatsappNumber }: Props) {
                                                 )}
                                             </div>
                                             {service.description && (
-                                                <p className="text-sm text-muted-foreground">
+                                                <p className="whitespace-pre-line text-sm text-muted-foreground">
                                                     {service.description}
                                                 </p>
                                             )}
                                             {service.deliverables && (
-                                                <p className="text-sm">
+                                                <p className="whitespace-pre-line text-sm">
                                                     <span className="font-medium">
                                                         Hasil:{" "}
                                                     </span>
