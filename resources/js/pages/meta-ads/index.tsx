@@ -5,7 +5,7 @@ import {
     Building2,
     CalendarRange,
     Clapperboard,
-    FlaskConical,
+    Unplug,
     KeyRound,
     LayoutDashboard,
     Star,
@@ -124,15 +124,15 @@ export default function MetaAdsAnalyticsPage({
                                     <Megaphone className="size-3" aria-hidden />
                                     {analytics.accountName}
                                 </span>
-                                {analytics.isDummy ? (
-                                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
-                                        <FlaskConical className="size-2.5" aria-hidden />
-                                        Simulasi
-                                    </Badge>
-                                ) : (
+                                {analytics.isConnected ? (
                                     <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Live API
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
+                                        <Unplug className="size-2.5" aria-hidden />
+                                        Belum terhubung
                                     </Badge>
                                 )}
                             </div>
@@ -310,13 +310,13 @@ export default function MetaAdsAnalyticsPage({
                     </div>
                 </div>
 
-                {/* Simulation Mode Banner - Compact */}
-                {analytics.isDummy && (
+                {/* Not connected banner - Compact */}
+                {!analytics.isConnected && (
                     <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs shadow-2xs">
                         <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 min-w-0">
-                            <FlaskConical className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+                            <Unplug className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
                             <span className="truncate">
-                                <strong>Simulasi Meta Ads ({analytics.accountName})</strong>: Data terisolasi per project. Hubungkan akun Meta Graph API untuk menarik live campaigns real-time.
+                                <strong>Meta Ads belum terhubung ({analytics.accountName})</strong>: semua angka 0 sampai akun iklan dihubungkan.
                             </span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">

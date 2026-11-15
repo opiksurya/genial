@@ -163,7 +163,7 @@ Route::prefix('freelancer')->name('freelancer.portal.')->group(function () {
 // middleware so guests get a 401 instead of a redirect to the login page.
 Route::get('office-auth', ClaudeOfficeAuthController::class)->name('claude-office.auth');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'confine.reviewer'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');

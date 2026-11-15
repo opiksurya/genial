@@ -23,7 +23,8 @@ class MetaAdsAnalyticsController extends Controller
     {
         $period = MetaAdsPeriod::fromInput($request->query('period'));
 
-        $projects = Project::select('id', 'name', 'client', 'slug')
+        $projects = Project::visibleTo($request->user())
+            ->select('id', 'name', 'client', 'slug')
             ->with(['metaConfig', 'metaConfigs'])
             ->orderBy('name')
             ->get();

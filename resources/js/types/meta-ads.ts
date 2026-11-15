@@ -153,7 +153,6 @@ export type MetaAdsPixelHealth = {
 };
 
 export type MetaAdsAnalytics = {
-    isDummy: boolean;
     isConnected: boolean;
     accountName: string;
     adAccountId: string;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Project extends Model
 {
+    /**
+     * Roles that only see the projects they are a member of.
+     *
+     * @var list<string>
+     */
+    public const MEMBER_ONLY_ROLES = ['Client', 'Reviewer'];
+
     protected $fillable = [
         'name',
         'client',
@@ -119,6 +127,32 @@ class Project extends Model
     public function metaConfigs(): HasMany
     {
         return $this->hasMany(ProjectMetaConfig::class)->orderByDesc('is_default')->orderBy('id');
+    }
+
+    /**
+     * Projects the user may see: everything for staff roles, only their own projects for member-only roles.
+     *
+     * @param  Builder<Project>  $query
+     * @return Builder<Project>
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! self::isMemberOnly($user)) {
+            return $query;
+        }
+
+        return $query->whereIn('id', ProjectMember::where('user_id', $user->id)->select('project_id'));
+    }
+
+    public function isVisibleTo(?User $user): bool
+    {
+        return ! self::isMemberOnly($user)
+            || ProjectMember::where('project_id', $this->id)->where('user_id', $user->id)->exists();
+    }
+
+    private static function isMemberOnly(?User $user): bool
+    {
+        return $user !== null && $user->hasAnyRole(self::MEMBER_ONLY_ROLES);
     }
 
     public function shopeeConfig(): \Illuminate\Database\Eloquent\Relations\HasOne

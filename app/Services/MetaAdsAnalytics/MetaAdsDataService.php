@@ -29,6 +29,10 @@ class MetaAdsDataService implements MetaAdsAnalyticsSource
         $metaConfig = $project?->metaConfig;
         $isLiveConnected = $metaConfig && $metaConfig->isConnected() && !empty($metaConfig->access_token);
 
+        if (! $isLiveConnected) {
+            return $this->disconnectedReport($period, $endDate, $project);
+        }
+
         // Generate daily data deterministically
         $currentDaily = $this->generateDailyStats($startDate, $endDate);
         $previousDaily = $this->generateDailyStats($previousStartDate, $previousEndDate);
@@ -114,8 +118,7 @@ class MetaAdsDataService implements MetaAdsAnalyticsSource
         ];
 
         return [
-            'isDummy' => !$isLiveConnected,
-            'isConnected' => (bool) $isLiveConnected,
+            'isConnected' => true,
             'accountName' => $metaConfig?->account_name ?: ($brandName . ' - Meta Ads'),
             'adAccountId' => $metaConfig?->ad_account_id ?: ('act_' . ($project ? (718290000 + $project->id * 12345) : '892019482')),
             'pixelId' => $pixelHealth['pixelId'],
@@ -140,6 +143,92 @@ class MetaAdsDataService implements MetaAdsAnalyticsSource
             'audiences' => $audiences,
             'creatives' => $creatives,
             'pixelHealth' => $pixelHealth,
+        ];
+    }
+
+    /**
+     * Same shape as a connected report with every number at zero and nothing invented.
+     * Shown when the project has no connected Meta account.
+     */
+    public function disconnectedReport(MetaAdsPeriod $period, CarbonImmutable $endDate, ?Project $project = null): array
+    {
+        $numDays = $period->value;
+        $startDate = $endDate->subDays($numDays - 1);
+        $previousEndDate = $startDate->subDay();
+        $previousStartDate = $previousEndDate->subDays($numDays - 1);
+
+        $brandName = $project ? ($project->client ?: $project->name) : 'Belum ada proyek';
+        $metaConfig = $project?->metaConfig;
+
+        $daily = [];
+        for ($cursor = $startDate; $cursor->lessThanOrEqualTo($endDate); $cursor = $cursor->addDay()) {
+            $daily[] = [
+                'date' => $cursor->toDateString(),
+                'spend' => 0, 'revenue' => 0, 'roas' => 0, 'purchases' => 0, 'leads' => 0,
+                'clicks' => 0, 'impressions' => 0, 'cpc' => 0, 'ctr' => 0,
+            ];
+        }
+
+        $totals = $this->aggregateDaily($daily);
+
+        $platforms = array_map(fn (array $p): array => [
+            'platform' => $p[0], 'label' => $p[1], 'spend' => 0, 'revenue' => 0, 'roas' => 0,
+            'purchases' => 0, 'clicks' => 0, 'impressions' => 0, 'share' => 0,
+        ], [
+            ['instagram', 'Instagram'], ['facebook', 'Facebook'], ['audience_network', 'Audience Network'], ['messenger', 'Messenger'],
+        ]);
+
+        $placements = array_map(fn (string $name): array => [
+            'name' => $name, 'share' => 0, 'spend' => 0, 'revenue' => 0, 'purchases' => 0, 'roas' => 0,
+        ], [
+            'Instagram Reels', 'Instagram Feeds', 'Instagram Stories', 'Facebook Feeds', 'Facebook Video Feeds', 'Audience Network & Lainnya',
+        ]);
+
+        $ageGroups = array_map(fn (string $age): array => [
+            'age' => $age, 'share' => 0, 'spend' => 0, 'purchases' => 0, 'roas' => 0,
+        ], ['18–24', '25–34', '35–44', '45–54', '55+']);
+
+        $gender = array_map(fn (string $g): array => [
+            'gender' => $g, 'share' => 0, 'spend' => 0, 'purchases' => 0,
+        ], ['Wanita', 'Pria']);
+
+        $creatives = array_map(fn (string $format): array => [
+            'format' => $format, 'hookRate' => null, 'holdRate' => null, 'ctr' => 0, 'spend' => 0, 'revenue' => 0, 'roas' => 0,
+        ], ['Video Reels (9:16)', 'Carousel Product (1:1)', 'Single Image Feed (4:5)', 'Stories Interactive (9:16)']);
+
+        return [
+            'isConnected' => false,
+            'accountName' => $metaConfig?->account_name ?: $brandName,
+            'adAccountId' => $metaConfig?->ad_account_id ?: '',
+            'pixelId' => $metaConfig?->pixel_id ?: '',
+            'currency' => $metaConfig?->currency ?: 'IDR',
+            'projectId' => $project?->id,
+            'projectName' => $project?->name,
+            'clientName' => $project?->client,
+            'range' => [
+                'start' => $startDate->toDateString(),
+                'end' => $endDate->toDateString(),
+                'previousStart' => $previousStartDate->toDateString(),
+                'previousEnd' => $previousEndDate->toDateString(),
+            ],
+            'summary' => [
+                'kpis' => $this->buildKpis($totals, $totals),
+                'totals' => $totals,
+            ],
+            'daily' => $daily,
+            'platforms' => $platforms,
+            'placements' => $placements,
+            'campaigns' => [],
+            'audiences' => ['ageGroups' => $ageGroups, 'gender' => $gender, 'segments' => []],
+            'creatives' => $creatives,
+            'pixelHealth' => [
+                'pixelId' => $metaConfig?->pixel_id ?: '',
+                'status' => 'Belum terhubung',
+                'eventMatchQuality' => 0,
+                'capiActive' => false,
+                'lastEventTime' => '',
+                'events' => [],
+            ],
         ];
     }
 

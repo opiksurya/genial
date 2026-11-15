@@ -1,17 +1,38 @@
 <?php
 
 use App\Models\Project;
+use App\Models\ProjectMetaConfig;
 use App\Models\User;
 use App\Services\MetaAdsAnalytics\MetaAdsDataService;
 use App\Services\MetaAdsAnalytics\MetaAdsPeriod;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
+
+/**
+ * A project with a connected Meta account. Campaign calls are faked empty, so the generator fills the figures.
+ */
+function connectedMetaProject(string $name, string $client): Project
+{
+    Http::fake(['*' => Http::response(['data' => []])]);
+
+    $project = Project::create(['name' => $name, 'client' => $client, 'start_date' => now(), 'end_date' => now()->addMonth()]);
+    ProjectMetaConfig::create([
+        'project_id' => $project->id,
+        'is_default' => true,
+        'ad_account_id' => 'act_'.(1000 + $project->id),
+        'access_token' => 'test-token',
+        'status' => 'connected',
+    ]);
+
+    return $project->fresh('metaConfig');
+}
 
 test('guests are redirected to the login page from meta ads', function () {
     $this->get(route('meta-ads.index'))->assertRedirect(route('login'));
 });
 
-test('authenticated users see the meta ads analytics page with data for the default period', function () {
+test('authenticated users see the meta ads page with zeros when no account is connected', function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-23 10:00:00'));
 
     $this->actingAs(User::factory()->create())
@@ -21,19 +42,45 @@ test('authenticated users see the meta ads analytics page with data for the defa
             ->component('meta-ads/index')
             ->where('period', 30)
             ->has('periodOptions', 3)
-            ->where('analytics.isDummy', true)
+            ->where('analytics.isConnected', false)
             ->where('analytics.range.start', '2026-09-23')
             ->where('analytics.range.end', '2026-10-22')
             ->where('analytics.range.previousEnd', '2026-09-22')
             ->has('analytics.daily', 30)
+            ->where('analytics.summary.totals.spend', 0)
+            ->where('analytics.summary.totals.revenue', 0)
             ->has('analytics.summary.kpis', 8)
+            ->where('analytics.summary.kpis.0.value', 0)
             ->has('analytics.platforms', 4)
-            ->has('analytics.placements')
-            ->has('analytics.campaigns')
-            ->has('analytics.audiences.ageGroups')
-            ->has('analytics.creatives')
-            ->has('analytics.pixelHealth.events')
+            ->where('analytics.platforms.0.spend', 0)
+            ->has('analytics.placements', 6)
+            ->where('analytics.placements.0.roas', 0)
+            ->has('analytics.campaigns', 0)
+            ->has('analytics.audiences.ageGroups', 5)
+            ->has('analytics.audiences.segments', 0)
+            ->has('analytics.creatives', 4)
+            ->where('analytics.adAccountId', '')
+            ->where('analytics.pixelHealth.status', 'Belum terhubung')
+            ->has('analytics.pixelHealth.events', 0)
         );
+});
+
+test('a disconnected meta report contains no generated figures at all', function () {
+    $report = (new MetaAdsDataService)->report(MetaAdsPeriod::Last7Days, CarbonImmutable::parse('2026-10-22'));
+
+    $numbers = [];
+    array_walk_recursive($report, function ($value, $key) use (&$numbers) {
+        if (is_int($value) || is_float($value)) {
+            $numbers[$key] = $value;
+        }
+    });
+
+    expect($report['isConnected'])->toBeFalse()
+        ->and($report['summary']['totals'])->each->toBe(0)
+        ->and(collect($report['daily'])->sum('spend'))->toBe(0)
+        ->and(collect($report['platforms'])->pluck('share')->unique()->all())->toBe([0])
+        ->and(collect($report['creatives'])->pluck('hookRate')->unique()->all())->toBe([null])
+        ->and(array_filter($numbers, fn ($n, $k) => ! in_array($k, ['projectId'], true) && $n !== 0, ARRAY_FILTER_USE_BOTH))->toBe([]);
 });
 
 test('valid period changes the reported range for meta ads', function (int $period) {
@@ -61,13 +108,16 @@ test('invalid period falls back to 30 days for meta ads', function (mixed $perio
     'huge' => '99999999999999999999',
 ]);
 
-test('meta ads dummy data is deterministic for the same period and end date', function () {
+test('meta ads generated data is deterministic for the same period and end date', function () {
+    $this->freezeTime();
+    $project = connectedMetaProject('Tatamu Brand', 'Tatamu');
     $endDate = CarbonImmutable::parse('2026-10-22');
 
-    $first = (new MetaAdsDataService)->report(MetaAdsPeriod::Last30Days, $endDate);
-    $second = (new MetaAdsDataService)->report(MetaAdsPeriod::Last30Days, $endDate);
+    $first = (new MetaAdsDataService)->report(MetaAdsPeriod::Last30Days, $endDate, $project);
+    $second = (new MetaAdsDataService)->report(MetaAdsPeriod::Last30Days, $endDate, $project);
 
-    expect($first)->toBe($second);
+    expect($first)->toBe($second)
+        ->and($first['isConnected'])->toBeTrue();
 });
 
 test('switching projects in meta ads customizes account name and generates distinct deterministic data', function () {
@@ -91,7 +141,7 @@ test('switching projects in meta ads customizes account name and generates disti
         ->assertInertia(fn (Assert $page) => $page
             ->where('selectedProjectId', $projectA->id)
             ->where('selectedProject.name', 'Tatamu Brand')
-            ->where('analytics.accountName', 'Tatamu - Meta Ads')
+            ->where('analytics.accountName', 'Tatamu')
             ->has('projects')
         );
 
@@ -101,21 +151,24 @@ test('switching projects in meta ads customizes account name and generates disti
         ->assertInertia(fn (Assert $page) => $page
             ->where('selectedProjectId', $projectB->id)
             ->where('selectedProject.name', 'Prestige Atelier')
-            ->where('analytics.accountName', 'Prestige Atelier - Meta Ads')
+            ->where('analytics.accountName', 'Prestige Atelier')
         );
 
     $service = new MetaAdsDataService();
     $date = CarbonImmutable::parse('2026-10-22');
-    $reportA = $service->report(MetaAdsPeriod::Last30Days, $date, $projectA);
-    $reportB = $service->report(MetaAdsPeriod::Last30Days, $date, $projectB);
+    $connectedA = connectedMetaProject('Tatamu Brand', 'Tatamu');
+    $connectedB = connectedMetaProject('Prestige Atelier', 'Prestige Atelier');
+    $reportA = $service->report(MetaAdsPeriod::Last30Days, $date, $connectedA);
+    $reportB = $service->report(MetaAdsPeriod::Last30Days, $date, $connectedB);
 
     expect($reportA['accountName'])->toBe('Tatamu - Meta Ads')
         ->and($reportB['accountName'])->toBe('Prestige Atelier - Meta Ads')
         ->and($reportA['summary']['totals']['spend'])->not->toBe($reportB['summary']['totals']['spend']);
 });
 
-test('meta ads dummy data totals are internally consistent', function (MetaAdsPeriod $period) {
-    $report = (new MetaAdsDataService)->report($period, CarbonImmutable::parse('2026-10-22'));
+test('meta ads generated data totals are internally consistent', function (MetaAdsPeriod $period) {
+    $project = connectedMetaProject('Tatamu Brand', 'Tatamu');
+    $report = (new MetaAdsDataService)->report($period, CarbonImmutable::parse('2026-10-22'), $project);
     $totals = $report['summary']['totals'];
     $daily = $report['daily'];
 

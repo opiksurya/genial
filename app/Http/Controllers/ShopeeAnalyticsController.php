@@ -25,7 +25,8 @@ class ShopeeAnalyticsController extends Controller
     {
         $period = ShopeePeriod::fromInput($request->query('period'));
 
-        $projects = Project::select('id', 'name', 'client', 'slug')
+        $projects = Project::visibleTo($request->user())
+            ->select('id', 'name', 'client', 'slug')
             ->with(['shopeeConfig' => function ($query) {
                 $query->select('id', 'project_id', 'partner_id', 'is_sandbox', 'shop_id', 'shop_name', 'status', 'token_expires_at', 'last_synced_at', 'error_message');
             }])
