@@ -274,9 +274,52 @@ class MetaClientService
     /**
      * Generate Facebook OAuth authorization URL for 1-click connect.
      */
+    /**
+     * Ad accounts the access token can currently see in Meta (follows pagination).
+     *
+     * @return array{success: bool, accounts: list<array<string, mixed>>, message?: string}
+     */
+    public static function listAccessibleAdAccounts(string $accessToken): array
+    {
+        $accounts = [];
+        $url = self::BASE_URL . '/me/adaccounts';
+        $query = [
+            'fields' => 'id,account_id,name,currency,account_status,business{id,name}',
+            'limit' => 100,
+            'access_token' => $accessToken,
+        ];
+
+        try {
+            for ($page = 0; $page < 5 && $url; $page++) {
+                $response = Http::timeout(15)->get($url, $query);
+
+                if (! $response->successful()) {
+                    return [
+                        'success' => false,
+                        'accounts' => $accounts,
+                        'message' => $response->json('error.message') ?? 'Gagal mengambil daftar ad account dari Meta.',
+                    ];
+                }
+
+                foreach ($response->json('data') ?? [] as $row) {
+                    $accounts[] = $row;
+                }
+
+                $url = $response->json('paging.next');
+                $query = [];
+            }
+        } catch (\Exception $e) {
+            Log::error('Meta listAccessibleAdAccounts exception: ' . $e->getMessage());
+
+            return ['success' => false, 'accounts' => $accounts, 'message' => 'Koneksi ke Meta error: ' . $e->getMessage()];
+        }
+
+        return ['success' => true, 'accounts' => $accounts];
+    }
+
     public static function generateOAuthUrl(string $appId, string $redirectUri, string $state): string
     {
-        $scopes = ['ads_read', 'ads_management', 'read_insights', 'public_profile', 'email'];
+        $scopes = ['ads_read', 'ads_management', 'read_insights', 'business_management', 'public_profile', 'email'];
 
         return 'https://www.facebook.com/' . self::GRAPH_API_VERSION . '/dialog/oauth?' . http_build_query([
             'client_id' => trim($appId),

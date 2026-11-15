@@ -102,9 +102,23 @@ class Project extends Model
         return $this->hasMany(Expense::class);
     }
 
+    /**
+     * The default Meta ad account of this project.
+     */
     public function metaConfig(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne(ProjectMetaConfig::class);
+        return $this->hasOne(ProjectMetaConfig::class)->ofMany([
+            'is_default' => 'max',
+            'id' => 'min',
+        ]);
+    }
+
+    /**
+     * Every Meta ad account linked to this project.
+     */
+    public function metaConfigs(): HasMany
+    {
+        return $this->hasMany(ProjectMetaConfig::class)->orderByDesc('is_default')->orderBy('id');
     }
 
     public function shopeeConfig(): \Illuminate\Database\Eloquent\Relations\HasOne

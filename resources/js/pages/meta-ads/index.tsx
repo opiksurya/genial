@@ -8,6 +8,7 @@ import {
     FlaskConical,
     KeyRound,
     LayoutDashboard,
+    Star,
     Megaphone,
     Settings,
     Share2,
@@ -18,6 +19,7 @@ import { AudiencesSection } from '@/components/meta-ads/audiences-section';
 import { CampaignsSection } from '@/components/meta-ads/campaigns-section';
 import { CreativesSection } from '@/components/meta-ads/creatives-section';
 import { formatDate } from '@/components/meta-ads/format';
+import { MetaOneClickConnect, type MetaAppInfo } from '@/components/meta-ads/meta-one-click-connect';
 import { PixelSection } from '@/components/meta-ads/pixel-section';
 import { SummarySection } from '@/components/meta-ads/summary-section';
 import { ClientMetaConnectModal } from '@/components/projects/client-meta-connect-modal';
@@ -54,7 +56,18 @@ interface Props {
     projects?: MetaAdsProjectOption[];
     selectedProjectId?: number | null;
     selectedProject?: MetaAdsProjectOption | null;
+    adAccounts?: AdAccountOption[];
+    metaApp: MetaAppInfo;
+    selectedAdAccountId?: string | null;
     analytics: MetaAdsAnalytics;
+}
+
+interface AdAccountOption {
+    id: number;
+    ad_account_id: string;
+    account_name: string | null;
+    is_default: boolean;
+    status: string;
 }
 
 export default function MetaAdsAnalyticsPage({
@@ -63,6 +76,9 @@ export default function MetaAdsAnalyticsPage({
     projects = [],
     selectedProjectId = null,
     selectedProject = null,
+    adAccounts = [],
+    metaApp,
+    selectedAdAccountId = null,
     analytics,
 }: Props) {
     const [tab, setTab] = useState<TabKey>('summary');
@@ -82,6 +98,9 @@ export default function MetaAdsAnalyticsPage({
               meta_config: (selectedProject.meta_config || selectedProject.metaConfig || null) as any,
           }
         : null;
+
+    const activeAdAccount = adAccounts.find((a) => a.ad_account_id === selectedAdAccountId) ?? null;
+    const adAccountLabel = (a: AdAccountOption) => a.account_name || a.ad_account_id;
 
     const rangeLabel = `${formatDate(analytics.range.start, { day: 'numeric', month: 'short', year: 'numeric' })} – ${formatDate(analytics.range.end, { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
@@ -165,6 +184,8 @@ export default function MetaAdsAnalyticsPage({
                             </Button>
                         )}
 
+                        <MetaOneClickConnect metaApp={metaApp} />
+
                         {/* Project / Client Switcher */}
                         {projects.length > 0 && (
                             <Select
@@ -204,6 +225,61 @@ export default function MetaAdsAnalyticsPage({
                             </Select>
                         )}
 
+                        {/* Ad Account Switcher (only when the project has more than one) */}
+                        {selectedProject && adAccounts.length > 1 && (
+                            <div className="flex items-center gap-1">
+                                <Select
+                                    value={selectedAdAccountId ?? undefined}
+                                    onValueChange={(val) => {
+                                        router.get(
+                                            metaAdsIndex(),
+                                            { period, project_id: selectedProject.id, ad_account_id: val },
+                                            { preserveState: true, preserveScroll: true },
+                                        );
+                                    }}
+                                >
+                                    <SelectTrigger className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs font-semibold text-foreground shadow-2xs hover:border-blue-500/40 cursor-pointer min-w-[140px] max-w-[220px]">
+                                        <div className="flex items-center gap-1.5 truncate">
+                                            <Megaphone className="size-3.5 shrink-0 text-blue-600" aria-hidden />
+                                            <SelectValue placeholder="Pilih Ad Account" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent align="end" className="w-[260px]">
+                                        {adAccounts.map((acc) => (
+                                            <SelectItem key={acc.id} value={acc.ad_account_id} className="cursor-pointer text-xs py-1.5">
+                                                <div className="flex flex-col text-left">
+                                                    <span className="font-bold text-foreground">
+                                                        {adAccountLabel(acc)}
+                                                        {acc.is_default && ' ★'}
+                                                    </span>
+                                                    <span className="font-mono text-[10px] text-muted-foreground">{acc.ad_account_id}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {activeAdAccount && !activeAdAccount.is_default && (
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 rounded-lg px-2 text-xs font-semibold gap-1 cursor-pointer"
+                                        title="Jadikan akun ini default untuk project"
+                                        onClick={() =>
+                                            router.post(
+                                                `/projects/${selectedProject.id}/meta-accounts/${activeAdAccount.id}/default`,
+                                                {},
+                                                { preserveScroll: true },
+                                            )
+                                        }
+                                    >
+                                        <Star className="size-3.5 text-amber-500" aria-hidden />
+                                        Jadikan default
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+
                         {/* Period Navigation ("Tab Hari") */}
                         <nav aria-label="Filter periode" className="flex items-center rounded-lg border border-border bg-card p-0.5 shadow-2xs h-8">
                             {periodOptions.map((option) => (
@@ -213,6 +289,7 @@ export default function MetaAdsAnalyticsPage({
                                         query: {
                                             period: option.value,
                                             ...(selectedProjectId ? { project_id: selectedProjectId } : {}),
+                                            ...(selectedAdAccountId ? { ad_account_id: selectedAdAccountId } : {}),
                                         },
                                     })}
                                     preserveState

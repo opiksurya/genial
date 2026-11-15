@@ -43,6 +43,7 @@ class ProjectMetaController extends Controller
         }
 
         $config->save();
+        $this->shareCredentials($config);
 
         // Immediately attempt to sync & verify connection with Meta Graph API
         $syncResult = MetaClientService::syncAccount($config);
@@ -157,6 +158,7 @@ class ProjectMetaController extends Controller
         }
 
         $config->save();
+        $this->shareCredentials($config);
 
         // Perform immediate account sync
         MetaClientService::syncAccount($config);
@@ -245,5 +247,151 @@ class ProjectMetaController extends Controller
             'currency' => $config->currency,
             'ad_account_id' => $config->ad_account_id,
         ]);
+    }
+
+    /**
+     * Linked ad accounts plus any account Meta exposes to the token that is not linked yet.
+     */
+    public function accounts(Project $project)
+    {
+        $linked = $project->metaConfigs()->get();
+        $default = $linked->firstWhere('is_default', true) ?? $linked->first();
+
+        $available = [];
+        $message = null;
+
+        if ($default && ! empty($default->access_token)) {
+            $result = MetaClientService::listAccessibleAdAccounts($default->access_token);
+            $message = $result['success'] ? null : ($result['message'] ?? null);
+            $linkedIds = $linked->pluck('ad_account_id')->all();
+
+            foreach ($result['accounts'] as $row) {
+                $id = MetaClientService::formatAdAccountId($row['id'] ?? $row['account_id'] ?? '');
+                if ($id === 'act_' || in_array($id, $linkedIds, true)) {
+                    continue;
+                }
+                $available[] = [
+                    'ad_account_id' => $id,
+                    'name' => $row['name'] ?? $id,
+                    'currency' => $row['currency'] ?? null,
+                    'business_name' => $row['business']['name'] ?? null,
+                ];
+            }
+        }
+
+        return response()->json([
+            'linked' => $linked->map(fn ($c) => [
+                'id' => $c->id,
+                'ad_account_id' => $c->ad_account_id,
+                'account_name' => $c->account_name,
+                'is_default' => (bool) $c->is_default,
+                'status' => $c->status,
+            ])->values(),
+            'available' => $available,
+            'has_token' => (bool) ($default && ! empty($default->access_token)),
+            'message' => $message,
+        ]);
+    }
+
+    /**
+     * Link another ad account to this project, reusing the connection of the default account.
+     */
+    public function addAccount(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'ad_account_id' => 'required|string|max:100',
+            'make_default' => 'nullable|boolean',
+        ]);
+
+        $adAccountId = MetaClientService::formatAdAccountId($validated['ad_account_id']);
+
+        if ($project->metaConfigs()->where('ad_account_id', $adAccountId)->exists()) {
+            return back()->with('error', 'Ad account tersebut sudah tertaut ke project ini.');
+        }
+
+        $source = $project->metaConfig;
+
+        $config = new ProjectMetaConfig([
+            'project_id' => $project->id,
+            'ad_account_id' => $adAccountId,
+            'is_default' => ! $source,
+            'status' => 'disconnected',
+        ]);
+        $config->save();
+
+        if ($source) {
+            $this->copyCredentials($source, $config);
+            $config->save();
+            MetaClientService::syncAccount($config);
+        }
+
+        if ($request->boolean('make_default')) {
+            $this->makeDefault($config);
+        }
+
+        return back()->with('success', 'Ad account berhasil ditautkan ke project.');
+    }
+
+    /**
+     * Choose which linked ad account is shown by default.
+     */
+    public function setDefaultAccount(Project $project, ProjectMetaConfig $config)
+    {
+        abort_unless($config->project_id === $project->id, 404);
+
+        $this->makeDefault($config);
+
+        return back()->with('success', 'Akun default diubah ke ' . ($config->account_name ?: $config->ad_account_id) . '.');
+    }
+
+    /**
+     * Unlink one ad account. The default account cannot be removed while others exist.
+     */
+    public function destroyAccount(Project $project, ProjectMetaConfig $config)
+    {
+        abort_unless($config->project_id === $project->id, 404);
+
+        if ($config->is_default && $project->metaConfigs()->count() > 1) {
+            return back()->with('error', 'Jadikan akun lain sebagai default dulu sebelum menghapus akun ini.');
+        }
+
+        $config->delete();
+
+        return back()->with('success', 'Ad account dilepas dari project.');
+    }
+
+    private function makeDefault(ProjectMetaConfig $config): void
+    {
+        ProjectMetaConfig::where('project_id', $config->project_id)->update(['is_default' => false]);
+        $config->forceFill(['is_default' => true])->save();
+    }
+
+    /**
+     * Ad accounts of one project share the same Facebook login, so push it to the siblings.
+     */
+    private function shareCredentials(ProjectMetaConfig $source): void
+    {
+        $siblings = ProjectMetaConfig::where('project_id', $source->project_id)
+            ->where('id', '!=', $source->id)
+            ->get();
+
+        foreach ($siblings as $sibling) {
+            $this->copyCredentials($source, $sibling);
+            $sibling->save();
+            if (! empty($sibling->access_token)) {
+                MetaClientService::syncAccount($sibling);
+            }
+        }
+    }
+
+    private function copyCredentials(ProjectMetaConfig $from, ProjectMetaConfig $to): void
+    {
+        $to->app_id = $from->app_id;
+        $to->app_secret = $from->app_secret;
+        $to->access_token = $from->access_token;
+        $to->fb_user_id = $from->fb_user_id;
+        $to->fb_user_name = $from->fb_user_name;
+        $to->token_expires_at = $from->token_expires_at;
+        $to->currency = $to->currency ?: $from->currency;
     }
 }

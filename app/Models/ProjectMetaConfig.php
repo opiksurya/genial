@@ -9,6 +9,7 @@ class ProjectMetaConfig extends Model
 {
     protected $fillable = [
         'project_id',
+        'is_default',
         'ad_account_id',
         'pixel_id',
         'app_id',
@@ -48,6 +49,7 @@ class ProjectMetaConfig extends Model
         'last_synced_at' => 'datetime',
         'token_expires_at' => 'datetime',
         'account_status' => 'integer',
+        'is_default' => 'boolean',
     ];
 
     public function project(): BelongsTo

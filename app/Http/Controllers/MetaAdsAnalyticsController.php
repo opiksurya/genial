@@ -24,7 +24,7 @@ class MetaAdsAnalyticsController extends Controller
         $period = MetaAdsPeriod::fromInput($request->query('period'));
 
         $projects = Project::select('id', 'name', 'client', 'slug')
-            ->with('metaConfig')
+            ->with(['metaConfig', 'metaConfigs'])
             ->orderBy('name')
             ->get();
 
@@ -35,12 +35,34 @@ class MetaAdsAnalyticsController extends Controller
             $selectedProject = $projects->first();
         }
 
+        // Let the viewer pick one of the project's ad accounts; fall back to the default one.
+        $adAccounts = $selectedProject?->metaConfigs ?? collect();
+        $selectedAccount = $adAccounts->firstWhere('ad_account_id', $request->query('ad_account_id'))
+            ?? $selectedProject?->metaConfig;
+        if ($selectedProject && $selectedAccount) {
+            $selectedProject->setRelation('metaConfig', $selectedAccount);
+        }
+
         return Inertia::render('meta-ads/index', [
             'period' => $period->value,
             'periodOptions' => MetaAdsPeriod::options(),
             'projects' => $projects,
             'selectedProjectId' => $selectedProject?->id,
             'selectedProject' => $selectedProject,
+            'adAccounts' => $adAccounts->map(fn ($c) => [
+                'id' => $c->id,
+                'ad_account_id' => $c->ad_account_id,
+                'account_name' => $c->account_name,
+                'is_default' => (bool) $c->is_default,
+                'status' => $c->status,
+            ])->values(),
+            'metaApp' => [
+                'configured' => \App\Services\MetaAppCredentials::isConfigured(),
+                'app_id' => \App\Services\MetaAppCredentials::appId(),
+                'redirect_uri' => route('meta-ads.callback'),
+                'can_setup' => (bool) $request->user()?->hasRole('Super Admin'),
+            ],
+            'selectedAdAccountId' => $selectedAccount?->ad_account_id,
             'analytics' => $this->analytics->report($period, CarbonImmutable::yesterday(), $selectedProject),
         ]);
     }

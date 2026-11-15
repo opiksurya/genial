@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { MetaAdAccountsPanel } from '@/components/projects/meta-ad-accounts-panel';
 import {
     Share2,
     CheckCircle2,
@@ -140,25 +141,9 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
     }, [existingConfig, isOpen]);
 
     const handleFacebookLogin = () => {
-        const appId = data.app_id || existingConfig?.app_id;
-        if (!appId) {
-            setTestResult({
-                success: false,
-                message: 'Silakan isi Meta App ID terlebih dahulu untuk menggunakan Koneksi 1-Klik Facebook.',
-            });
-            return;
-        }
-
+        // One-click flow: connects every brand the Facebook account can access.
         setIsRedirectingFb(true);
-
-        const params = new URLSearchParams();
-        if (data.app_id) params.set('app_id', data.app_id);
-        if (data.app_secret) params.set('app_secret', data.app_secret);
-        if (data.ad_account_id) params.set('ad_account_id', data.ad_account_id);
-        if (data.pixel_id) params.set('pixel_id', data.pixel_id);
-        params.set('return_url', window.location.href);
-
-        window.location.href = `/projects/${project.id}/meta-config/oauth/redirect?${params.toString()}`;
+        window.location.href = `/meta-ads/connect?return_url=${encodeURIComponent(window.location.href)}`;
     };
 
     // Fetch campaigns whenever modal opens or tab changes to campaigns
@@ -352,6 +337,8 @@ export function ClientMetaConnectModal({ project, isOpen, onClose }: Props) {
                         </button>
                     </div>
                 </div>
+
+                {existingConfig && <MetaAdAccountsPanel projectId={project.id} isOpen={isOpen} />}
 
                 {/* Tab 1: Live Campaigns View */}
                 {activeTab === 'campaigns' && (

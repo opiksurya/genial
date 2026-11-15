@@ -207,6 +207,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{project}/meta-config/sync', [ProjectMetaController::class, 'sync'])->whereNumber('project')->name('meta.sync');
         Route::get('{project}/meta-campaigns', [ProjectMetaController::class, 'getCampaigns'])->whereNumber('project')->name('meta.campaigns');
         Route::delete('{project}/meta-config', [ProjectMetaController::class, 'destroy'])->whereNumber('project')->name('meta.destroy');
+        Route::get('{project}/meta-accounts', [ProjectMetaController::class, 'accounts'])->whereNumber('project')->name('meta.accounts.index');
+        Route::post('{project}/meta-accounts', [ProjectMetaController::class, 'addAccount'])->whereNumber('project')->name('meta.accounts.store');
+        Route::post('{project}/meta-accounts/{config}/default', [ProjectMetaController::class, 'setDefaultAccount'])->whereNumber(['project', 'config'])->name('meta.accounts.default');
+        Route::delete('{project}/meta-accounts/{config}', [ProjectMetaController::class, 'destroyAccount'])->whereNumber(['project', 'config'])->name('meta.accounts.destroy');
 
         // Shopee Open Platform Integration Routes
         Route::get('{project}/shopee-config/oauth/redirect', [ProjectShopeeController::class, 'oauthRedirect'])->whereNumber('project')->name('shopee.oauth.redirect');
@@ -312,6 +316,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Meta Ads Analytics Module Routes
     Route::prefix('meta-ads')->name('meta-ads.')->group(function () {
         Route::get('/', [\App\Http\Controllers\MetaAdsAnalyticsController::class, 'index'])->name('index');
+        Route::get('connect', [\App\Http\Controllers\MetaOAuthController::class, 'connect'])->name('connect');
+        Route::get('callback', [\App\Http\Controllers\MetaOAuthController::class, 'callback'])->name('callback');
+        Route::post('app', [\App\Http\Controllers\MetaOAuthController::class, 'saveApp'])->middleware('role:Super Admin')->name('app.save');
     });
 });
 
