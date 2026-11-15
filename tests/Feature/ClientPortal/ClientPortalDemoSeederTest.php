@@ -4,8 +4,10 @@ use App\Models\CreativeService;
 use App\Models\Freelancer;
 use App\Models\FreelancerAssignment;
 use App\Models\Meeting;
+use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\ProjectMember;
+use App\Models\Task;
 use App\Models\User;
 use Database\Seeders\ClientPortalDemoSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -21,6 +23,7 @@ beforeEach(function () {
     $this->counts = fn (): array => [
         Project::count(), Meeting::count(), Freelancer::count(),
         FreelancerAssignment::count(), ProjectMember::count(), CreativeService::count(),
+        Task::count(), Milestone::count(), User::count(),
     ];
 });
 
@@ -32,7 +35,7 @@ test('seeding twice creates no duplicates', function () {
     $this->seed(ClientPortalDemoSeeder::class);
 
     expect(($this->counts)())->toBe($first)
-        ->and($first)->toBe([1, 2, 2, 2, 1, 2]);
+        ->and($first)->toBe([1, 2, 2, 2, 4, 2, 8, 3, 4]);
 });
 
 test('the demo project is flagged and hidden from home', function () {
@@ -92,4 +95,33 @@ test('a non-reviewer user is not linked', function () {
     $this->seed(ClientPortalDemoSeeder::class);
 
     expect(ProjectMember::whereIn('user_id', [$client->id, $staff->id])->count())->toBe(0);
+});
+
+test('demo ProjectFlow data shows up for a reviewer on every ProjectFlow page', function () {
+    $reviewer = User::factory()->create()->assignRole('Reviewer');
+
+    $this->seed(ClientPortalDemoSeeder::class);
+
+    foreach (['client.projectflow.index', 'client.projectflow.board', 'client.projectflow.timeline', 'client.projectflow.team', 'client.projectflow.reports'] as $name) {
+        $this->actingAs($reviewer)->get(route($name))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('tasks', 8)
+                ->has('milestones', 3)
+                ->has('team', 4)
+                ->where('stats.done', 2)
+                ->where('stats.total', 8));
+    }
+});
+
+test('demo team accounts cannot log in and carry no roles', function () {
+    $this->seed(ClientPortalDemoSeeder::class);
+
+    $demoUsers = User::where('email', 'like', '%@example.invalid')->get();
+
+    expect($demoUsers)->toHaveCount(3);
+
+    foreach ($demoUsers as $user) {
+        expect($user->roles)->toHaveCount(0)
+            ->and(auth()->validate(['email' => $user->email, 'password' => '']))->toBeFalse();
+    }
 });
