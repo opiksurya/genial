@@ -130,10 +130,10 @@ test('a reviewer may use the shopee and meta analytics pages', function (string 
     $this->actingAs(($this->userWith)('Reviewer'))->get(route($routeName))->assertOk();
 })->with(['shopee.index', 'meta-ads.index']);
 
-test('a reviewer is sent to the shopee page instead of anything else', function (string $path) {
+test('a reviewer is sent to the client dashboard instead of anything else', function (string $path) {
     $this->actingAs(($this->userWith)('Reviewer'))
         ->get($path)
-        ->assertRedirect(route('shopee.index'));
+        ->assertRedirect(route('client.dashboard'));
 })->with([
     'dashboard' => '/dashboard',
     'project board' => '/projects/board',
@@ -144,7 +144,6 @@ test('a reviewer is sent to the shopee page instead of anything else', function 
     'creative services' => '/creative-services',
     'pixel settings' => '/settings/pixel',
     'whatsapp settings' => '/settings/whatsapp',
-    'profile' => '/settings/profile',
     'users' => '/users',
 ]);
 
@@ -169,10 +168,10 @@ test('a reviewer can still log out', function () {
     $this->assertGuest();
 });
 
-test('the client role keeps its existing access outside the analytics pages', function () {
+test('the client role is also sent to the client dashboard outside the analytics pages', function () {
     $this->actingAs(($this->userWith)('Client'))
         ->get('/projects/board')
-        ->assertOk();
+        ->assertRedirect(route('client.dashboard'));
 });
 
 test('the allowed route list only names routes that exist', function () {

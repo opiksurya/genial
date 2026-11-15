@@ -170,6 +170,11 @@ Route::middleware(['auth', 'verified', 'confine.reviewer'])->group(function () {
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
 
+    // Client portal: the only area of the app that Client and Reviewer accounts are sent to.
+    Route::prefix('client')->name('client.')->middleware('client.portal')->group(function () {
+        Route::get('dashboard', \App\Http\Controllers\Client\DashboardController::class)->name('dashboard');
+    });
+
     // Genial ProjectFlow Module Routes
     Route::prefix('projects')->name('projects.')->group(function () {
         Route::get('dashboard', [ProjectDashboardController::class, 'index'])->name('dashboard');
