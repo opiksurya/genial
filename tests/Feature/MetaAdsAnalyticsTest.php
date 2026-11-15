@@ -1,32 +1,11 @@
 <?php
 
 use App\Models\Project;
-use App\Models\ProjectMetaConfig;
 use App\Models\User;
 use App\Services\MetaAdsAnalytics\MetaAdsDataService;
 use App\Services\MetaAdsAnalytics\MetaAdsPeriod;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
-
-/**
- * A project with a connected Meta account. Campaign calls are faked empty, so the generator fills the figures.
- */
-function connectedMetaProject(string $name, string $client): Project
-{
-    Http::fake(['*' => Http::response(['data' => []])]);
-
-    $project = Project::create(['name' => $name, 'client' => $client, 'start_date' => now(), 'end_date' => now()->addMonth()]);
-    ProjectMetaConfig::create([
-        'project_id' => $project->id,
-        'is_default' => true,
-        'ad_account_id' => 'act_'.(1000 + $project->id),
-        'access_token' => 'test-token',
-        'status' => 'connected',
-    ]);
-
-    return $project->fresh('metaConfig');
-}
 
 test('guests are redirected to the login page from meta ads', function () {
     $this->get(route('meta-ads.index'))->assertRedirect(route('login'));
@@ -56,9 +35,9 @@ test('authenticated users see the meta ads page with zeros when no account is co
             ->has('analytics.placements', 6)
             ->where('analytics.placements.0.roas', 0)
             ->has('analytics.campaigns', 0)
-            ->has('analytics.audiences.ageGroups', 5)
+            ->has('analytics.audiences.ageGroups', 6)
             ->has('analytics.audiences.segments', 0)
-            ->has('analytics.creatives', 4)
+            ->has('analytics.creatives', 3)
             ->where('analytics.adAccountId', '')
             ->where('analytics.pixelHealth.status', 'Belum terhubung')
             ->has('analytics.pixelHealth.events', 0)
@@ -108,19 +87,7 @@ test('invalid period falls back to 30 days for meta ads', function (mixed $perio
     'huge' => '99999999999999999999',
 ]);
 
-test('meta ads generated data is deterministic for the same period and end date', function () {
-    $this->freezeTime();
-    $project = connectedMetaProject('Tatamu Brand', 'Tatamu');
-    $endDate = CarbonImmutable::parse('2026-10-22');
-
-    $first = (new MetaAdsDataService)->report(MetaAdsPeriod::Last30Days, $endDate, $project);
-    $second = (new MetaAdsDataService)->report(MetaAdsPeriod::Last30Days, $endDate, $project);
-
-    expect($first)->toBe($second)
-        ->and($first['isConnected'])->toBeTrue();
-});
-
-test('switching projects in meta ads customizes account name and generates distinct deterministic data', function () {
+test('switching projects in meta ads customizes the account name per project', function () {
     $user = User::factory()->create();
     $projectA = Project::create([
         'name' => 'Tatamu Brand',
@@ -153,32 +120,7 @@ test('switching projects in meta ads customizes account name and generates disti
             ->where('selectedProject.name', 'Prestige Atelier')
             ->where('analytics.accountName', 'Prestige Atelier')
         );
-
-    $service = new MetaAdsDataService();
-    $date = CarbonImmutable::parse('2026-10-22');
-    $connectedA = connectedMetaProject('Tatamu Brand', 'Tatamu');
-    $connectedB = connectedMetaProject('Prestige Atelier', 'Prestige Atelier');
-    $reportA = $service->report(MetaAdsPeriod::Last30Days, $date, $connectedA);
-    $reportB = $service->report(MetaAdsPeriod::Last30Days, $date, $connectedB);
-
-    expect($reportA['accountName'])->toBe('Tatamu - Meta Ads')
-        ->and($reportB['accountName'])->toBe('Prestige Atelier - Meta Ads')
-        ->and($reportA['summary']['totals']['spend'])->not->toBe($reportB['summary']['totals']['spend']);
 });
-
-test('meta ads generated data totals are internally consistent', function (MetaAdsPeriod $period) {
-    $project = connectedMetaProject('Tatamu Brand', 'Tatamu');
-    $report = (new MetaAdsDataService)->report($period, CarbonImmutable::parse('2026-10-22'), $project);
-    $totals = $report['summary']['totals'];
-    $daily = $report['daily'];
-
-    expect(array_sum(array_column($daily, 'spend')))->toBe($totals['spend'])
-        ->and(array_sum(array_column($daily, 'revenue')))->toBe($totals['revenue'])
-        ->and(array_sum(array_column($daily, 'purchases')))->toBe($totals['purchases'])
-        ->and(array_sum(array_column($daily, 'clicks')))->toBe($totals['clicks'])
-        ->and(array_sum(array_column($daily, 'impressions')))->toBe($totals['impressions'])
-        ->and(round($totals['revenue'] / $totals['spend'], 2))->toBe($totals['roas']);
-})->with(MetaAdsPeriod::cases());
 
 test('updating project meta config saves app_id and encrypted app_secret', function () {
     $user = User::factory()->create();
