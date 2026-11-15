@@ -3,7 +3,7 @@ import {
     BarChart3,
     Building2,
     CalendarRange,
-    FlaskConical,
+    Unplug,
     LayoutDashboard,
     Megaphone,
     PlaySquare,
@@ -96,15 +96,20 @@ export default function ShopeeAnalyticsPage({
                                     <Store className="size-3" aria-hidden />
                                     {analytics.storeName}
                                 </span>
-                                {analytics.isDummy ? (
-                                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
-                                        <FlaskConical className="size-2.5" aria-hidden />
-                                        Simulasi
-                                    </Badge>
-                                ) : (
+                                {analytics.isConnected ? (
                                     <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Live API
+                                    </Badge>
+                                ) : analytics.liveError ? (
+                                    <Badge variant="outline" className="border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
+                                        <Unplug className="size-2.5" aria-hidden />
+                                        Gagal memuat
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
+                                        <Unplug className="size-2.5" aria-hidden />
+                                        Belum terhubung
                                     </Badge>
                                 )}
                             </div>
@@ -222,13 +227,13 @@ export default function ShopeeAnalyticsPage({
                     </div>
                 </div>
 
-                {/* Simulation Mode Banner - Compact */}
-                {analytics.isDummy && (
+                {/* Not connected banner - Compact */}
+                {!analytics.isConnected && !analytics.liveError && (
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs shadow-2xs">
                         <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 min-w-0">
-                            <FlaskConical className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+                            <Unplug className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
                             <span className="truncate">
-                                <strong>Mode Simulasi ({analytics.storeName})</strong>: Data terisolasi per project.{' '}
+                                <strong>Toko Shopee belum terhubung ({analytics.storeName})</strong>: semua angka 0 sampai toko dihubungkan.{' '}
                                 {!isShopeeConnected && (
                                     <button
                                         type="button"
@@ -250,11 +255,11 @@ export default function ShopeeAnalyticsPage({
 
                 {analytics.liveError && (
                     <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-800 dark:text-rose-300">
-                        <strong>Gagal mengambil data Shopee:</strong> {analytics.liveError}. Menampilkan data simulasi sementara.
+                        <strong>Gagal mengambil data Shopee:</strong> {analytics.liveError}. Semua angka ditampilkan 0 sementara.
                     </div>
                 )}
 
-                {!analytics.isDummy && analytics.meta && (
+                {analytics.isConnected && analytics.meta && (
                     <div className="rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                         Data langsung dari Shopee (diperbarui berkala, maks. 15 menit).
                         {analytics.meta.truncated && ` Menampilkan maksimal ${analytics.meta.maxOrders.toLocaleString('id-ID')} pesanan terbaru, sehingga angka bisa lebih rendah dari aslinya.`}

@@ -169,7 +169,7 @@ export type ShopeeProjectOption = {
 };
 
 export type ShopeeAnalytics = {
-    isDummy: boolean;
+    isConnected: boolean;
     storeName: string;
     projectId?: number | null;
     projectName?: string | null;

@@ -7,8 +7,9 @@ use Carbon\CarbonImmutable;
 use Illuminate\Container\Attributes\Bind;
 
 /**
- * Source of Meta Ads analytics. Combines live data from MetaClientService
- * with deterministic fallback/simulation data per project.
+ * Source of Meta Ads analytics. A project without a connected Meta account gets a report with every
+ * number at zero. For a connected account only the campaign list comes from MetaClientService; the other
+ * figures are still produced by a deterministic generator until real insights are wired in.
  */
 #[Bind(MetaAdsDataService::class)]
 interface MetaAdsAnalyticsSource

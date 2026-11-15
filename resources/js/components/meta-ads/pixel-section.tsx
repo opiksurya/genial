@@ -34,6 +34,11 @@ export function PixelSection({ pixelHealth }: { pixelHealth: MetaAdsPixelHealth 
                 title="Aktivitas Event Pelacakan Meta Pixel & CAPI"
                 description="Status penerimaan event konversi dan Event Match Quality per tipe tindakan pelanggan."
             >
+                {pixelHealth.events.length === 0 ? (
+                    <p className="px-1 py-6 text-center text-sm text-muted-foreground">
+                        Belum ada event yang terbaca. Hubungkan akun Meta Ads untuk melihat aktivitas Pixel dan CAPI.
+                    </p>
+                ) : (
                 <TableWrapper>
                     <thead>
                         <tr>
@@ -72,6 +77,7 @@ export function PixelSection({ pixelHealth }: { pixelHealth: MetaAdsPixelHealth 
                         ))}
                     </tbody>
                 </TableWrapper>
+                )}
             </SectionCard>
         </div>
     );
