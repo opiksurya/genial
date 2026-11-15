@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Activity,
     BarChart3,
@@ -83,6 +83,9 @@ export default function MetaAdsAnalyticsPage({
 }: Props) {
     const [tab, setTab] = useState<TabKey>('summary');
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+    // Clients and reviewers (portalNav is set) only read analytics; connecting and managing Meta is staff-only.
+    const { portalNav } = usePage().props;
+    const canManageMeta = !portalNav;
 
     const isConnected = Boolean(
         (selectedProject?.meta_config && selectedProject.meta_config.status === 'connected') ||
@@ -162,7 +165,7 @@ export default function MetaAdsAnalyticsPage({
                     {/* Right: Controls Toolbar - Strictly Right Aligned */}
                     <div className="flex items-center justify-end gap-2 ml-auto shrink-0 flex-wrap sm:flex-nowrap">
                         {/* Meta Ads Connection Button */}
-                        {isConnected ? (
+                        {canManageMeta && (isConnected ? (
                             <Button
                                 type="button"
                                 variant="outline"
@@ -187,9 +190,9 @@ export default function MetaAdsAnalyticsPage({
                                 <KeyRound className="size-3.5" aria-hidden />
                                 <span>Hubungkan Meta</span>
                             </Button>
-                        )}
+                        ))}
 
-                        <MetaOneClickConnect metaApp={metaApp} />
+                        {canManageMeta && <MetaOneClickConnect metaApp={metaApp} />}
 
                         {/* Project / Client Switcher */}
                         {projects.length > 0 && (
@@ -263,7 +266,7 @@ export default function MetaAdsAnalyticsPage({
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                {activeAdAccount && !activeAdAccount.is_default && (
+                                {canManageMeta && activeAdAccount && !activeAdAccount.is_default && (
                                     <Button
                                         type="button"
                                         size="sm"
@@ -338,6 +341,7 @@ export default function MetaAdsAnalyticsPage({
                             </span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                            {canManageMeta && (
                             <Button
                                 type="button"
                                 size="sm"
@@ -348,6 +352,7 @@ export default function MetaAdsAnalyticsPage({
                                 <KeyRound className="size-3" aria-hidden />
                                 <span>Hubungkan Meta Ads</span>
                             </Button>
+                            )}
                             {selectedProject && (
                                 <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-[10px] font-bold text-amber-800 dark:text-amber-300 shrink-0">
                                     Project: {selectedProject.name}
@@ -388,7 +393,7 @@ export default function MetaAdsAnalyticsPage({
                     {tab === 'campaigns' && (
                         <CampaignsSection
                             campaigns={analytics.campaigns}
-                            onManageConnection={() => setIsConnectModalOpen(true)}
+                            onManageConnection={canManageMeta ? () => setIsConnectModalOpen(true) : undefined}
                         />
                     )}
                     {tab === 'audiences' && <AudiencesSection audiences={analytics.audiences} />}
@@ -397,11 +402,13 @@ export default function MetaAdsAnalyticsPage({
                 </div>
 
                 {/* Client Meta Connect Modal */}
-                <ClientMetaConnectModal
-                    project={modalProject}
-                    isOpen={isConnectModalOpen}
-                    onClose={() => setIsConnectModalOpen(false)}
-                />
+                {canManageMeta && (
+                    <ClientMetaConnectModal
+                        project={modalProject}
+                        isOpen={isConnectModalOpen}
+                        onClose={() => setIsConnectModalOpen(false)}
+                    />
+                )}
             </div>
         </AppLayout>
     );

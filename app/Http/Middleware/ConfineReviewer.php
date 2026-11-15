@@ -9,9 +9,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Deny by default for the outside roles (Client and Reviewer): they may only use the client portal, their own
- * profile and password settings, and the Shopee and Meta analytics pages (and the endpoints those pages call)
- * for the projects they belong to. Everything else is refused, so a page added later stays closed to them
- * until it is listed here.
+ * profile and password settings, the Shopee analytics page and its endpoints, and the read-only Meta analytics
+ * page (no Meta connect or manage routes: those can read other brands' ad accounts) for the projects they belong to.
+ * Everything else is refused, so a page added later stays closed to them until it is listed here.
  */
 class ConfineReviewer
 {
@@ -28,11 +28,15 @@ class ConfineReviewer
         'user-password.update',
         'appearance.edit',
         'shopee.index',
-        'projects.shopee.*',
+        'projects.shopee.oauth.redirect',
+        'projects.shopee.update',
+        'projects.shopee.test',
+        'projects.shopee.disconnect',
+        'projects.shopee.links.index',
+        'projects.shopee.links.store',
+        'projects.shopee.links.destroy',
         'meta-ads.index',
-        'meta-ads.connect',
-        'meta-ads.callback',
-        'projects.meta.*',
+        'projects.meta.campaigns',
     ];
 
     public function handle(Request $request, Closure $next): Response
