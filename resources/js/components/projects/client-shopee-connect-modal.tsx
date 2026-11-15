@@ -48,9 +48,11 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
     if (!project) return null;
 
     const { shopeeApp } = usePage<{
-        shopeeApp?: { hasSharedApp: boolean; sandbox: boolean; redirectUri: string; webhookUrl: string };
+        shopeeApp?: { hasSharedApp: boolean; canManageCredentials?: boolean; sandbox: boolean; redirectUri: string; webhookUrl: string };
     }>().props;
     const hasSharedApp = Boolean(shopeeApp?.hasSharedApp);
+    // Partner ID / Key are the developer's secrets: only a Super Admin sees or edits them.
+    const canManage = Boolean(shopeeApp?.canManageCredentials);
 
     const existingConfig = project.shopee_config || project.shopeeConfig;
     const isConnected = existingConfig?.status === 'connected';
@@ -192,10 +194,12 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
 
                     <div className="space-y-0.5 min-w-0 flex-1">
                         <DialogTitle className="text-base font-bold text-foreground tracking-tight">
-                            Pengaturan Kredensial Shopee API
+                            {canManage ? 'Pengaturan Kredensial Shopee API' : 'Hubungkan Toko Shopee'}
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground leading-normal">
-                            Diperoleh dari Shopee Open Platform Developer Console (open.shopee.com)
+                            {canManage
+                                ? 'Diperoleh dari Shopee Open Platform Developer Console (open.shopee.com)'
+                                : 'Login ke Shopee dan beri izin akses toko untuk membuat laporan.'}
                         </DialogDescription>
                     </div>
                 </div>
@@ -238,7 +242,7 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                     )}
 
                     {/* Quick 1-Click Store Authorization Box if Partner ID is provided */}
-                    {(hasSharedApp || data.partner_id || existingConfig?.partner_id) && (
+                    {(hasSharedApp || (canManage && data.partner_id) || existingConfig?.partner_id) && (
                         <div className="rounded-2xl border border-orange-200/80 dark:border-orange-900/40 bg-gradient-to-r from-orange-50/80 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/10 p-3.5 flex items-center justify-between gap-3 shadow-2xs">
                             <div className="space-y-0.5 min-w-0">
                                 <div className="flex items-center gap-1.5">
@@ -272,7 +276,7 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                         </div>
                     )}
 
-                    {hasSharedApp && (
+                    {hasSharedApp && canManage && (
                         <p className="text-[11px] text-muted-foreground rounded-xl border border-dashed p-2.5">
                             Genial memakai satu aplikasi Shopee Open Platform{shopeeApp?.sandbox ? ' (mode sandbox)' : ''} untuk semua toko klien.
                             Klik <strong>Hubungkan Toko</strong> saja. Isi Partner ID dan Key di bawah hanya jika klien memakai aplikasi sendiri.
@@ -283,7 +287,27 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                         <ShopeeClientLinkSection projectId={project.id} isOpen={isOpen} />
                     )}
 
-                    {/* Configuration Form */}
+                    {!canManage && !hasSharedApp && !existingConfig?.partner_id && (
+                        <p role="status" className="text-xs text-muted-foreground rounded-xl border border-dashed p-3">
+                            Layanan penghubung Shopee belum siap. Hubungi tim kami.
+                        </p>
+                    )}
+
+                    {!canManage && (
+                        <div className="flex justify-end pt-1">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={onClose}
+                                className="text-xs h-9 px-3.5 rounded-xl cursor-pointer text-muted-foreground hover:text-foreground"
+                            >
+                                Tutup
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Configuration Form (developer only) */}
+                    {canManage && (
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Field 1: Partner ID */}
                         <div className="space-y-1.5">
@@ -292,11 +316,11 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                             </Label>
                             <Input
                                 id="shopee_partner_id"
-                                placeholder="2046979"
+                                placeholder="Contoh: 1234567"
                                 value={data.partner_id}
                                 onChange={(e) => setData('partner_id', e.target.value)}
                                 className="font-mono text-xs h-10 rounded-xl bg-background"
-                                required
+                                required={!hasSharedApp}
                             />
                             <p className="text-[11px] text-muted-foreground">
                                 Ditemukan di menu App Info pada dashboard developer Shopee.
@@ -449,6 +473,7 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                             </div>
                         </div>
                     </form>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
