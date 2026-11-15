@@ -11,7 +11,8 @@ use App\Models\Project;
 use App\Models\Setting;
 
 Route::get('/', function () {
-    $clientProjects = Project::where('is_show_on_home', true)
+    $clientProjects = Project::withoutDemo()
+        ->where('is_show_on_home', true)
         ->select('id', 'name', 'client', 'client_logo', 'slug', 'category', 'status', 'article_title', 'growth_percentage')
         ->latest()
         ->get()
@@ -26,9 +27,10 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/case-study/{slug}', function ($slug) {
-    $project = Project::where('slug', $slug)
-        ->orWhere('id', is_numeric($slug) ? $slug : 0)
-        ->orWhere('client', 'LIKE', '%' . str_replace('-', ' ', $slug) . '%')
+    $project = Project::withoutDemo()
+        ->where(fn ($query) => $query->where('slug', $slug)
+            ->orWhere('id', is_numeric($slug) ? $slug : 0)
+            ->orWhere('client', 'LIKE', '%' . str_replace('-', ' ', $slug) . '%'))
         ->first();
 
     if (!$project) {
