@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\ProjectFlow;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ShopeeClientConnectController;
 use App\Models\Project;
 use App\Models\ProjectShopeeConfig;
+use App\Models\ShopeeConnectLink;
 use App\Services\Shopee\ShopeeClientService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProjectShopeeController extends Controller
@@ -95,6 +98,19 @@ class ProjectShopeeController extends Controller
      */
     public function oauthCallback(Request $request): RedirectResponse
     {
+        $queryState = $request->query('state');
+        $queryState = is_string($queryState) ? $queryState : '';
+
+        // A shop owner authorizing through a link has no account; that flow is checked first and never relaxes the staff flow below.
+        $clientPayload = $queryState !== '' ? Cache::get("shopee_oauth:{$queryState}") : null;
+        if (is_array($clientPayload) && ($clientPayload['flow'] ?? null) === 'client') {
+            return $this->completeClientConnect($request, $queryState, $clientPayload);
+        }
+
+        if (! $request->user()) {
+            return redirect()->route('login');
+        }
+
         $fallback = route('shopee.index');
         $userId = $request->user()->id;
 
@@ -128,13 +144,76 @@ class ProjectShopeeController extends Controller
             return redirect($returnUrl)->with('error', (string) $message);
         }
 
+        $connected = $this->connectShop($project, (string) $code, (string) $shopId);
+
+        if (! $connected['success']) {
+            return redirect($returnUrl)->with('error', $connected['message']);
+        }
+
+        return redirect($returnUrl)->with('success', "Berhasil menghubungkan toko Shopee: {$connected['config']->shop_name}!");
+    }
+
+    /**
+     * Finish a connection started from a client link. Requires the same browser session that opened the link.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function completeClientConnect(Request $request, string $state, array $payload): RedirectResponse
+    {
+        $connect = app(ShopeeClientConnectController::class);
+
+        $sessionState = $request->session()->get('shopee_client_state');
+        if (! is_string($sessionState) || ! hash_equals($sessionState, $state)) {
+            return $connect->finish('error', 'Sesi otorisasi tidak cocok. Buka kembali tautan dari tim kami dan coba lagi.');
+        }
+
+        // From here the state is spent, whatever the outcome.
+        Cache::forget("shopee_oauth:{$state}");
+        $request->session()->forget('shopee_client_state');
+
+        $link = ShopeeConnectLink::find($payload['link_id'] ?? 0);
+        if (! $link || ! $link->isUsable() || $link->project_id !== ($payload['project_id'] ?? null)) {
+            return $connect->finish('error', 'Tautan ini sudah tidak berlaku. Minta tautan baru dari tim kami.');
+        }
+
+        $code = $request->query('code');
+        $shopId = $request->query('shop_id');
+
+        if (empty($code) || empty($shopId)) {
+            $message = $request->filled('main_account_id')
+                ? 'Otorisasi akun utama (merchant) belum didukung. Hubungkan lewat toko tunggal.'
+                : 'Otorisasi dibatalkan. Tautan masih bisa dipakai selama belum kedaluwarsa.';
+
+            return $connect->finish('error', $message);
+        }
+
+        $connected = $this->connectShop($link->project, (string) $code, (string) $shopId);
+
+        if (! $connected['success']) {
+            Log::warning('Shopee client link authorization failed', ['project_id' => $link->project_id, 'message' => $connected['message']]);
+
+            return $connect->finish('error', 'Toko belum berhasil dihubungkan. Silakan coba lagi atau hubungi tim kami.');
+        }
+
+        $link->update(['used_at' => now(), 'connected_shop_id' => (string) $shopId]);
+
+        return $connect->finish('success', null, $connected['config']->shop_name);
+    }
+
+    /**
+     * Exchange the authorization code for tokens and store them on the project's Shopee config.
+     *
+     * @return array{success: bool, message: string|null, config: ProjectShopeeConfig|null}
+     */
+    private function connectShop(Project $project, string $code, string $shopId): array
+    {
         $config = $project->shopeeConfig ?: new ProjectShopeeConfig(['project_id' => $project->id]);
         if (! $config->hasCredentials()) {
-            return redirect($returnUrl)->with('error', 'Kredensial Shopee Partner tidak ditemukan.');
+            return ['success' => false, 'message' => 'Kredensial Shopee Partner tidak ditemukan.', 'config' => null];
         }
 
         $result = ShopeeClientService::handleCallback(
-            (string) $code,
+            $code,
             $shopId,
             $config->resolvedPartnerId(),
             $config->resolvedPartnerKey(),
@@ -146,10 +225,10 @@ class ProjectShopeeController extends Controller
             $config->error_message = $result['message'];
             $config->save();
 
-            return redirect($returnUrl)->with('error', $result['message']);
+            return ['success' => false, 'message' => $result['message'], 'config' => null];
         }
 
-        $config->shop_id = (string) $shopId;
+        $config->shop_id = $shopId;
         $config->shop_name = $result['shop_name'] ?? "Shopee Store #{$shopId}";
         $config->access_token = $result['access_token'];
         $config->refresh_token = $result['refresh_token'] ?? null;
@@ -162,7 +241,7 @@ class ProjectShopeeController extends Controller
         $config->shopee_raw_data = collect($result['raw'] ?? [])->only(['request_id', 'expire_in', 'merchant_id_list', 'shop_id_list'])->all();
         $config->save();
 
-        return redirect($returnUrl)->with('success', "Berhasil menghubungkan toko Shopee: {$config->shop_name}!");
+        return ['success' => true, 'message' => null, 'config' => $config];
     }
 
     /**

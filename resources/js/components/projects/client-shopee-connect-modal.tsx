@@ -28,6 +28,7 @@ import {
     Sparkles,
 } from 'lucide-react';
 import type { ShopeeConfig } from '@/types/shopee';
+import { ShopeeClientLinkSection } from '@/components/projects/shopee-client-link-section';
 
 interface Project {
     id: number;
@@ -276,6 +277,10 @@ export function ClientShopeeConnectModal({ project, isOpen, onClose }: Props) {
                             Genial memakai satu aplikasi Shopee Open Platform{shopeeApp?.sandbox ? ' (mode sandbox)' : ''} untuk semua toko klien.
                             Klik <strong>Hubungkan Toko</strong> saja. Isi Partner ID dan Key di bawah hanya jika klien memakai aplikasi sendiri.
                         </p>
+                    )}
+
+                    {(hasSharedApp || data.partner_id || existingConfig?.partner_id) && (
+                        <ShopeeClientLinkSection projectId={project.id} isOpen={isOpen} />
                     )}
 
                     {/* Configuration Form */}
