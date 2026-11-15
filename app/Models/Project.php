@@ -113,6 +113,9 @@ class Project extends Model
     /**
      * The default Meta ad account of this project.
      */
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<ProjectMetaConfig, $this>
+     */
     public function metaConfig(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(ProjectMetaConfig::class)->ofMany([

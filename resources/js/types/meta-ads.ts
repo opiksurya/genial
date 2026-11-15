@@ -142,13 +142,15 @@ export type MetaAdsCreative = {
 export type MetaAdsPixelHealth = {
     pixelId: string;
     status: string;
-    eventMatchQuality: number;
-    capiActive: boolean;
+    /** null when unknown: Event Match Quality is only available in Events Manager. */
+    eventMatchQuality: number | null;
+    /** null when Meta did not report how events arrive. */
+    capiActive: boolean | null;
     lastEventTime: string;
     events: {
         name: string;
         count: number;
-        matchRate: string;
+        matchRate: string | null;
     }[];
 };
 
@@ -192,4 +194,11 @@ export type MetaAdsAnalytics = {
     audiences: MetaAdsAudience;
     creatives: MetaAdsCreative[];
     pixelHealth: MetaAdsPixelHealth;
+    /** Set when live data failed and zeros are shown instead. */
+    liveError?: string | null;
+    /** Set for live data: sections that could not be loaded and were left empty. */
+    meta?: {
+        partial: string[];
+        generatedAt: string;
+    };
 };

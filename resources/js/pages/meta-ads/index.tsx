@@ -129,6 +129,11 @@ export default function MetaAdsAnalyticsPage({
                                         <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Live API
                                     </Badge>
+                                ) : analytics.liveError ? (
+                                    <Badge variant="outline" className="border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
+                                        <Unplug className="size-2.5" aria-hidden />
+                                        Gagal memuat
+                                    </Badge>
                                 ) : (
                                     <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-[10px] gap-1 px-1.5 py-0 rounded-full">
                                         <Unplug className="size-2.5" aria-hidden />
@@ -310,8 +315,21 @@ export default function MetaAdsAnalyticsPage({
                     </div>
                 </div>
 
+                {analytics.liveError && (
+                    <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-800 dark:text-rose-300">
+                        <strong>Gagal mengambil data Meta:</strong> {analytics.liveError} Semua angka ditampilkan 0 sementara.
+                    </div>
+                )}
+
+                {analytics.isConnected && analytics.meta && (
+                    <div className="rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                        Data langsung dari Meta (diperbarui berkala, maks. 15 menit).
+                        {analytics.meta.partial.length > 0 && ` Bagian berikut tidak dapat dimuat dan dikosongkan: ${analytics.meta.partial.join(', ')}.`}
+                    </div>
+                )}
+
                 {/* Not connected banner - Compact */}
-                {!analytics.isConnected && (
+                {!analytics.isConnected && !analytics.liveError && (
                     <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs shadow-2xs">
                         <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 min-w-0">
                             <Unplug className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
