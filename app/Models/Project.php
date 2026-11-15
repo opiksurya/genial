@@ -135,7 +135,7 @@ class Project extends Model
     }
 
     /**
-     * Projects the user may see: everything for staff roles, only their own projects for member-only roles.
+     * Projects that are not demo projects.
      *
      * @param  Builder<Project>  $query
      * @return Builder<Project>
@@ -145,6 +145,12 @@ class Project extends Model
         return $query->where('is_demo', false);
     }
 
+    /**
+     * Projects the user may see: everything for staff roles, only their own projects for member-only roles.
+     *
+     * @param  Builder<Project>  $query
+     * @return Builder<Project>
+     */
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
     {
         if (! self::isMemberOnly($user)) {
