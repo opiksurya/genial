@@ -173,6 +173,8 @@ Route::middleware(['auth', 'verified', 'confine.reviewer'])->group(function () {
     // Client portal: the only area of the app that Client and Reviewer accounts are sent to.
     Route::prefix('client')->name('client.')->middleware('client.portal')->group(function () {
         Route::get('dashboard', \App\Http\Controllers\Client\DashboardController::class)->name('dashboard');
+        Route::get('meetings', [\App\Http\Controllers\Client\MeetingController::class, 'index'])->name('meetings.index');
+        Route::get('meetings/{meeting}/ics', [\App\Http\Controllers\Client\MeetingController::class, 'ics'])->name('meetings.ics');
     });
 
     // Genial ProjectFlow Module Routes
