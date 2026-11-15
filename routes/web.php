@@ -110,6 +110,19 @@ Route::post('/webhooks/shopee', \App\Http\Controllers\ShopeeWebhookController::c
     ->middleware('throttle:120,1')
     ->name('webhooks.shopee');
 
+// Single Redirect URL registered in the Shopee console. Staff (logged in) and shop owners using a
+// client link both return here; the project is resolved from the server-side OAuth state.
+Route::get('/auth/shopee/callback', [\App\Http\Controllers\ProjectFlow\ProjectShopeeController::class, 'oauthCallback'])
+    ->middleware('throttle:60,1')
+    ->name('auth.shopee.callback');
+
+// Public pages for a shop owner who received a connect link. No account needed; the link is single-use.
+Route::middleware('throttle:30,1')->prefix('hubungkan')->name('shopee.connect.')->group(function () {
+    Route::get('/berhasil', [\App\Http\Controllers\ShopeeClientConnectController::class, 'done'])->name('done');
+    Route::get('/{token}', [\App\Http\Controllers\ShopeeClientConnectController::class, 'show'])->where('token', '[A-Za-z0-9]{48}')->name('show');
+    Route::get('/{token}/mulai', [\App\Http\Controllers\ShopeeClientConnectController::class, 'start'])->where('token', '[A-Za-z0-9]{48}')->name('start');
+});
+
 use App\Http\Controllers\ClaudeOfficeAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RoleController;
@@ -152,9 +165,6 @@ Route::get('office-auth', ClaudeOfficeAuthController::class)->name('claude-offic
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    // Single Redirect URL registered in the Shopee console; the project is resolved from the OAuth state.
-    Route::get('auth/shopee/callback', [ProjectShopeeController::class, 'oauthCallback'])->name('auth.shopee.callback');
-
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
 
@@ -203,6 +213,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{project}/shopee-config', [ProjectShopeeController::class, 'update'])->whereNumber('project')->name('shopee.update');
         Route::post('{project}/shopee-config/test', [ProjectShopeeController::class, 'testConnection'])->whereNumber('project')->name('shopee.test');
         Route::post('{project}/shopee-config/disconnect', [ProjectShopeeController::class, 'disconnect'])->whereNumber('project')->name('shopee.disconnect');
+        Route::get('{project}/shopee-connect-links', [\App\Http\Controllers\ProjectFlow\ShopeeConnectLinkController::class, 'index'])->whereNumber('project')->name('shopee.links.index');
+        Route::post('{project}/shopee-connect-links', [\App\Http\Controllers\ProjectFlow\ShopeeConnectLinkController::class, 'store'])->whereNumber('project')->name('shopee.links.store');
+        Route::delete('{project}/shopee-connect-links/{link}', [\App\Http\Controllers\ProjectFlow\ShopeeConnectLinkController::class, 'destroy'])->whereNumber(['project', 'link'])->name('shopee.links.destroy');
     });
 
     // Genial FinanceFlow Module Routes

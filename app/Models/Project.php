@@ -112,6 +112,11 @@ class Project extends Model
         return $this->hasOne(ProjectShopeeConfig::class);
     }
 
+    public function shopeeConnectLinks(): HasMany
+    {
+        return $this->hasMany(ShopeeConnectLink::class);
+    }
+
 
     /**
      * Recalculate progress % automatically based on completed tasks.
