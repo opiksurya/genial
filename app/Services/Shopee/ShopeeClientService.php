@@ -2,13 +2,13 @@
 
 namespace App\Services\Shopee;
 
-use App\Models\ProjectShopeeConfig;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ShopeeClientService
 {
     public const BASE_PROD = 'https://partner.shopeemobile.com';
+
     public const BASE_SANDBOX = 'https://partner.test-stable.shopeemobile.com';
 
     /**
@@ -93,8 +93,9 @@ class ShopeeClientService
 
             $json = $response->json();
 
-            if (!empty($json['error'])) {
+            if (! empty($json['error'])) {
                 $msg = $json['message'] ?? $json['error'] ?? 'Gagal otorisasi token dari Shopee.';
+
                 return ['success' => false, 'message' => $msg];
             }
 
@@ -102,7 +103,7 @@ class ShopeeClientService
             $refreshToken = $json['refresh_token'] ?? null;
             $expiresIn = (int) ($json['expire_in'] ?? 14400); // 4 hours default
 
-            if (!$accessToken) {
+            if (! $accessToken) {
                 return ['success' => false, 'message' => 'Shopee tidak mengembalikan Access Token yang valid.'];
             }
 
@@ -110,11 +111,11 @@ class ShopeeClientService
             $shopName = null;
             try {
                 $shopInfo = self::getShopInfo($partnerId, $partnerKey, $accessToken, $shopId, $isSandbox);
-                if (!empty($shopInfo['shop_name'])) {
+                if (! empty($shopInfo['shop_name'])) {
                     $shopName = $shopInfo['shop_name'];
                 }
             } catch (\Throwable $e) {
-                Log::warning('Shopee getShopInfo failed during callback: ' . $e->getMessage());
+                Log::warning('Shopee getShopInfo failed during callback: '.$e->getMessage());
             }
 
             return [
@@ -127,10 +128,11 @@ class ShopeeClientService
                 'raw' => $json,
             ];
         } catch (\Throwable $e) {
-            Log::error('Shopee handleCallback error: ' . $e->getMessage());
+            Log::error('Shopee handleCallback error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Koneksi ke Shopee Open Platform gagal: ' . $e->getMessage(),
+                'message' => 'Koneksi ke Shopee Open Platform gagal: '.$e->getMessage(),
             ];
         }
     }
@@ -162,11 +164,110 @@ class ShopeeClientService
         $response = Http::timeout(15)->get("{$baseUrl}{$path}?{$params}");
         $json = $response->json();
 
-        if (!empty($json['error'])) {
+        if (! empty($json['error'])) {
             throw new \Exception($json['message'] ?? $json['error']);
         }
 
         return $json['response'] ?? $json;
+    }
+
+    /**
+     * Exchange a refresh token for a new access token (/api/v2/auth/access_token/get).
+     * Shopee rotates the refresh token on every call, so the new one must be stored.
+     */
+    public static function refreshAccessToken(
+        string|int $partnerId,
+        string $partnerKey,
+        string $refreshToken,
+        string|int $shopId,
+        bool $isSandbox = false
+    ): array {
+        $baseUrl = self::getBaseUrl($isSandbox);
+        $path = '/api/v2/auth/access_token/get';
+        $timestamp = time();
+
+        $sign = self::generateSignature($partnerId, $path, $timestamp, $partnerKey);
+
+        try {
+            $response = Http::timeout(20)->post("{$baseUrl}{$path}?partner_id={$partnerId}&timestamp={$timestamp}&sign={$sign}", [
+                'refresh_token' => $refreshToken,
+                'shop_id' => (int) $shopId,
+                'partner_id' => (int) $partnerId,
+            ]);
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Koneksi ke Shopee gagal: '.$e->getMessage()];
+        }
+
+        $json = $response->json() ?? [];
+
+        if (! empty($json['error'])) {
+            return [
+                'success' => false,
+                'code' => $json['error'],
+                'message' => $json['message'] ?: $json['error'],
+            ];
+        }
+
+        if (empty($json['access_token']) || empty($json['refresh_token'])) {
+            return ['success' => false, 'message' => 'Shopee tidak mengembalikan token baru yang valid.'];
+        }
+
+        return [
+            'success' => true,
+            'access_token' => $json['access_token'],
+            'refresh_token' => $json['refresh_token'],
+            'expires_in' => (int) ($json['expire_in'] ?? 14400),
+        ];
+    }
+
+    /**
+     * Signed request to a shop-level endpoint. Throws ShopeeApiException when Shopee reports an error.
+     *
+     * @param  array<string, mixed>  $params  extra query parameters
+     * @param  array<string, mixed>  $body  JSON body (POST only)
+     * @return array<string, mixed>
+     */
+    public static function shopRequest(
+        string $method,
+        string $path,
+        string|int $partnerId,
+        string $partnerKey,
+        string $accessToken,
+        string|int $shopId,
+        bool $isSandbox = false,
+        array $params = [],
+        array $body = []
+    ): array {
+        $timestamp = time();
+        $sign = self::generateSignature($partnerId, $path, $timestamp, $partnerKey, $accessToken, $shopId);
+
+        $query = http_build_query(array_merge($params, [
+            'partner_id' => (int) $partnerId,
+            'timestamp' => $timestamp,
+            'access_token' => $accessToken,
+            'shop_id' => (int) $shopId,
+            'sign' => $sign,
+        ]));
+
+        $url = self::getBaseUrl($isSandbox).$path.'?'.$query;
+        $http = Http::timeout(20);
+
+        $response = strtoupper($method) === 'POST' ? $http->post($url, $body) : $http->get($url);
+        $json = $response->json();
+
+        if (! is_array($json)) {
+            throw new ShopeeApiException('Respons Shopee tidak valid (HTTP '.$response->status().').');
+        }
+
+        if (! empty($json['error'])) {
+            throw new ShopeeApiException(
+                (string) ($json['message'] ?: $json['error']),
+                (string) $json['error'],
+                $json['request_id'] ?? null
+            );
+        }
+
+        return $json;
     }
 
     /**
@@ -187,10 +288,11 @@ class ShopeeClientService
         }
 
         // If access token and shop id exist, test live shop info
-        if (!empty($accessToken) && !empty($shopId)) {
+        if (! empty($accessToken) && ! empty($shopId)) {
             try {
                 $info = self::getShopInfo($partnerId, $partnerKey, $accessToken, $shopId, $isSandbox);
                 $name = $info['shop_name'] ?? "Toko #{$shopId}";
+
                 return [
                     'success' => true,
                     'message' => "Koneksi berhasil! Terhubung ke toko Shopee: {$name}.",
@@ -203,7 +305,7 @@ class ShopeeClientService
             } catch (\Throwable $e) {
                 return [
                     'success' => false,
-                    'message' => 'Gagal verifikasi token toko Shopee: ' . $e->getMessage(),
+                    'message' => 'Gagal verifikasi token toko Shopee: '.$e->getMessage(),
                 ];
             }
         }

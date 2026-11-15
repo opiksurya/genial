@@ -64,6 +64,9 @@ export default function ShopeeAnalyticsPage({
     analytics,
 }: Props) {
     const [tab, setTab] = useState<TabKey>('summary');
+    const unavailable = analytics.meta?.unavailable ?? [];
+    const visibleTabs = TABS.filter(({ key }) => !(key === 'ads' && unavailable.includes('ads')) && !(key === 'content' && unavailable.includes('content')));
+    const activeTab = visibleTabs.some(({ key }) => key === tab) ? tab : 'summary';
     const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 
     const isShopeeConnected = Boolean(
@@ -245,10 +248,25 @@ export default function ShopeeAnalyticsPage({
                     </div>
                 )}
 
+                {analytics.liveError && (
+                    <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-800 dark:text-rose-300">
+                        <strong>Gagal mengambil data Shopee:</strong> {analytics.liveError}. Menampilkan data simulasi sementara.
+                    </div>
+                )}
+
+                {!analytics.isDummy && analytics.meta && (
+                    <div className="rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                        Data langsung dari Shopee (diperbarui berkala, maks. 15 menit).
+                        {analytics.meta.truncated && ` Menampilkan maksimal ${analytics.meta.maxOrders.toLocaleString('id-ID')} pesanan terbaru, sehingga angka bisa lebih rendah dari aslinya.`}
+                        {unavailable.includes('views') && ' Views, konversi, iklan, dan konten Live/Video belum tersedia dari API.'}
+                        {unavailable.includes('returns') && ' Data retur tidak tersedia untuk aplikasi ini.'}
+                    </div>
+                )}
+
                 {/* Navigation Segmented Tabs - Compact */}
                 <div role="tablist" aria-label="Bagian analitik" className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border/70 bg-muted/50 p-1 shadow-2xs max-w-full h-9">
-                    {TABS.map(({ key, label, icon: Icon }) => {
-                        const isActive = tab === key;
+                    {visibleTabs.map(({ key, label, icon: Icon }) => {
+                        const isActive = activeTab === key;
                         return (
                             <button
                                 key={key}
@@ -272,11 +290,11 @@ export default function ShopeeAnalyticsPage({
 
                 {/* Tab Panel Content */}
                 <div role="tabpanel">
-                    {tab === 'summary' && <SummarySection analytics={analytics} />}
-                    {tab === 'sales' && <SalesSection sales={analytics.sales} />}
-                    {tab === 'ads' && <AdsSection ads={analytics.ads} />}
-                    {tab === 'content' && <ContentSection content={analytics.content} />}
-                    {tab === 'storefront' && <StorefrontSection storefront={analytics.storefront} />}
+                    {activeTab === 'summary' && <SummarySection analytics={analytics} />}
+                    {activeTab === 'sales' && <SalesSection sales={analytics.sales} />}
+                    {activeTab === 'ads' && <AdsSection ads={analytics.ads} />}
+                    {activeTab === 'content' && <ContentSection content={analytics.content} />}
+                    {activeTab === 'storefront' && <StorefrontSection storefront={analytics.storefront} showViews={!unavailable.includes('views')} />}
                 </div>
 
                 {/* Client Shopee API Connect Modal */}
