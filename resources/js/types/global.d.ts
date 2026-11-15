@@ -1,5 +1,11 @@
 import type { Auth } from '@/types/auth';
 
+export type PortalNavItem = {
+    key: 'dashboard' | 'meetings' | 'freelancers' | 'catalog' | 'shopee' | 'meta-ads';
+    title: string;
+    href: string;
+};
+
 declare module 'react' {
     interface InputHTMLAttributes<T> {
         passwordrules?: string;
@@ -16,7 +22,7 @@ declare module '@inertiajs/core' {
             canManageRoles: boolean;
             canManageUsers: boolean;
             sidebarOpen: boolean;
-            portalNav?: { title: string; href: string }[];
+            portalNav: PortalNavItem[] | null;
             [key: string]: unknown;
         };
     }

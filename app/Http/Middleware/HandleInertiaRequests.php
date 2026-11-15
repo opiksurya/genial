@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -52,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                 'redirectUri' => config('services.shopee.redirect') ?: route('auth.shopee.callback'),
                 'webhookUrl' => config('services.shopee.webhook_url') ?: route('webhooks.shopee'),
             ],
+            'portalNav' => $this->portalNav($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'metaPixel' => [
                 'pixel_id' => \App\Models\Setting::get('meta_pixel_id', ''),
@@ -67,5 +69,31 @@ class HandleInertiaRequests extends Middleware
             ],
         ];
     }
-}
 
+    /**
+     * Sidebar for member-only roles (Client/Reviewer), chosen on the server so no
+     * internal menu ever reaches their browser. Null for everyone else.
+     *
+     * @return list<array{key: string, title: string, href: string}>|null
+     */
+    private function portalNav(Request $request): ?array
+    {
+        if (! $request->user()?->hasAnyRole(Project::MEMBER_ONLY_ROLES)) {
+            return null;
+        }
+
+        $items = [
+            ['dashboard', 'Dashboard', 'client.dashboard'],
+            ['meetings', 'Agenda Meeting', 'client.meetings.index'],
+            ['freelancers', 'Freelancer Hub', 'client.freelancers.index'],
+            ['catalog', 'Katalog Digital Kreatif', 'client.catalog.index'],
+            ['shopee', 'Shopee Analytics', 'shopee.index'],
+            ['meta-ads', 'Meta Ads Analytics', 'meta-ads.index'],
+        ];
+
+        return array_map(
+            fn (array $item) => ['key' => $item[0], 'title' => $item[1], 'href' => route($item[2], absolute: false)],
+            $items,
+        );
+    }
+}
