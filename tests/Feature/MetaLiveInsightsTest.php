@@ -11,6 +11,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -563,6 +564,118 @@ test('the smoke test refuses a project without a connected account', function ()
     Http::fake();
 
     $this->artisan('meta:smoke-test', ['project' => metaProject(['status' => 'disconnected'])->id])->assertFailed();
+
+    Http::assertNothingSent();
+});
+
+// ------------------------------------------------------------------ resync
+
+function resyncFake(): void
+{
+    Http::fake([
+        '*/act_111*' => Http::response(['id' => 'act_111', 'name' => 'Akun Satu', 'account_status' => 1, 'currency' => 'IDR', 'timezone_name' => 'Asia/Jakarta']),
+        '*/act_222*' => Http::response(['error' => ['message' => '(#200) Ad account owner has NOT grant ads_management or ads_read permission', 'code' => 200]], 403),
+        '*' => Http::response(['id' => 'act_other', 'name' => 'Akun Lain', 'account_status' => 1, 'currency' => 'IDR', 'timezone_name' => 'Asia/Jakarta']),
+    ]);
+}
+
+function resyncProject(string $name, string $adAccount, string $status, array $extra = []): ProjectMetaConfig
+{
+    $project = Project::create(['name' => $name, 'client' => $name, 'slug' => str($name)->slug()->toString(), 'start_date' => '2026-10-01', 'end_date' => '2026-12-01']);
+
+    return ProjectMetaConfig::create(array_merge([
+        'project_id' => $project->id, 'is_default' => true, 'ad_account_id' => $adAccount,
+        'access_token' => 'secret-token', 'status' => $status,
+        'error_message' => $status === 'error' ? '(#200) Ad account owner has NOT grant ads_management or ads_read permission' : null,
+    ], $extra));
+}
+
+test('resync fixes connections that now work and keeps the reason for those that do not', function () {
+    resyncFake();
+    $fixed = resyncProject('Klien Satu', 'act_111', 'error');
+    $stillBroken = resyncProject('Klien Dua', 'act_222', 'error');
+
+    $this->artisan('meta:resync')
+        ->expectsOutputToContain('1 berhasil, 1 gagal')
+        ->assertFailed();
+
+    expect($fixed->fresh())->status->toBe('connected')->error_message->toBeNull()->account_name->toBe('Akun Satu')
+        ->and($stillBroken->fresh())->status->toBe('error')->error_message->toContain('ads_read');
+});
+
+test('resync succeeds when every connection works', function () {
+    resyncFake();
+    resyncProject('Klien Satu', 'act_111', 'error');
+
+    $this->artisan('meta:resync')->expectsOutputToContain('1 berhasil, 0 gagal')->assertSuccessful();
+});
+
+test('resync leaves connected accounts alone unless asked', function () {
+    resyncFake();
+    resyncProject('Klien Satu', 'act_111', 'connected');
+    resyncProject('Klien Dua', 'act_222', 'error');
+
+    $this->artisan('meta:resync');
+    expect(Http::recorded(fn ($request) => str_contains($request->url(), 'act_111')))->toHaveCount(0);
+
+    $this->artisan('meta:resync', ['--all' => true]);
+    expect(Http::recorded(fn ($request) => str_contains($request->url(), 'act_111')))->toHaveCount(1);
+});
+
+test('resync can be limited to one project by id or slug', function () {
+    resyncFake();
+    $a = resyncProject('Klien Satu', 'act_111', 'error');
+    resyncProject('Klien Dua', 'act_222', 'error');
+
+    $this->artisan('meta:resync', ['project' => $a->project_id])->assertSuccessful();
+    $this->artisan('meta:resync', ['project' => 'klien-satu'])->assertSuccessful();
+
+    expect(Http::recorded(fn ($request) => str_contains($request->url(), 'act_222')))->toHaveCount(0);
+});
+
+test('resync with a project also rechecks it when it is not in error', function () {
+    resyncFake();
+    $config = resyncProject('Klien Satu', 'act_111', 'connected');
+
+    $this->artisan('meta:resync', ['project' => $config->project_id])->assertSuccessful();
+
+    expect(Http::recorded())->toHaveCount(1);
+});
+
+test('a dry run asks Meta but saves nothing', function () {
+    resyncFake();
+    $fixable = resyncProject('Klien Satu', 'act_111', 'error');
+
+    $this->artisan('meta:resync', ['--dry-run' => true])
+        ->expectsOutputToContain('dry-run, tidak ada yang disimpan')
+        ->assertSuccessful();
+
+    expect($fixable->fresh())->status->toBe('error')->error_message->not->toBeNull();
+});
+
+test('a connection without a token is skipped and reported', function () {
+    resyncFake();
+    resyncProject('Klien Satu', 'act_111', 'error', ['access_token' => null]);
+
+    $this->artisan('meta:resync')->expectsOutputToContain('Token atau ID akun belum diisi')->assertFailed();
+
+    Http::assertNothingSent();
+});
+
+test('resync never prints the token', function () {
+    resyncFake();
+    resyncProject('Klien Satu', 'act_111', 'error');
+    resyncProject('Klien Dua', 'act_222', 'error');
+
+    $exit = Artisan::call('meta:resync');
+
+    expect(Artisan::output())->not->toContain('secret-token')->and($exit)->toBe(1);
+});
+
+test('resync with nothing to do says so', function () {
+    Http::fake();
+
+    $this->artisan('meta:resync')->expectsOutputToContain('Tidak ada koneksi Meta yang perlu disinkronkan')->assertSuccessful();
 
     Http::assertNothingSent();
 });
