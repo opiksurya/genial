@@ -659,6 +659,11 @@ export default function AllocationManagement({
                                                         const overNominal = sub.over_budget_amount || 0;
                                                         const overPct = sub.over_budget_percentage || 0;
                                                         const remaining = sub.remaining_budget ?? (subCalc - spent);
+                                                        // Uang yang benar-benar bisa dibelanjakan dari sub ini: sisa kuotanya,
+                                                        // tapi tidak lebih dari sisa anggaran induk (yang sudah dikurangi subsidi silang).
+                                                        const parentRemaining = Math.max(0, alloc.remaining_budget ?? 0);
+                                                        const spendable = Math.min(Math.max(0, remaining), parentRemaining);
+                                                        const isCappedByParent = !isOver && remaining > parentRemaining;
                                                         const utilRate = sub.utilization_rate ?? (subCalc > 0 ? (spent / subCalc) * 100 : 0);
 
                                                         return (
@@ -780,6 +785,22 @@ export default function AllocationManagement({
                                                                         )}
                                                                     </div>
                                                                 </div>
+
+                                                                {/* Line 5: Sisa riil, dibatasi sisa anggaran induk */}
+                                                                {isCappedByParent && (
+                                                                    <div
+                                                                        className="mt-2 flex items-center justify-between gap-2 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-[10px] font-mono"
+                                                                        title={`Sebagian sisa kuota ${sub.name} sudah terpakai untuk menutup pos lain yang over (subsidi silang). Uang yang benar-benar tersisa di ${alloc.name} hanya ${formatIDR(parentRemaining)}, dan jumlah itu dipakai bersama oleh semua sub-alokasi.`}
+                                                                    >
+                                                                        <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold min-w-0">
+                                                                            <AlertTriangle className="w-3 h-3 shrink-0" />
+                                                                            <span className="truncate">Bisa dipakai (riil)</span>
+                                                                        </span>
+                                                                        <span className="font-bold text-[11px] text-amber-700 dark:text-amber-400 shrink-0">
+                                                                            maks. {formatIDR(spendable)}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         );
                                                     })}
