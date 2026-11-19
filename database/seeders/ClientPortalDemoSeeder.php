@@ -6,10 +6,13 @@ use App\Models\CreativeService;
 use App\Models\Freelancer;
 use App\Models\FreelancerAssignment;
 use App\Models\Meeting;
+use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\ProjectMember;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 /**
  * Demo data for the client portal (reviewer walkthroughs). Idempotent and
@@ -19,6 +22,8 @@ class ClientPortalDemoSeeder extends Seeder
 {
     public function run(): void
     {
+        $team = $this->seedTeam();
+
         $project = Project::updateOrCreate(
             ['slug' => 'demo-portal-klien'],
             [
@@ -28,15 +33,96 @@ class ClientPortalDemoSeeder extends Seeder
                 'progress' => 40,
                 'is_demo' => true,
                 'is_show_on_home' => false,
+                'manager_id' => $team['manager']->id,
                 'start_date' => now()->subDays(30)->toDateString(),
                 'end_date' => now()->addDays(30)->toDateString(),
             ],
         );
 
         $this->seedMeetings($project);
+        $this->seedProjectFlow($project, $team);
         $this->seedFreelancers($project);
         $this->seedServices();
         $this->linkReviewers($project);
+    }
+
+    /**
+     * Fictional internal team for the demo project. These accounts have no role and
+     * a random password nobody knows, so they can never be used to log in.
+     *
+     * @return array{manager: User, designer: User, ads: User}
+     */
+    private function seedTeam(): array
+    {
+        $make = function (string $name, string $email): User {
+            $user = User::where('email', $email)->first();
+
+            if ($user === null) {
+                $user = new User;
+                $user->forceFill(['name' => $name, 'email' => $email, 'password' => Str::random(48)])->save();
+            }
+
+            return $user;
+        };
+
+        return [
+            'manager' => $make('[Demo] Sari Project Manager', 'demo-sari@example.invalid'),
+            'designer' => $make('[Demo] Rina Desainer Tim', 'demo-rina-tim@example.invalid'),
+            'ads' => $make('[Demo] Dimas Ads Specialist', 'demo-dimas@example.invalid'),
+        ];
+    }
+
+    /**
+     * @param  array{manager: User, designer: User, ads: User}  $team
+     */
+    private function seedProjectFlow(Project $project, array $team): void
+    {
+        foreach ([
+            [$team['manager'], 'Project Manager'],
+            [$team['designer'], 'Designer'],
+            [$team['ads'], 'Ads Specialist'],
+        ] as [$user, $role]) {
+            ProjectMember::updateOrCreate(
+                ['project_id' => $project->id, 'user_id' => $user->id],
+                ['role' => $role],
+            );
+        }
+
+        $tasks = [
+            ['[Demo] Riset kompetitor dan audiens', 'DONE', 'High', $team['manager'], -25, -18],
+            ['[Demo] Susun strategi kampanye', 'DONE', 'High', $team['manager'], -20, -12],
+            ['[Demo] Desain banner promo', 'REVIEW', 'Medium', $team['designer'], -8, 2],
+            ['[Demo] Setup iklan Shopee dan Meta', 'IN_PROGRESS', 'High', $team['ads'], -5, 6],
+            ['[Demo] Produksi video iklan 15 detik', 'IN_PROGRESS', 'Medium', $team['designer'], -3, 9],
+            ['[Demo] Optimasi budget iklan mingguan', 'PLANNING', 'Medium', $team['ads'], 5, 14],
+            ['[Demo] Laporan performa bulanan', 'BACKLOG', 'Low', $team['manager'], 15, 25],
+            ['[Demo] Tinjauan hasil kampanye', 'BACKLOG', 'Low', $team['manager'], 20, 28],
+        ];
+
+        foreach ($tasks as $order => [$title, $status, $priority, $assignee, $startOffset, $dueOffset]) {
+            Task::updateOrCreate(
+                ['project_id' => $project->id, 'title' => $title],
+                [
+                    'status' => $status,
+                    'priority' => $priority,
+                    'assignee_id' => $assignee->id,
+                    'start_date' => now()->addDays($startOffset)->toDateString(),
+                    'due_date' => now()->addDays($dueOffset)->toDateString(),
+                    'order' => $order,
+                ],
+            );
+        }
+
+        foreach ([
+            ['[Demo] Strategi disetujui', -12, true],
+            ['[Demo] Materi kreatif siap tayang', 3, false],
+            ['[Demo] Evaluasi akhir kampanye', 28, false],
+        ] as [$title, $dueOffset, $completed]) {
+            Milestone::updateOrCreate(
+                ['project_id' => $project->id, 'title' => $title],
+                ['due_date' => now()->addDays($dueOffset)->toDateString(), 'is_completed' => $completed],
+            );
+        }
     }
 
     private function seedMeetings(Project $project): void
