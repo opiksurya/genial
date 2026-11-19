@@ -169,6 +169,21 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const portalIcons: Record<string, NavItem['icon']> = {
+    'projectflow-dashboard': LayoutGrid,
+    'projectflow-board': Kanban,
+    'projectflow-timeline': Clock,
+    'projectflow-team': UserCheck,
+    'projectflow-reports': BarChart3,
+    dashboard: LayoutGrid,
+    projectflow: FolderKanban,
+    meetings: CalendarCheck,
+    freelancers: Briefcase,
+    catalog: Palette,
+    shopee: ShoppingBag,
+    'meta-ads': Share2,
+};
+
 const isFinanceNavItem = (item: NavItem): boolean =>
     typeof item.href === 'string' && item.href.startsWith('/finance');
 
@@ -177,17 +192,29 @@ const isRolesNavItem = (item: NavItem): boolean => item.href === '/roles';
 const isUsersNavItem = (item: NavItem): boolean => item.href === '/users';
 
 export function AppSidebar() {
-    const { claudeOfficeUrl, canAccessFinance, canManageRoles, canManageUsers } =
+    const { claudeOfficeUrl, canAccessFinance, canManageRoles, canManageUsers, portalNav } =
         usePage().props;
 
-    const visibleNavItems = mainNavItems.filter(
+    // Client/Reviewer: the server decides the menu; render only what it sent.
+    const visibleNavItems: NavItem[] = portalNav
+        ? portalNav.map((item) => ({
+              title: item.title,
+              href: item.href,
+              icon: portalIcons[item.key],
+              items: item.children?.map((child) => ({
+                  title: child.title,
+                  href: child.href,
+                  icon: portalIcons[child.key],
+              })),
+          }))
+        : mainNavItems.filter(
         (item) =>
             (canAccessFinance || !isFinanceNavItem(item)) &&
             (canManageRoles || !isRolesNavItem(item)) &&
             (canManageUsers || !isUsersNavItem(item)),
     );
 
-    const footerNavItems: NavItem[] = claudeOfficeUrl
+    const footerNavItems: NavItem[] = claudeOfficeUrl && !portalNav
         ? [{ title: 'Claude Office', href: claudeOfficeUrl, icon: Bot }]
         : [];
 
@@ -197,7 +224,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch className="flex items-center gap-2">
+                            <Link href={portalNav ? portalNav[0].href : dashboard()} prefetch className="flex items-center gap-2">
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

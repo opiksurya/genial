@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -52,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                 'redirectUri' => config('services.shopee.redirect') ?: route('auth.shopee.callback'),
                 'webhookUrl' => config('services.shopee.webhook_url') ?: route('webhooks.shopee'),
             ],
+            'portalNav' => $this->portalNav($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'metaPixel' => [
                 'pixel_id' => \App\Models\Setting::get('meta_pixel_id', ''),
@@ -67,5 +69,48 @@ class HandleInertiaRequests extends Middleware
             ],
         ];
     }
-}
 
+    /**
+     * Sidebar for member-only roles (Client/Reviewer), chosen on the server so no
+     * internal menu ever reaches their browser. Null for everyone else.
+     *
+     * @return list<array{key: string, title: string, href: string, children?: list<array{key: string, title: string, href: string}>}>|null
+     */
+    private function portalNav(Request $request): ?array
+    {
+        if (! $request->user()?->hasAnyRole(Project::MEMBER_ONLY_ROLES)) {
+            return null;
+        }
+
+        $items = [
+            ['dashboard', 'Dashboard', 'client.dashboard'],
+            ['projectflow', 'ProjectFlow', 'client.projectflow.index', [
+                ['projectflow-dashboard', 'Dashboard Project', 'client.projectflow.index'],
+                ['projectflow-board', 'Project Board', 'client.projectflow.board'],
+                ['projectflow-timeline', 'Timeline View', 'client.projectflow.timeline'],
+                ['projectflow-team', 'Team Management', 'client.projectflow.team'],
+                ['projectflow-reports', 'Reports', 'client.projectflow.reports'],
+            ]],
+            ['meetings', 'Agenda Meeting', 'client.meetings.index'],
+            ['freelancers', 'Freelancer Hub', 'client.freelancers.index'],
+            ['catalog', 'Katalog Digital Kreatif', 'client.catalog.index'],
+            ['shopee', 'Shopee Analytics', 'shopee.index'],
+            ['meta-ads', 'Meta Ads Analytics', 'meta-ads.index'],
+        ];
+
+        $link = fn (string $key, string $title, string $route): array => ['key' => $key, 'title' => $title, 'href' => route($route, absolute: false)];
+
+        $nav = [];
+        foreach ($items as $item) {
+            $entry = $link($item[0], $item[1], $item[2]);
+
+            if (isset($item[3])) {
+                $entry['children'] = array_map(fn (array $child): array => $link($child[0], $child[1], $child[2]), $item[3]);
+            }
+
+            $nav[] = $entry;
+        }
+
+        return $nav;
+    }
+}

@@ -11,7 +11,8 @@ use App\Models\Project;
 use App\Models\Setting;
 
 Route::get('/', function () {
-    $clientProjects = Project::where('is_show_on_home', true)
+    $clientProjects = Project::withoutDemo()
+        ->where('is_show_on_home', true)
         ->select('id', 'name', 'client', 'client_logo', 'slug', 'category', 'status', 'article_title', 'growth_percentage')
         ->latest()
         ->get()
@@ -26,9 +27,10 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/case-study/{slug}', function ($slug) {
-    $project = Project::where('slug', $slug)
-        ->orWhere('id', is_numeric($slug) ? $slug : 0)
-        ->orWhere('client', 'LIKE', '%' . str_replace('-', ' ', $slug) . '%')
+    $project = Project::withoutDemo()
+        ->where(fn ($query) => $query->where('slug', $slug)
+            ->orWhere('id', is_numeric($slug) ? $slug : 0)
+            ->orWhere('client', 'LIKE', '%' . str_replace('-', ' ', $slug) . '%'))
         ->first();
 
     if (!$project) {
@@ -167,6 +169,20 @@ Route::middleware(['auth', 'verified', 'confine.reviewer'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('role:Super Admin');
+
+    // Client portal: the only area of the app that Client and Reviewer accounts are sent to.
+    Route::prefix('client')->name('client.')->middleware('client.portal')->group(function () {
+        Route::get('dashboard', \App\Http\Controllers\Client\DashboardController::class)->name('dashboard');
+        Route::get('projectflow', [\App\Http\Controllers\Client\ProjectFlowController::class, 'index'])->name('projectflow.index');
+        Route::get('projectflow/board', [\App\Http\Controllers\Client\ProjectFlowController::class, 'board'])->name('projectflow.board');
+        Route::get('projectflow/timeline', [\App\Http\Controllers\Client\ProjectFlowController::class, 'timeline'])->name('projectflow.timeline');
+        Route::get('projectflow/team', [\App\Http\Controllers\Client\ProjectFlowController::class, 'team'])->name('projectflow.team');
+        Route::get('projectflow/reports', [\App\Http\Controllers\Client\ProjectFlowController::class, 'reports'])->name('projectflow.reports');
+        Route::get('meetings', [\App\Http\Controllers\Client\MeetingController::class, 'index'])->name('meetings.index');
+        Route::get('meetings/{meeting}/ics', [\App\Http\Controllers\Client\MeetingController::class, 'ics'])->name('meetings.ics');
+        Route::get('freelancers', [\App\Http\Controllers\Client\FreelancerController::class, 'index'])->name('freelancers.index');
+        Route::get('catalog', [\App\Http\Controllers\Client\CreativeServiceController::class, 'index'])->name('catalog.index');
+    });
 
     // Genial ProjectFlow Module Routes
     Route::prefix('projects')->name('projects.')->group(function () {

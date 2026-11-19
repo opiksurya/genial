@@ -34,7 +34,7 @@ class FinancialReportController extends Controller
         }
 
         // 2. Project Profit Report
-        $projectProfitReport = Project::with(['incomes', 'expenses'])
+        $projectProfitReport = Project::withoutDemo()->with(['incomes', 'expenses'])
             ->get()
             ->map(function ($project) {
                 $rev = $project->incomes ? $project->incomes->sum('amount') : 0;
@@ -156,7 +156,7 @@ class FinancialReportController extends Controller
                 }
             } elseif ($type === 'project') {
                 fputcsv($handle, ['Nama Project', 'Client', 'Kategori', 'Status', 'Revenue', 'Expense', 'Profit', 'Margin (%)']);
-                $projects = Project::with(['incomes', 'expenses'])->get();
+                $projects = Project::withoutDemo()->with(['incomes', 'expenses'])->get();
                 foreach ($projects as $proj) {
                     $rev = $proj->incomes ? $proj->incomes->sum('amount') : 0;
                     $exp = $proj->expenses ? $proj->expenses->sum('amount') : 0;

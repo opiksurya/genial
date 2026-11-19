@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'confine.reviewer' => \App\Http\Middleware\ConfineReviewer::class,
+            'client.portal' => \App\Http\Middleware\EnsureClientPortalUser::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

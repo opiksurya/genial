@@ -9,7 +9,7 @@ beforeEach(function () {
     }
 });
 
-dataset('forbidden roles', ['Admin', 'Staff', 'Client', 'Agent', null]);
+dataset('forbidden roles', ['Admin', 'Staff', 'Agent', null]);
 
 test('super admin can open the roles page', function () {
     $user = User::factory()->create();
@@ -88,7 +88,6 @@ test('roles access is shared with the frontend', function (?string $roleName, bo
     'super admin' => ['Super Admin', true],
     'admin' => ['Admin', false],
     'staff' => ['Staff', false],
-    'client' => ['Client', false],
     'agent' => ['Agent', false],
     'no role' => [null, false],
 ]);

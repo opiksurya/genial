@@ -42,6 +42,7 @@ class Project extends Model
         'manager_id',
         'agent_id',
         'is_show_on_home',
+        'is_demo',
     ];
 
     protected static function boot()
@@ -68,6 +69,7 @@ class Project extends Model
         'end_date' => 'date',
         'progress' => 'integer',
         'is_show_on_home' => 'boolean',
+        'is_demo' => 'boolean',
     ];
 
     public function manager(): BelongsTo
@@ -130,6 +132,17 @@ class Project extends Model
     public function metaConfigs(): HasMany
     {
         return $this->hasMany(ProjectMetaConfig::class)->orderByDesc('is_default')->orderBy('id');
+    }
+
+    /**
+     * Projects that are not demo projects.
+     *
+     * @param  Builder<Project>  $query
+     * @return Builder<Project>
+     */
+    public function scopeWithoutDemo(Builder $query): Builder
+    {
+        return $query->where('is_demo', false);
     }
 
     /**

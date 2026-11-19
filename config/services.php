@@ -38,6 +38,8 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        // Let people with an unknown Google email create a Client account (no project access until an admin links one).
+        'allow_signup' => (bool) env('GOOGLE_ALLOW_SIGNUP', true),
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
