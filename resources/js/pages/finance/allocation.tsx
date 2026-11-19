@@ -1168,11 +1168,11 @@ export default function AllocationManagement({
 
             {/* Manage Sub Allocation Modal */}
             {isSubModalOpen && selectedParentAlloc && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-5 relative animate-in zoom-in-95 duration-200">
-                        {/* Header */}
-                        <div className="flex items-start justify-between border-b border-border pb-4">
-                            <div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-3xl max-h-[92vh] flex flex-col bg-card border border-border rounded-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Header (tetap terlihat) */}
+                        <div className="flex items-start justify-between gap-3 border-b border-border px-4 sm:px-6 pt-5 pb-4 shrink-0">
+                            <div className="min-w-0">
                                 <div className="flex items-center gap-2">
                                     <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                                     <h3 className="text-lg font-bold text-foreground">Kelola Sub-Alokasi</h3>
@@ -1181,11 +1181,14 @@ export default function AllocationManagement({
                                     Membagi porsi dana <strong className="text-indigo-600 dark:text-indigo-400">{selectedParentAlloc.name}</strong> ({selectedParentAlloc.percentage}% = {formatIDR(parentBudget)})
                                 </p>
                             </div>
-                            <button onClick={() => setIsSubModalOpen(false)} className="p-1 rounded-lg text-muted-foreground hover:text-foreground">
+                            <button onClick={() => setIsSubModalOpen(false)} className="p-1 rounded-lg text-muted-foreground hover:text-foreground shrink-0">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
+                        <form onSubmit={handleSaveSubAllocations} className="flex flex-col flex-1 min-h-0">
+                        {/* Isi yang bisa di-scroll */}
+                        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
                         {/* LIVE SUB TOTAL PERCENTAGE STATUS CARD (Mencantumkan lebihnya secara jelas!) */}
                         <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                             isSubModal100 
@@ -1220,7 +1223,7 @@ export default function AllocationManagement({
                             </div>
 
                             {/* Quick Action Helpers */}
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex flex-wrap items-center gap-2 shrink-0">
                                 {subRemainingPercentage > 0 && (
                                     <button
                                         type="button"
@@ -1252,17 +1255,16 @@ export default function AllocationManagement({
                             </div>
                         </div>
 
-                        {/* Sub Items Form */}
-                        <form onSubmit={handleSaveSubAllocations} className="space-y-4">
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                        {/* Sub Items */}
+                            <div className="space-y-2">
                                 {subItems.map((item, idx) => {
                                     const subItemAmount = ((Number(item.percentage) || 0) / 100) * parentBudget;
                                     return (
-                                        <div key={idx} className="flex items-center gap-2 bg-muted/40 p-2.5 rounded-xl border border-border hover:border-indigo-500/40 transition-all">
-                                            <span className="w-5 text-center text-xs text-muted-foreground font-mono font-bold shrink-0">
+                                        <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-muted/40 p-2.5 rounded-xl border border-border hover:border-indigo-500/40 transition-all">
+                                            <span className="order-1 w-5 text-center text-xs text-muted-foreground font-mono font-bold shrink-0">
                                                 {idx + 1}
                                             </span>
-                                            
+
                                             <input
                                                 type="text"
                                                 required
@@ -1273,9 +1275,11 @@ export default function AllocationManagement({
                                                     updated[idx].name = e.target.value;
                                                     setSubItems(updated);
                                                 }}
-                                                className="flex-1 px-3 py-1.5 bg-card border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500 min-w-0"
+                                                className="order-2 flex-1 px-3 py-2 sm:py-1.5 bg-card border border-border rounded-lg text-sm sm:text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500 min-w-0"
                                             />
 
+                                            {/* Persen & nominal: baris kedua di HP, sejajar di layar lebar */}
+                                            <div className="order-4 sm:order-3 w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3 pl-7 sm:pl-0 shrink-0">
                                             <div className="flex items-center gap-1 w-24 shrink-0">
                                                 <input
                                                     type="number"
@@ -1294,16 +1298,17 @@ export default function AllocationManagement({
                                                 <span className="text-xs text-muted-foreground font-bold">%</span>
                                             </div>
 
-                                            <div className="w-28 text-right hidden sm:block shrink-0">
+                                            <div className="sm:w-32 text-right shrink-0">
                                                 <span className="font-mono text-[11px] font-semibold text-foreground/80 tabular-nums">
                                                     {formatIDR(subItemAmount)}
                                                 </span>
+                                            </div>
                                             </div>
 
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveSubRow(idx)}
-                                                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer shrink-0"
+                                                className="order-3 sm:order-4 p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer shrink-0"
                                                 title="Hapus Baris Ini"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -1321,9 +1326,11 @@ export default function AllocationManagement({
                                 <Plus className="w-3.5 h-3.5" />
                                 <span>Tambah Kategori Sub-Alokasi</span>
                             </button>
+                        </div>
 
-                            <div className="flex items-center justify-between pt-4 border-t border-border">
-                                <span className="text-[11px] text-muted-foreground">
+                            {/* Footer (tetap terlihat) */}
+                            <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t border-border bg-card shrink-0">
+                                <span className="text-[11px] text-muted-foreground text-center sm:text-left">
                                     Total Sub: <strong className={isSubModal100 ? 'text-emerald-600' : isSubModalOver ? 'text-rose-600' : 'text-amber-600'}>{currentSubTotalPercentage.toFixed(1)}%</strong>
                                     {isSubModalOver && (
                                         <span className="text-rose-600 font-bold ml-1">
@@ -1335,13 +1342,13 @@ export default function AllocationManagement({
                                     <button
                                         type="button"
                                         onClick={() => setIsSubModalOpen(false)}
-                                        className="px-4 py-2 rounded-xl bg-muted text-muted-foreground text-xs font-semibold hover:bg-muted/80 cursor-pointer"
+                                        className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 rounded-xl bg-muted text-muted-foreground text-xs font-semibold hover:bg-muted/80 cursor-pointer"
                                     >
                                         Batal
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
+                                        className="flex-1 sm:flex-none px-5 py-2.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
                                     >
                                         Simpan Sub-Alokasi
                                     </button>
