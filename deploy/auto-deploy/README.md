@@ -28,6 +28,8 @@ systemctl enable --now genial-auto-deploy.timer
 systemctl list-timers genial-auto-deploy.timer
 ```
 
+Unit service mengisi `HOME=/root`, karena systemd tidak mengisinya. Tanpa itu `git fetch` gagal dengan "dubious ownership" (git tidak membaca `safe.directory` di `/root/.gitconfig`) dan ssh tidak menemukan kunci GitHub di `/root/.ssh`.
+
 Skrip disalin ke `/opt/auto-deploy`, jadi skrip yang dijalankan sebagai root tidak ikut berubah otomatis saat ada PR baru. Kalau skrip di repo diperbarui, ulangi baris `install -m 700 ...`.
 
 ## Menonaktifkan

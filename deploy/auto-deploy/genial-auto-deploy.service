@@ -5,6 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+# systemd tidak mengisi HOME; tanpa ini git mengabaikan safe.directory di
+# /root/.gitconfig ("dubious ownership") dan ssh tidak menemukan kunci GitHub.
+Environment=HOME=/root
 ExecStart=/bin/bash /opt/auto-deploy/auto-deploy.sh
 TimeoutStartSec=30min
 Nice=5
