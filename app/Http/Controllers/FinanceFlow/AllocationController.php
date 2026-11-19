@@ -134,6 +134,20 @@ class AllocationController extends Controller
                         })
                         ->toArray();
 
+                    // Sisa riil per sub: kelebihan sub yang over ditanggung sub yang masih sisa,
+                    // sebanding dengan besar sisanya, sehingga jumlah sisa riil semua sub = sisa induk.
+                    $totalSurplus = (float) collect($surplusSiblings)->sum('remaining_budget');
+                    $parentRemaining = max(0.0, (float) $alloc->remaining_budget);
+                    $realRatio = $totalSurplus > 0 ? min(1.0, $parentRemaining / $totalSurplus) : 0.0;
+
+                    $alloc->subAllocations->transform(function ($sub) use ($realRatio) {
+                        $quotaRemaining = max(0.0, (float) $sub->remaining_budget);
+                        $sub->real_remaining_budget = $quotaRemaining * $realRatio;
+                        $sub->subsidy_contribution = $quotaRemaining - $sub->real_remaining_budget;
+
+                        return $sub;
+                    });
+
                     $alloc->subAllocations->transform(function ($sub) use ($alloc, $allocIsOver, $surplusSiblings, &$totalCrossSubsidyNominal, &$totalCrossSubsidyCount) {
                         if ($sub->is_over_budget) {
                             if (!$allocIsOver) {
