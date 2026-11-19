@@ -764,16 +764,25 @@ export default function AllocationManagement({
                                                                     </div>
                                                                 )}
 
-                                                                {/* Line 3: Micro Progress Bar */}
-                                                                <div className="w-full bg-muted/80 rounded-full h-1.5 overflow-hidden mb-2">
-                                                                    <div 
-                                                                        className={`h-full rounded-full transition-all duration-500 ${
-                                                                            isOver 
-                                                                                ? (isCovered ? 'bg-amber-500' : 'bg-rose-500') 
-                                                                                : 'bg-emerald-500'
-                                                                        }`}
-                                                                        style={{ width: `${Math.min(100, isOver ? 100 : utilRate)}%` }}
-                                                                    />
+                                                                {/* Line 3: Micro Progress Bar — terpakai sendiri + dipakai subsidi silang; bagian kosong = sisa riil */}
+                                                                <div className="w-full bg-muted/80 rounded-full h-1.5 overflow-hidden mb-2 flex">
+                                                                    {isOver ? (
+                                                                        <div className={`h-full w-full ${isCovered ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                                                                    ) : (
+                                                                        <>
+                                                                            <div
+                                                                                className="h-full bg-emerald-500 transition-all duration-500"
+                                                                                style={{ width: `${Math.min(100, utilRate)}%` }}
+                                                                            />
+                                                                            {hasSubsidyContribution && subCalc > 0 && (
+                                                                                <div
+                                                                                    className="h-full bg-amber-400 dark:bg-amber-500/80 transition-all duration-500"
+                                                                                    style={{ width: `${Math.max(0, Math.min(100 - utilRate, (subsidyContribution / subCalc) * 100))}%` }}
+                                                                                    title={`Dipakai subsidi silang ${formatIDR(subsidyContribution)}`}
+                                                                                />
+                                                                            )}
+                                                                        </>
+                                                                    )}
                                                                 </div>
 
                                                                 {/* Line 4: 2-Column Metrics (Zero overlap!) */}
