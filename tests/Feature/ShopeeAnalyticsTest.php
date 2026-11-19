@@ -5,6 +5,7 @@ use App\Services\ShopeeAnalytics\ShopeeDummyDataService;
 use App\Services\ShopeeAnalytics\ShopeePeriod;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Role;
 
 test('guests are redirected to the login page', function () {
     $this->get(route('shopee.index'))->assertRedirect(route('login'));
@@ -174,6 +175,7 @@ test('switching projects customizes store name and generates distinct determinis
 
 test('saving shopee api credentials stores partner_id, encrypted partner_key and sandbox flag', function () {
     $user = User::factory()->create();
+    $user->assignRole(Role::findOrCreate('Super Admin'));
     $project = \App\Models\Project::create([
         'name' => 'Tatamu Brand',
         'client' => 'Tatamu',
@@ -198,6 +200,7 @@ test('saving shopee api credentials stores partner_id, encrypted partner_key and
 
 test('shopee oauth redirect generates shopee open platform url with hmac signature', function () {
     $user = User::factory()->create();
+    $user->assignRole(Role::findOrCreate('Super Admin'));
     $project = \App\Models\Project::create([
         'name' => 'Tatamu Brand',
         'client' => 'Tatamu',
