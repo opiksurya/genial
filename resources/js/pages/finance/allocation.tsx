@@ -48,6 +48,8 @@ interface SubAllocation {
     is_covered_by_subsidy?: boolean;
     covered_by_allocation_name?: string;
     parent_remaining_budget?: number;
+    real_remaining_budget?: number;
+    subsidy_contribution?: number;
     deficit_type?: 'cross_subsidy' | 'real_deficit' | 'safe';
     surplus_sources?: SurplusSource[];
 }
@@ -489,6 +491,15 @@ export default function AllocationManagement({
                             const subAllocatedAmount = (roundedSubTotalPct / 100) * calculatedAmount;
                             const subRemainingAmount = Math.max(0, calculatedAmount - subAllocatedAmount);
                             const subExcessAmount = Math.max(0, subAllocatedAmount - calculatedAmount);
+                            // Total terpakai & sisa riil seluruh sub-alokasi (sisa riil sudah dikurangi subsidi silang).
+                            const subsTotalSpent = subs.reduce((acc, curr) => acc + (Number(curr.total_spent) || 0), 0);
+                            const subsTotalRealRemaining = subs.reduce((acc, curr) => {
+                                if (curr.is_over_budget) {
+                                    return acc;
+                                }
+
+                                return acc + (curr.real_remaining_budget ?? Math.max(0, Number(curr.remaining_budget) || 0));
+                            }, 0);
 
                             return (
                                 <div
@@ -638,6 +649,28 @@ export default function AllocationManagement({
                                                 </div>
                                             </div>
 
+                                            {/* Total terpakai & sisa riil seluruh sub-alokasi */}
+                                            {subs.length > 0 && (
+                                                <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs">
+                                                    <div className="min-w-0">
+                                                        <span className="text-[9px] text-muted-foreground uppercase font-semibold block">
+                                                            Total Terpakai
+                                                        </span>
+                                                        <span className="font-mono font-bold text-[12px] text-foreground block truncate mt-0.5 tabular-nums">
+                                                            {formatIDR(subsTotalSpent)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="min-w-0 text-right">
+                                                        <span className="text-[9px] text-muted-foreground uppercase font-semibold block">
+                                                            Total Sisa Riil
+                                                        </span>
+                                                        <span className="font-mono font-bold text-[12px] text-emerald-600 dark:text-emerald-400 block truncate mt-0.5 tabular-nums">
+                                                            {formatIDR(subsTotalRealRemaining)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {/* Sub Distribution Mini Visual Bar */}
                                             <div className="w-full bg-muted/80 rounded-full h-1.5 overflow-hidden flex">
                                                 <div 
@@ -659,11 +692,10 @@ export default function AllocationManagement({
                                                         const overNominal = sub.over_budget_amount || 0;
                                                         const overPct = sub.over_budget_percentage || 0;
                                                         const remaining = sub.remaining_budget ?? (subCalc - spent);
-                                                        // Uang yang benar-benar bisa dibelanjakan dari sub ini: sisa kuotanya,
-                                                        // tapi tidak lebih dari sisa anggaran induk (yang sudah dikurangi subsidi silang).
-                                                        const parentRemaining = Math.max(0, alloc.remaining_budget ?? 0);
-                                                        const spendable = Math.min(Math.max(0, remaining), parentRemaining);
-                                                        const isCappedByParent = !isOver && remaining > parentRemaining;
+                                                        // Sisa riil: sisa kuota dikurangi bagian sub ini dalam menutup sub lain yang over.
+                                                        const realRemaining = sub.real_remaining_budget ?? Math.max(0, remaining);
+                                                        const subsidyContribution = sub.subsidy_contribution ?? 0;
+                                                        const hasSubsidyContribution = !isOver && subsidyContribution >= 1;
                                                         const utilRate = sub.utilization_rate ?? (subCalc > 0 ? (spent / subCalc) * 100 : 0);
 
                                                         return (
@@ -776,29 +808,33 @@ export default function AllocationManagement({
                                                                         ) : (
                                                                             <>
                                                                                 <span className="text-muted-foreground block text-[9px] uppercase font-semibold">
-                                                                                    Sisa Kuota
+                                                                                    Sisa Riil
                                                                                 </span>
                                                                                 <span className="font-semibold text-[11px] text-emerald-600 dark:text-emerald-400 block truncate mt-0.5">
-                                                                                    {formatIDR(remaining)}
+                                                                                    {formatIDR(realRemaining)}
                                                                                 </span>
                                                                             </>
                                                                         )}
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Line 5: Sisa riil, dibatasi sisa anggaran induk */}
-                                                                {isCappedByParent && (
+                                                                {/* Line 5: Asal sisa riil, bila sebagian kuota dipakai subsidi silang */}
+                                                                {hasSubsidyContribution && (
                                                                     <div
-                                                                        className="mt-2 flex items-center justify-between gap-2 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-[10px] font-mono"
-                                                                        title={`Sebagian sisa kuota ${sub.name} sudah terpakai untuk menutup pos lain yang over (subsidi silang). Uang yang benar-benar tersisa di ${alloc.name} hanya ${formatIDR(parentRemaining)}, dan jumlah itu dipakai bersama oleh semua sub-alokasi.`}
+                                                                        className="mt-2 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-[10px] font-mono leading-tight space-y-0.5"
+                                                                        title={`Sebagian sisa kuota ${sub.name} dipakai untuk menutup pos lain di ${alloc.name} yang over (subsidi silang), sebanding dengan besar sisa kuotanya.`}
                                                                     >
-                                                                        <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold min-w-0">
-                                                                            <AlertTriangle className="w-3 h-3 shrink-0" />
-                                                                            <span className="truncate">Bisa dipakai (riil)</span>
-                                                                        </span>
-                                                                        <span className="font-bold text-[11px] text-amber-700 dark:text-amber-400 shrink-0">
-                                                                            maks. {formatIDR(spendable)}
-                                                                        </span>
+                                                                        <div className="flex items-center justify-between gap-2 text-muted-foreground">
+                                                                            <span>Sisa kuota</span>
+                                                                            <span className="tabular-nums">{formatIDR(remaining)}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between gap-2 text-amber-700 dark:text-amber-400 font-semibold">
+                                                                            <span className="flex items-center gap-1 min-w-0">
+                                                                                <RefreshCw className="w-3 h-3 shrink-0" />
+                                                                                <span className="truncate">Dipakai subsidi silang</span>
+                                                                            </span>
+                                                                            <span className="tabular-nums shrink-0">−{formatIDR(subsidyContribution)}</span>
+                                                                        </div>
                                                                     </div>
                                                                 )}
                                                             </div>
